@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: docker
+      dockerfile: api.Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./packages/backend:/app
+
+  web:
+    build:
+      context: docker
+      dockerfile: web.Dockerfile
+    command: sh -c "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 5000"
+    ports:
+      # Host 5050: macOS AirPlay Receiver (ControlCenter) occupies host 5000.
+      - "5050:5000"
+    # Keep the Flutter run REPL alive so hot reload works via:
+    #   docker compose attach web   (then press "r")
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./platform/frontend:/app
+      # Anonymous volumes: keep Linux build artifacts out of the macOS checkout.
+      - /app/.dart_tool
+      - /app/build
+      - pub-cache:/root/.pub-cache
+
+volumes:
+  pub-cache:
