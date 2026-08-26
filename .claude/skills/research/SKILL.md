@@ -44,6 +44,7 @@ Start from the entry point named in $ARGUMENTS, then follow imports and call cha
 - Check frontend assets in `packages/backend/resources/js/` and `resources/css/` when investigating frontend behavior
 - Check Blade views and layouts in `packages/backend/resources/views/` for rendering chains
 - Look at models in `app/Models/`, controllers in `app/Http/Controllers/`, and middleware in `app/Http/Middleware/`
+- Check the Flutter app in `platform/frontend/lib/` (and `pubspec.yaml`, `platform/frontend/test/`) when investigating the mobile client
 - **Timebox**: if you've read 10+ files without a clear model forming, surface what you've found so far and ask a clarifying question rather than continuing to dig
 
 ### 3. Synthesise

@@ -66,7 +66,7 @@ Test the skill mentally against realistic scenarios:
 
 ### 5. Codebase Alignment
 
-- Does the skill reference this project's actual conventions? (Laravel monorepo under `packages/backend/`, Eloquent, PHPUnit, factories, Sanctum, Blade, Vite, Tailwind, Pint)
+- Does the skill reference this project's actual conventions? (Laravel monorepo under `packages/backend/`, Eloquent, PHPUnit, factories, Sanctum, Blade, Vite, Tailwind, Pint; Flutter app under `platform/frontend/`)
 - Does it reference tools/patterns that don't exist in this project? (e.g., Rails, RSpec, React, TypeScript, Django)
 - Are file paths, commands, and examples realistic for this codebase?
 - Does it overlap with or contradict other skills?

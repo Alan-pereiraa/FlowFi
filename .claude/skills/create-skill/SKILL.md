@@ -92,7 +92,7 @@ $ARGUMENTS — <Description of expected input. List formats accepted (descriptio
 ## Rules
 
 - <3-8 rules, bold key constraints, explicit about NEVER/ALWAYS behaviors>
-- <Reference this project's conventions: Laravel in `packages/backend/`, Model::factory(), PHPUnit, Sanctum, Blade, Tailwind, etc. where relevant>
+- <Reference this project's conventions: Laravel in `packages/backend/`, Model::factory(), PHPUnit, Sanctum, Blade, Tailwind, Pint; Flutter app in `platform/frontend/` — where relevant>
 - <Handle empty $ARGUMENTS: use AskUserQuestion>
 
 ## Steps
@@ -114,7 +114,7 @@ $ARGUMENTS — <Description of expected input. List formats accepted (descriptio
 
 - Every step must be actionable — no vague instructions
 - Rules must be enforceable — no "try to" or "consider"
-- Include codebase-specific references where relevant (Laravel, Eloquent, PHPUnit, factories, Sanctum, Blade, Vite, Tailwind)
+- Include codebase-specific references where relevant (Laravel, Eloquent, PHPUnit, factories, Sanctum, Blade, Vite, Tailwind, Pint; Flutter/Dart in `platform/frontend/`)
 - The Summary/Output section must define a consistent format so results are predictable across runs
 
 ### 6. Write the Skill

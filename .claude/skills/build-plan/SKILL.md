@@ -40,6 +40,7 @@ Before drafting anything, read the relevant code:
 - Check frontend assets in `packages/backend/resources/js/` and `resources/css/` when investigating frontend behavior
 - Check Blade views and layouts in `packages/backend/resources/views/` for rendering chains
 - Look at models in `app/Models/`, controllers in `app/Http/Controllers/`, and middleware in `app/Http/Middleware/`
+- Check the Flutter app in `platform/frontend/lib/` (and `pubspec.yaml`, `platform/frontend/test/`) when the task touches the mobile client
 
 **Timebox exploration**: if you've read 10+ files without a clear picture, stop and surface open questions rather than keep digging.
 
@@ -50,7 +51,7 @@ Before writing anything, apply these rules:
 - **ALWAYS model existing patterns** — find a real example in the codebase before proposing any new file structure, component shape, or API design
 - **NEVER introduce a new pattern when an existing one covers the need** — if a pattern already exists, use it; explicitly justify any deviation
 - **Cite the pattern** — for each proposed approach, name a specific file that demonstrates it (e.g., "following the pattern in `packages/backend/app/Http/Controllers/TransactionController.php`")
-- **ALWAYS follow framework and language best practices** — apply idiomatic conventions for the relevant stack (e.g., Laravel: prefer Form Requests for validation, resource controllers with RESTful actions, Eloquent scopes and eager loading, policies for authorization; PHP: explicit type declarations, guard clauses, follow existing naming conventions; frontend: follow the existing Blade + Vite + Tailwind patterns)
+- **ALWAYS follow framework and language best practices** — apply idiomatic conventions for the relevant stack (e.g., Laravel: prefer Form Requests for validation, resource controllers with RESTful actions, Eloquent scopes and eager loading, policies for authorization; PHP: explicit type declarations, guard clauses, follow existing naming conventions; frontend: follow the existing Blade + Vite + Tailwind patterns in `packages/backend/resources/` and idiomatic Flutter/Dart widget structure in `platform/frontend/lib/`)
 
 Structure the plan as:
 

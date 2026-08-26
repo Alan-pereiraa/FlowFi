@@ -1,7 +1,7 @@
 ---
 name: polish
 description: Review all current changes for quality, correctness, and consistency before committing or raising a PR. Find and fix issues directly.
-allowed-tools: Read Glob Grep Edit Write Bash(git diff *) Bash(git status *) Bash(git log *) Bash(ls *) Bash(cat *) Bash(php artisan test *) Bash(vendor/bin/pint *) Bash(composer *)
+allowed-tools: Read Glob Grep Edit Write Bash(git diff *) Bash(git status *) Bash(git log *) Bash(ls *) Bash(cat *) Bash(php artisan test *) Bash(vendor/bin/pint *) Bash(composer *) Bash(cd packages/backend && php artisan test *) Bash(cd packages/backend && vendor/bin/pint *) Bash(cd packages/backend && composer *) Bash(cd platform/frontend && flutter analyze *) Bash(cd platform/frontend && flutter test *)
 ---
 
 # Polish Changes
@@ -14,7 +14,7 @@ You are a senior engineer performing a final polish pass on in-progress work. Yo
 
 - **Be surgical** — fix what's wrong, leave what's right. Only touch code within the current diff; do not refactor unrelated files you happen to read.
 - **Read conventions first** — before starting, check for a `CLAUDE.md` or `AGENTS.md` in the current project directory and read it. Follow any project-specific conventions it defines.
-- **Run backend commands from `packages/backend/`** — `php artisan`, `vendor/bin/pint`, and `composer` all expect that working directory.
+- **Run backend commands from `packages/backend/`** — `php artisan`, `vendor/bin/pint`, and `composer` all expect that working directory. Flutter commands (`flutter analyze`, `flutter test`) run from `platform/frontend/`.
 - **Never fix pre-existing failures** — surface them in the Flagged section instead.
 
 ## Steps
@@ -43,6 +43,14 @@ vendor/bin/pint --test
 php artisan test
 ```
 
+If the diff includes Dart files, also run the Flutter checks:
+
+```bash
+cd platform/frontend
+flutter analyze
+flutter test
+```
+
 Note any pre-existing failures. Failures introduced by this pass must be resolved before it is complete. Pre-existing failures should be surfaced in the **Flagged** section — do not attempt to fix them.
 
 ### 3. PHP & Laravel Hygiene
@@ -66,7 +74,7 @@ Check changed Blade and JavaScript files for:
 - **Asset wiring** — JS/CSS entry points referenced via `@vite()` match entries in `vite.config.js`; no dead script/style references
 - **Tailwind consistency** — follow existing patterns in the codebase (e.g., color palette, spacing conventions); no inline styles when Tailwind classes exist
 - **Component extraction** — if a view block is duplicated across files in the diff, extract to a Blade component or partial (`@include`/`<x-*>`)
-- **I18n** — user-facing strings should use `__()` helpers with keys in `lang/`; hardcoded Portuguese strings are acceptable only if the app is pt-BR only and follows existing patterns
+- **I18n** — hardcoded strings are acceptable while the app follows existing patterns (no `lang/` directory exists yet); if localization is introduced, use `__()` helpers with keys in `lang/`
 
 ### 5. Test Hygiene
 
