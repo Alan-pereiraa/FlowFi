@@ -10,59 +10,19 @@ class AuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_register(): void
-    {
-        $response = $this->postJson('/api/v1/auth/register', [
-            'first_name' => 'Raphael',
-            'last_name' => 'Maximowski',
-            'email' => 'raphael@example.com',
-            'password' => 'super-secret-password',
-        ]);
-
-        $response->assertCreated()
-            ->assertJsonStructure(['user' => ['id', 'first_name', 'last_name', 'email'], 'token']);
-
-        $this->assertDatabaseHas('users', ['email' => 'raphael@example.com']);
-    }
-
-    public function test_user_can_login_with_valid_credentials(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->postJson('/api/v1/auth/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-
-        $response->assertOk()
-            ->assertJsonStructure(['user' => ['id', 'first_name', 'last_name', 'email'], 'token']);
-    }
-
-    public function test_login_fails_with_wrong_password(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->postJson('/api/v1/auth/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
-
-        $response->assertUnprocessable()->assertJsonValidationErrors('email');
-    }
-
     public function test_authenticated_user_can_fetch_profile(): void
     {
         $user = User::factory()->create();
         $token = $user->createToken('api')->plainTextToken;
 
-        $response = $this->withToken($token)->getJson('/api/v1/auth/me');
+        $response = $this->withToken($token)->getJson("/api/v1/users/{$user->id}");
 
         $response->assertOk()->assertJsonPath('data.email', $user->email);
     }
 
     public function test_guest_cannot_fetch_profile(): void
     {
-        $this->getJson('/api/v1/auth/me')->assertUnauthorized();
+        $this->getJson('/api/v1/users/1')->assertUnauthorized();
     }
 
     public function test_logout_revokes_current_token(): void

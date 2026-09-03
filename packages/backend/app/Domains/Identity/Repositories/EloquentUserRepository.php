@@ -11,14 +11,14 @@ class EloquentUserRepository implements UserRepositoryInterface
         return User::create($attributes);
     }
 
-    public function findById(int $id): ?User
-    {
-        return User::find($id);
-    }
-
     public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
+    }
+
+    public function findByEmailWithTrashed(string $email): ?User
+    {
+        return User::withTrashed()->where('email', $email)->first();
     }
 
     public function update(User $user, array $attributes): User

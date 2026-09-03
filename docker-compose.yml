@@ -7,6 +7,24 @@ services:
       - "8000:8000"
     volumes:
       - ./packages/backend:/app
+    # Points mail at the mailpit service regardless of what the local .env says.
+    # These names are added to ServeCommand::$passthroughVariables in
+    # AppServiceProvider; without that, `artisan serve` strips them and the
+    # request process silently falls back to .env.
+    environment:
+      MAIL_MAILER: smtp
+      MAIL_SCHEME: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      - mailpit
+
+  # Catches every email the API sends (OTP codes). UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   web:
     build:

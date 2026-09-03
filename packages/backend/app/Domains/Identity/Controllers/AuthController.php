@@ -2,8 +2,8 @@
 
 namespace App\Domains\Identity\Controllers;
 
-use App\Domains\Identity\Requests\LoginRequest;
-use App\Domains\Identity\Requests\RegisterRequest;
+use App\Domains\Identity\Requests\RequestOtpRequest;
+use App\Domains\Identity\Requests\VerifyOtpRequest;
 use App\Domains\Identity\Resources\UserResource;
 use App\Domains\Identity\Services\AuthService;
 use App\Http\Controllers\Controller;
@@ -16,32 +16,24 @@ class AuthController extends Controller
         private readonly AuthService $auth,
     ) {}
 
-    public function register(RegisterRequest $request): JsonResponse
+    public function requestOtp(RequestOtpRequest $request): JsonResponse
     {
-        $result = $this->auth->register($request->validated());
+        $this->auth->requestOtp($request->validated('email'));
 
-        return response()->json([
-            'user' => new UserResource($result['user']),
-            'token' => $result['token'],
-        ], 201);
+        return response()->json(['message' => 'Code sent.'], 202);
     }
 
-    public function login(LoginRequest $request): JsonResponse
+    public function verifyOtp(VerifyOtpRequest $request): JsonResponse
     {
-        $result = $this->auth->login(
+        $result = $this->auth->verifyOtp(
             $request->validated('email'),
-            $request->validated('password'),
+            $request->validated('code'),
         );
 
         return response()->json([
             'user' => new UserResource($result['user']),
             'token' => $result['token'],
         ]);
-    }
-
-    public function me(Request $request): UserResource
-    {
-        return new UserResource($request->user());
     }
 
     public function logout(Request $request): JsonResponse

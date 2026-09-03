@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domains\Identity\Repositories\EloquentOtpCodeRepository;
 use App\Domains\Identity\Repositories\EloquentUserRepository;
+use App\Domains\Identity\Repositories\OtpCodeRepositoryInterface;
 use App\Domains\Identity\Repositories\UserRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,5 +17,6 @@ class DomainServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         UserRepositoryInterface::class => EloquentUserRepository::class,
+        OtpCodeRepositoryInterface::class => EloquentOtpCodeRepository::class,
     ];
 }

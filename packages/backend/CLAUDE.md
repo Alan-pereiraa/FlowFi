@@ -1,6 +1,6 @@
 # FlowFi Backend
 
-Laravel 13 API backend for FlowFi. Pure JSON API — no Blade views, no web sessions. The client is the Flutter app in `platform/frontend/`. Auth is token-based via Laravel Sanctum.
+Laravel 13 API backend for FlowFi. Pure JSON API — no Blade pages, no web sessions (the only Blade files are Markdown mail templates under `resources/views/mail/`). The client is the Flutter app in `platform/frontend/`. Auth is passwordless: an emailed one-time code is exchanged for a Laravel Sanctum bearer token.
 
 ## Architecture: domain slices
 
@@ -19,7 +19,8 @@ app/Domains/<Domain>/
 
 Current domains:
 
-- **Identity** — users and authentication (register, login, logout, me). Complete; use it as the reference when building a new slice.
+- **Identity** — users and authentication (OTP request/verify, logout, and `users.show`/`update`/`destroy`). Complete; use it as the reference when building a new slice. Auth flow: `POST /auth/otp/request` mails a 6-digit code (`OtpService::issue`, row appended to `otp_codes`, never pruned), `POST /auth/otp/verify` burns it and finds-or-creates the user (`AuthService::verifyOtp`). Only `email` is required on `users`; there is no password column. Knobs live in `config/auth.php` under `otp`; throttling in `AppServiceProvider`. Mail is sent synchronously (no queue worker in dev) and lands in Mailpit at http://localhost:8025.
+  - Self-service CRUD is `GET|PUT|PATCH|DELETE /api/v1/users/{id}`. Entitlement lives in exactly one place, `UserService::findOwned()`, which throws `ModelNotFoundException` when the id is not the caller's. **Every failure is a 404, never a 403** — a 403 would confirm the account exists. `UpdateUserRequest::authorize()` calls the same method so the 404 beats validation; this is a deliberate exception to the "Request: input shape validation only" rule below. There is no `index` or `store` route and no admin surface: an admin would belong at `/admin/users/{id}` with its own authorization.
 - **Ledger** — accounts and transactions (FlowFi core). Skeleton only; see `app/Domains/Ledger/README.md`.
 
 Everything outside `app/Domains/` is framework plumbing: `app/Http/Controllers/Controller.php` (base controller), `app/Providers/` (wiring), `bootstrap/`, `config/`, `routes/`.

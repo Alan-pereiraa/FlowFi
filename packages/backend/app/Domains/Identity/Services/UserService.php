@@ -14,12 +14,28 @@ class UserService
     ) {}
 
     /**
+     * Resolve the user a caller is entitled to act on.
+     *
+     * A caller may only ever address themselves, so a mismatch is reported as
+     * "not found" rather than "forbidden": a 403 would confirm that the id
+     * belongs to a real account. Callers are already loaded by the Sanctum
+     * guard, so the entitled case costs no query.
+     *
+     * The message is deliberately generic. setModel() would render as
+     * "No query results for model [App\Domains\Identity\Models\User] 42",
+     * echoing the id and the internal class name, which survives even with
+     * APP_DEBUG off and would make a foreign id distinguishable from one that
+     * never existed.
+     *
      * @throws ModelNotFoundException
      */
-    public function find(int $id): User
+    public function findOwned(User $caller, int $id): User
     {
-        return $this->users->findById($id)
-            ?? throw (new ModelNotFoundException)->setModel(User::class, [$id]);
+        if ($caller->id !== $id) {
+            throw new ModelNotFoundException('Not found.');
+        }
+
+        return $caller;
     }
 
     /**

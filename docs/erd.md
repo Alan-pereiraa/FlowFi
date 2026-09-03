@@ -140,5 +140,6 @@ erDiagram
 - `TRANSACTION.installmentNumbers` duplicates `COUNT(INSTALLMENT)`.
 - `TRANSACTION.period` is `VARCHAR` while `type` is `ENUM`; period looks
   enum-shaped too.
-- `ACCOUNT` carries no `password` / `email_verified_at`; both must survive the
-  migration from `users`. Resolved: `ACCOUNT` stayed on `users`, both columns kept.
+- `ACCOUNT` carries no `password` / `email_verified_at`. Resolved: `ACCOUNT`
+  stayed on `users`; `password` was dropped (auth is OTP-only, codes live in
+  `otp_codes`) and `email_verified_at` is kept and set when a code is verified.

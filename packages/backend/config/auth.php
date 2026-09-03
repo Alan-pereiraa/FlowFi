@@ -103,6 +103,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | One-Time Passcodes
+    |--------------------------------------------------------------------------
+    |
+    | Sign-in and sign-up are passwordless: a numeric code is mailed to the
+    | user and exchanged for a Sanctum token. "expire" is the number of
+    | minutes a code stays valid, "max_attempts" the number of wrong guesses
+    | before the code is dead, and "length" the number of digits.
+    |
+    */
+
+    'otp' => [
+        'expire' => 15,
+        'max_attempts' => 5,
+        'length' => 6,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Password Confirmation Timeout
     |--------------------------------------------------------------------------
     |

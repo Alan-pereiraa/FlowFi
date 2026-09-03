@@ -8,9 +8,13 @@ interface UserRepositoryInterface
 {
     public function create(array $attributes): User;
 
-    public function findById(int $id): ?User;
-
     public function findByEmail(string $email): ?User;
+
+    /**
+     * Includes soft-deleted users, so callers can tell "never existed" from
+     * "deactivated".
+     */
+    public function findByEmailWithTrashed(string $email): ?User;
 
     public function update(User $user, array $attributes): User;
 

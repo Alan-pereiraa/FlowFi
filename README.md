@@ -11,7 +11,8 @@ Monorepo:
 docker compose up --build
 ```
 
-- API: http://localhost:8000 (e.g. `GET /api/user`, Sanctum-protected)
+- API: http://localhost:8000 (e.g. `GET /api/v1/users/{id}`, Sanctum-protected)
+- Mailpit (catches every email the API sends): http://localhost:8025
 - Flutter web: open http://localhost:5050 in Chrome on your machine — the
   container runs the dev server (`-d web-server`), the browser runs on the host.
   (Host port is 5050 because macOS AirPlay Receiver occupies 5000.)
@@ -28,6 +29,19 @@ docker compose attach web
 Then press `r` (hot reload) or `R` (hot restart). Detach with `ctrl-p ctrl-q`.
 
 Source is bind-mounted, so edit files normally in your editor.
+
+### Signing in (OTP only, no passwords)
+
+1. `POST /api/v1/auth/otp/request` with `{ "email": "you@example.com" }` → `202`.
+2. Open Mailpit at http://localhost:8025 and read the 6-digit code.
+3. `POST /api/v1/auth/otp/verify` with `{ "email", "code" }` → `200 { user, token }`.
+   Unknown emails are registered on the spot; codes last 15 minutes and work once.
+4. Send `Authorization: Bearer <token>` on protected routes.
+
+Store `user.id` from step 3 alongside the token: it is the only time the API
+hands out your own id, and `GET|PATCH|DELETE /api/v1/users/{id}` need it. Any
+id other than your own answers `404`, never `403`, so the endpoint cannot be
+used to discover which accounts exist.
 
 ### Notes
 

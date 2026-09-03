@@ -15,23 +15,27 @@ class UserController extends Controller
         private readonly UserService $users,
     ) {}
 
-    public function show(Request $request): UserResource
+    public function show(Request $request, int $id): UserResource
     {
-        $user = $this->users->find($request->user()->id);
-
-        return new UserResource($user);
+        return new UserResource($this->users->findOwned($request->user(), $id));
     }
 
-    public function update(UpdateUserRequest $request): UserResource
+    /**
+     * The gate also runs in UpdateUserRequest::authorize(), which is the only
+     * hook that fires before validation. Repeating it here keeps every action
+     * in this controller visibly gated; it is an integer comparison against an
+     * already-loaded model, so it costs nothing.
+     */
+    public function update(UpdateUserRequest $request, int $id): UserResource
     {
-        $user = $this->users->update($request->user(), $request->validated());
+        $user = $this->users->findOwned($request->user(), $id);
 
-        return new UserResource($user);
+        return new UserResource($this->users->update($user, $request->validated()));
     }
 
-    public function destroy(Request $request): Response
+    public function destroy(Request $request, int $id): Response
     {
-        $this->users->delete($request->user());
+        $this->users->delete($this->users->findOwned($request->user(), $id));
 
         return response()->noContent();
     }
