@@ -13,13 +13,14 @@ class AuthTest extends TestCase
     public function test_user_can_register(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
-            'name' => 'Raphael',
+            'first_name' => 'Raphael',
+            'last_name' => 'Maximowski',
             'email' => 'raphael@example.com',
             'password' => 'super-secret-password',
         ]);
 
         $response->assertCreated()
-            ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token']);
+            ->assertJsonStructure(['user' => ['id', 'first_name', 'last_name', 'email'], 'token']);
 
         $this->assertDatabaseHas('users', ['email' => 'raphael@example.com']);
     }
@@ -34,7 +35,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token']);
+            ->assertJsonStructure(['user' => ['id', 'first_name', 'last_name', 'email'], 'token']);
     }
 
     public function test_login_fails_with_wrong_password(): void

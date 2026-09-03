@@ -11,8 +11,30 @@ class EloquentUserRepository implements UserRepositoryInterface
         return User::create($attributes);
     }
 
+    public function findById(int $id): ?User
+    {
+        return User::find($id);
+    }
+
     public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
+    }
+
+    public function update(User $user, array $attributes): User
+    {
+        $user->forceFill($attributes)->save();
+
+        return $user;
+    }
+
+    public function delete(User $user): void
+    {
+        $user->delete();
+    }
+
+    public function revokeTokens(User $user): void
+    {
+        $user->tokens()->delete();
     }
 }

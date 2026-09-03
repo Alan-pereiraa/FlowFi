@@ -14,7 +14,7 @@ class AuthService
     ) {}
 
     /**
-     * @param  array{name: string, email: string, password: string}  $data
+     * @param  array{first_name: string, last_name: string, phone_number?: string|null, email: string, password: string}  $data
      * @return array{user: User, token: string}
      */
     public function register(array $data): array
