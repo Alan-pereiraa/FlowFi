@@ -21,9 +21,12 @@ Current domains:
 
 - **Identity** — users and authentication (OTP request/verify, logout, and `users.show`/`update`/`destroy`). Complete; use it as the reference when building a new slice. Auth flow: `POST /auth/otp/request` mails a 6-digit code (`OtpService::issue`, row appended to `otp_codes`, never pruned), `POST /auth/otp/verify` burns it and finds-or-creates the user (`AuthService::verifyOtp`). Only `email` is required on `users`; there is no password column. Knobs live in `config/auth.php` under `otp`; throttling in `AppServiceProvider`. Mail is sent synchronously (no queue worker in dev) and lands in Mailpit at http://localhost:8025.
   - Self-service CRUD is `GET|PUT|PATCH|DELETE /api/v1/users/{id}`. Entitlement lives in exactly one place, `UserService::findOwned()`, which throws `ModelNotFoundException` when the id is not the caller's. **Every failure is a 404, never a 403** — a 403 would confirm the account exists. `UpdateUserRequest::authorize()` calls the same method so the 404 beats validation; this is a deliberate exception to the "Request: input shape validation only" rule below. There is no `index` or `store` route and no admin surface: an admin would belong at `/admin/users/{id}` with its own authorization.
-- **Ledger** — accounts and transactions (FlowFi core). Skeleton only; see `app/Domains/Ledger/README.md`.
+- **Ledger** — money records (FlowFi core): goals today; categories, transactions and installments to come (see `docs/erd.md`). `goals` is full CRUD at `/api/v1/goals[/{id}]`, scoped to the caller through `User::goals()`: `GoalRepositoryInterface::findFor()` returns null for a foreign, missing or soft-deleted id and `GoalService::findOwned()` turns that into a generic 404 (`new ModelNotFoundException('Not found.')`), same reasoning as Identity. `UpdateGoalRequest::authorize()` runs the same gate so 404 beats 422. Money columns are integer cents behind the `Money` cast (below); the API speaks decimals.
+- **Shared** — cross-domain utilities, not a business domain. `Constants/IconCatalog` (Flutter Material `Icons` names, categorized; served at `GET /api/v1/icons`), `Casts/Money` (integer cents in the database, `"1500.00"` strings in PHP and JSON), and `Services/AppearanceService` + `Contracts/HasAppearance` (icon/color handling for any decorated model: call `normalize()` on create and `apply()` on update so stored colors are always `#RRGGBB` uppercase). Category will reuse all three; add new shared helpers here only when a second domain actually needs them.
 
 Everything outside `app/Domains/` is framework plumbing: `app/Http/Controllers/Controller.php` (base controller), `app/Providers/` (wiring), `bootstrap/`, `config/`, `routes/`.
+
+Cross-slice references are allowed but should stay rare and explicit. Today: `Identity\Models\User::goals()` points at `Ledger\Models\Goal`, and Ledger depends on Shared.
 
 ## Layer responsibilities
 
@@ -48,6 +51,9 @@ Everything outside `app/Domains/` is framework plumbing: `app/Http/Controllers/C
 - All endpoints live under `/api/v1/...`. Never add unversioned API routes.
 - Protected routes use the `auth:sanctum` middleware; clients send `Authorization: Bearer <token>`.
 - `use App\Domains\Identity\Models\User;` — the User model is NOT in `App\Models` (that folder no longer exists). `config/auth.php`, `UserFactory`, and `DatabaseSeeder` already point at the domain path.
+- Owned collections: query through the relation on `User` (`$user->goals()`), never `Model::where('user_id', ...)`; every miss is a 404 with the generic message, never a 403.
+- Money: store cents in an unsigned integer column and cast with `App\Domains\Shared\Casts\Money`; validate input with `numeric`, `decimal:0,2`; never do float arithmetic on amounts.
+- SQLite does not index foreign keys on its own: write `foreignId(...)->index()->constrained()`, in that order (`index()` after `constrained()` is a silent no-op).
 - Code style is enforced by Pint: run `./vendor/bin/pint --dirty` before committing.
 
 ## Commands
@@ -63,5 +69,5 @@ php artisan route:list --path=api   # inspect registered API routes
 ## Testing
 
 - Feature tests hit real HTTP through the full stack (`tests/Feature/<Domain>/`), using in-memory SQLite configured in `phpunit.xml`.
-- `User::factory()` default password is `password`.
-- Reference: `tests/Feature/Identity/AuthTest.php` covers the full auth flow.
+- There is no password: authenticate in tests with `$this->withToken($user->createToken('api')->plainTextToken)`.
+- Reference: `tests/Feature/Identity/AuthTest.php` (token-protected profile read, guest 401, logout). The OTP flow and the goals CRUD are currently covered by a curl smoke suite, not PHPUnit.

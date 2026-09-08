@@ -43,6 +43,20 @@ hands out your own id, and `GET|PATCH|DELETE /api/v1/users/{id}` need it. Any
 id other than your own answers `404`, never `403`, so the endpoint cannot be
 used to discover which accounts exist.
 
+### Goals and icons
+
+All routes below need the bearer token.
+
+- `GET /api/v1/icons` → `{ data: [{ category, icons: [...] }] }`. Icon names
+  are Flutter Material `Icons` getter names (`savings`, `flight_takeoff`); the
+  app keeps a `Map<String, IconData>` mirror and looks them up by name.
+- `GET|POST /api/v1/goals`, `GET|PATCH|DELETE /api/v1/goals/{id}`. Body:
+  `name`, `icon` (from the catalog), `color` (`#RRGGBB`, stored uppercase),
+  `target_amount` (decimal, up to two places: `"1500.50"` or `1500.5`),
+  `expires_at` (`YYYY-MM-DD`, optional). Amounts are stored as integer cents
+  and always come back as a two-decimal string. Goals are scoped to the
+  caller: another user's id answers `404`, same as `users`.
+
 ### Notes
 
 - The API base URL from Flutter web code must be `http://localhost:8000` —

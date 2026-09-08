@@ -11,6 +11,12 @@ implemented: today only the `Identity` slice exists (`users`, `sessions`,
 Status: `ACCOUNT` is realized on the existing `users` table (no rename) as
 `first_name`, `last_name`, `phone_number` and `deleted_at` (`SoftDeletes`).
 
+Status: `GOAL` is realized as `goals` (`app/Domains/Ledger/Models/Goal.php`):
+`accountId` → `user_id` (FK to `users.id`, indexed), `targetAmount` → integer
+cents in `target_amount` (exposed as a decimal string through the `Money`
+cast), `expiresDate` → nullable `date expires_at`, `color` → `#RRGGBB` string,
+`deleteAt` → `deleted_at`.
+
 ## Cardinalities
 
 Source diagram uses min-max pairs; the pair sits on the side it counts.
@@ -132,9 +138,16 @@ erDiagram
 ## Open points
 
 - `deleteAt` should be `deletedAt` (`deleted_at`) for Laravel `SoftDeletes`.
-  Done for `ACCOUNT` (`users.deleted_at`); still applies to the other entities.
-- `GOAL.expiresDate` is typed `INT` but named as a date.
-- `color` is `INT` on `CATEGORY` and `VARCHAR` on `GOAL`.
+  Done for `ACCOUNT` (`users.deleted_at`) and `GOAL` (`goals.deleted_at`);
+  still applies to the other entities.
+- `GOAL.expiresDate` is typed `INT` but named as a date. Resolved: nullable
+  `date expires_at`.
+- `color` is `INT` on `CATEGORY` and `VARCHAR` on `GOAL`. Resolved for `GOAL`
+  as a `#RRGGBB` string; `CATEGORY` should follow so both can share the
+  `AppearanceService`.
+- Money columns (`GOAL.targetAmount`, `TRANSACTION.totalAmount`,
+  `INSTALLMENT.amount`) are drawn as `FLOAT`. Resolved for `GOAL` as integer
+  cents behind the shared `Money` cast; the other two should follow.
 - `TRANSACTION.goalId` is drawn mandatory `(1,1)`; most transactions have no
   goal, so it likely wants to be nullable `(0,1)`.
 - `TRANSACTION.installmentNumbers` duplicates `COUNT(INSTALLMENT)`.
