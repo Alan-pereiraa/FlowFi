@@ -3,7 +3,7 @@
 namespace App\Domains\Shared\Constants;
 
 /**
- * Icons a user may pick for goals (and later categories).
+ * Icons a user may pick for goals and categories.
  *
  * Values are the getter names of Flutter's built-in Material `Icons` class
  * (`Icons.savings`, `Icons.flight_takeoff`, ...), which is what the client

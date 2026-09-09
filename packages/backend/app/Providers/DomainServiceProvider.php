@@ -6,6 +6,8 @@ use App\Domains\Identity\Repositories\EloquentOtpCodeRepository;
 use App\Domains\Identity\Repositories\EloquentUserRepository;
 use App\Domains\Identity\Repositories\OtpCodeRepositoryInterface;
 use App\Domains\Identity\Repositories\UserRepositoryInterface;
+use App\Domains\Ledger\Repositories\CategoryRepositoryInterface;
+use App\Domains\Ledger\Repositories\EloquentCategoryRepository;
 use App\Domains\Ledger\Repositories\EloquentGoalRepository;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
 use App\Domains\Shared\Repositories\AppearanceRepositoryInterface;
@@ -23,6 +25,7 @@ class DomainServiceProvider extends ServiceProvider
         UserRepositoryInterface::class => EloquentUserRepository::class,
         OtpCodeRepositoryInterface::class => EloquentOtpCodeRepository::class,
         GoalRepositoryInterface::class => EloquentGoalRepository::class,
+        CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
     ];
 }

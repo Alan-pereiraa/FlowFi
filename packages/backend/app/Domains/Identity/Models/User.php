@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,5 +45,13 @@ class User extends Authenticatable
     public function goals(): HasMany
     {
         return $this->hasMany(Goal::class);
+    }
+
+    /**
+     * @return HasMany<Category, $this>
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
     }
 }

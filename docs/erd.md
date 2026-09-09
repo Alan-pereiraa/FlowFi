@@ -1,8 +1,9 @@
 # FlowFi — Data Model (ERD)
 
-Target schema for the `Ledger` domain slice (plus notifications). Not yet
-implemented: today only the `Identity` slice exists (`users`, `sessions`,
-`password_reset_tokens`, `personal_access_tokens`).
+Target schema for the `Ledger` domain slice (plus notifications). Implemented
+so far: the `Identity` slice (`users`, `otp_codes`, `personal_access_tokens`)
+and, from `Ledger`, `goals` and `categories`. Each "Status" line below records
+how a drawn entity was realized.
 
 `ACCOUNT` is the evolution of the current `User` model
 (`packages/backend/app/Domains/Identity/Models/User.php`) — `name` split into
@@ -16,6 +17,15 @@ Status: `GOAL` is realized as `goals` (`app/Domains/Ledger/Models/Goal.php`):
 cents in `target_amount` (exposed as a decimal string through the `Money`
 cast), `expiresDate` → nullable `date expires_at`, `color` → `#RRGGBB` string,
 `deleteAt` → `deleted_at`.
+
+Status: `CATEGORY` is realized as `categories`
+(`app/Domains/Ledger/Models/Category.php`): `accountId` → `user_id` (FK to
+`users.id`, indexed), `color` → `#RRGGBB` string (not `INT`), `deleteAt` →
+`deleted_at`, plus one column not in the original drawing, `limitAmount` →
+nullable integer cents in `limit_amount` behind the `Money` cast (the maximum
+a user wants to allot to the category; null = no cap). `name` is unique per
+user among live rows, enforced in validation only (no DB unique index, so a
+soft-deleted name can be reused).
 
 ## Cardinalities
 
@@ -70,11 +80,12 @@ erDiagram
     }
 
     CATEGORY {
-        int      ID        PK
-        int      accountId FK
+        int      ID          PK
+        int      accountId   FK
         varchar  name
         varchar  icon
         int      color
+        float    limitAmount
         datetime createdAt
         datetime updatedAt
         datetime deleteAt
@@ -138,16 +149,19 @@ erDiagram
 ## Open points
 
 - `deleteAt` should be `deletedAt` (`deleted_at`) for Laravel `SoftDeletes`.
-  Done for `ACCOUNT` (`users.deleted_at`) and `GOAL` (`goals.deleted_at`);
-  still applies to the other entities.
+  Done for `ACCOUNT` (`users.deleted_at`), `GOAL` (`goals.deleted_at`) and
+  `CATEGORY` (`categories.deleted_at`); still applies to the other entities.
 - `GOAL.expiresDate` is typed `INT` but named as a date. Resolved: nullable
   `date expires_at`.
-- `color` is `INT` on `CATEGORY` and `VARCHAR` on `GOAL`. Resolved for `GOAL`
-  as a `#RRGGBB` string; `CATEGORY` should follow so both can share the
-  `AppearanceService`.
-- Money columns (`GOAL.targetAmount`, `TRANSACTION.totalAmount`,
-  `INSTALLMENT.amount`) are drawn as `FLOAT`. Resolved for `GOAL` as integer
-  cents behind the shared `Money` cast; the other two should follow.
+- `color` is `INT` on `CATEGORY` and `VARCHAR` on `GOAL`. Resolved for both as
+  a `#RRGGBB` string; they share the `AppearanceService`. The diagram keeps
+  the original `int` on `CATEGORY` for fidelity to the source drawing.
+- Money columns (`GOAL.targetAmount`, `CATEGORY.limitAmount`,
+  `TRANSACTION.totalAmount`, `INSTALLMENT.amount`) are drawn as `FLOAT`.
+  Resolved for `GOAL` and `CATEGORY` as integer cents behind the shared
+  `Money` cast; the other two should follow.
+- `CATEGORY.limitAmount` has no period attached (per month? total?). Decide
+  when `TRANSACTION` lands and spend can actually be compared against it.
 - `TRANSACTION.goalId` is drawn mandatory `(1,1)`; most transactions have no
   goal, so it likely wants to be nullable `(0,1)`.
 - `TRANSACTION.installmentNumbers` duplicates `COUNT(INSTALLMENT)`.

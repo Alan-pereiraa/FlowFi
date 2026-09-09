@@ -43,7 +43,7 @@ hands out your own id, and `GET|PATCH|DELETE /api/v1/users/{id}` need it. Any
 id other than your own answers `404`, never `403`, so the endpoint cannot be
 used to discover which accounts exist.
 
-### Goals and icons
+### Goals, categories and icons
 
 All routes below need the bearer token.
 
@@ -56,6 +56,12 @@ All routes below need the bearer token.
   `expires_at` (`YYYY-MM-DD`, optional). Amounts are stored as integer cents
   and always come back as a two-decimal string. Goals are scoped to the
   caller: another user's id answers `404`, same as `users`.
+- `GET|POST /api/v1/categories`, `GET|PATCH|DELETE /api/v1/categories/{id}`.
+  Body: `name`, `icon`, `color` (same rules as goals) and `limit_amount`
+  (optional decimal cap, up to two places; `null` or omitted means no limit).
+  `name` must be unique among your own live categories (`422` otherwise;
+  case-sensitive, and a soft-deleted name can be reused). Same scoping as
+  goals: another user's id answers `404`.
 
 ### Notes
 

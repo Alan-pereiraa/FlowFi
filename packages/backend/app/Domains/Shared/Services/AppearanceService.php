@@ -9,7 +9,7 @@ use Illuminate\Support\Arr;
 
 /**
  * Icon and color handling shared by every model a user can decorate (goals
- * now, categories later). Domain services call normalize() on create and
+ * and categories). Domain services call normalize() on create and
  * apply() on update so both paths store the same shape.
  */
 class AppearanceService
