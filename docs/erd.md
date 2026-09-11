@@ -16,16 +16,17 @@ Status: `GOAL` is realized as `goals` (`app/Domains/Ledger/Models/Goal.php`):
 `accountId` → `user_id` (FK to `users.id`, indexed), `targetAmount` → integer
 cents in `target_amount` (exposed as a decimal string through the `Money`
 cast), `expiresDate` → nullable `date expires_at`, `color` → `#RRGGBB` string,
-`deleteAt` → `deleted_at`.
+`deleteAt` → `deleted_at`. `name` is unique per user among live rows,
+enforced in validation only (no DB unique index, so a soft-deleted name can
+be reused).
 
 Status: `CATEGORY` is realized as `categories`
 (`app/Domains/Ledger/Models/Category.php`): `accountId` → `user_id` (FK to
 `users.id`, indexed), `color` → `#RRGGBB` string (not `INT`), `deleteAt` →
 `deleted_at`, plus one column not in the original drawing, `limitAmount` →
 nullable integer cents in `limit_amount` behind the `Money` cast (the maximum
-a user wants to allot to the category; null = no cap). `name` is unique per
-user among live rows, enforced in validation only (no DB unique index, so a
-soft-deleted name can be reused).
+a user wants to allot to the category; null = no cap). `name` follows the
+same per-user uniqueness rule as `GOAL`.
 
 ## Cardinalities
 

@@ -32,7 +32,16 @@ class UpdateGoalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('goals', 'name')
+                    ->where('user_id', $this->user()->id)
+                    ->whereNull('deleted_at')
+                    ->ignore((int) $this->route('id')),
+            ],
             'icon' => ['sometimes', 'required', 'string', Rule::in(IconCatalog::names())],
             'color' => ['sometimes', 'required', 'string', 'hex_color', 'size:7'],
             'target_amount' => ['sometimes', 'required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],

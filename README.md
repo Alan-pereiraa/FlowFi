@@ -54,14 +54,15 @@ All routes below need the bearer token.
   `name`, `icon` (from the catalog), `color` (`#RRGGBB`, stored uppercase),
   `target_amount` (decimal, up to two places: `"1500.50"` or `1500.5`),
   `expires_at` (`YYYY-MM-DD`, optional). Amounts are stored as integer cents
-  and always come back as a two-decimal string. Goals are scoped to the
-  caller: another user's id answers `404`, same as `users`.
+  and always come back as a two-decimal string. `name` must be unique among
+  your own live goals (`422` otherwise; case-sensitive, and a soft-deleted
+  name can be reused). Goals are scoped to the caller: another user's id
+  answers `404`, same as `users`.
 - `GET|POST /api/v1/categories`, `GET|PATCH|DELETE /api/v1/categories/{id}`.
-  Body: `name`, `icon`, `color` (same rules as goals) and `limit_amount`
-  (optional decimal cap, up to two places; `null` or omitted means no limit).
-  `name` must be unique among your own live categories (`422` otherwise;
-  case-sensitive, and a soft-deleted name can be reused). Same scoping as
-  goals: another user's id answers `404`.
+  Body: `name`, `icon`, `color` (same rules as goals, including the
+  unique-name rule) and `limit_amount` (optional decimal cap, up to two
+  places; `null` or omitted means no limit). Same scoping as goals: another
+  user's id answers `404`.
 
 ### Notes
 
