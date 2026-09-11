@@ -2,21 +2,8 @@
 
 namespace App\Domains\Shared\Constants;
 
-/**
- * Icons a user may pick for goals and categories.
- *
- * Values are the getter names of Flutter's built-in Material `Icons` class
- * (`Icons.savings`, `Icons.flight_takeoff`, ...), which is what the client
- * renders. Names rather than codepoints on purpose: Flutter cannot build an
- * `IconData` from a runtime integer without disabling icon tree-shaking, so
- * the client keeps a `Map<String, IconData>` mirror of this list and looks the
- * name up. Keep the catalog small enough for that mirror to stay maintainable.
- */
 final class IconCatalog
 {
-    /**
-     * @var array<string, list<string>>
-     */
     public const array CATEGORIES = [
         'finance' => [
             'savings',
@@ -120,11 +107,6 @@ final class IconCatalog
         ],
     ];
 
-    /**
-     * Every allowed icon name, flattened for `Rule::in()`.
-     *
-     * @return list<string>
-     */
     public static function names(): array
     {
         return array_merge(...array_values(self::CATEGORIES));

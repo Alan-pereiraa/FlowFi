@@ -7,12 +7,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * Each Schema::table call is kept separate on purpose: changing a column's
-     * nullability rebuilds the whole table on SQLite.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
@@ -41,9 +35,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

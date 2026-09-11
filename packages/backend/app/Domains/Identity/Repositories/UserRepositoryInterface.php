@@ -10,10 +10,6 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): ?User;
 
-    /**
-     * Includes soft-deleted users, so callers can tell "never existed" from
-     * "deactivated".
-     */
     public function findByEmailWithTrashed(string $email): ?User;
 
     public function update(User $user, array $attributes): User;

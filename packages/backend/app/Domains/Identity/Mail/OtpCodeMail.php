@@ -6,10 +6,6 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
-/**
- * Sent synchronously on purpose: the dev stack runs no queue worker, so this
- * deliberately skips Queueable / ShouldQueue.
- */
 class OtpCodeMail extends Mailable
 {
     public function __construct(

@@ -9,9 +9,6 @@ class VerifyOtpRequest extends FormRequest
 {
     use NormalizesEmail;
 
-    /**
-     * @return array<string, mixed>
-     */
     public function rules(): array
     {
         return [

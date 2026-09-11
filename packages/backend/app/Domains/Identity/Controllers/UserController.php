@@ -20,12 +20,6 @@ class UserController extends Controller
         return new UserResource($this->users->findOwned($request->user(), $id));
     }
 
-    /**
-     * The gate also runs in UpdateUserRequest::authorize(), which is the only
-     * hook that fires before validation. Repeating it here keeps every action
-     * in this controller visibly gated; it is an integer comparison against an
-     * already-loaded model, so it costs nothing.
-     */
     public function update(UpdateUserRequest $request, int $id): UserResource
     {
         $user = $this->users->findOwned($request->user(), $id);

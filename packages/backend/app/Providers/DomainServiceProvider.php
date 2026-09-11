@@ -16,11 +16,6 @@ use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
 {
-    /**
-     * Repository interface bindings, one entry per domain implementation.
-     *
-     * @var array<class-string, class-string>
-     */
     public array $bindings = [
         UserRepositoryInterface::class => EloquentUserRepository::class,
         OtpCodeRepositoryInterface::class => EloquentOtpCodeRepository::class,

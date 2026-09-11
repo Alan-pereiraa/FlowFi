@@ -19,11 +19,6 @@ class OtpService
         private readonly OtpCodeRepositoryInterface $codes,
     ) {}
 
-    /**
-     * Generate a fresh code for the email, persist its hash and mail the
-     * plaintext. Previous codes for the email become dead because only the
-     * latest row is ever checked.
-     */
     public function issue(string $email): void
     {
         $code = $this->generateCode();
@@ -34,15 +29,6 @@ class OtpService
         Mail::to($email)->send(new OtpCodeMail($code, $expiresInMinutes));
     }
 
-    /**
-     * Validate the code against the latest row for the email and burn it.
-     *
-     * The check runs in its own transaction (so the row lock holds) and
-     * reports failure by return value rather than by throwing, so a wrong
-     * guess still commits the attempts counter instead of rolling it back.
-     *
-     * @throws ValidationException
-     */
     public function consume(string $email, string $code): void
     {
         $failure = DB::transaction(function () use ($email, $code): ?string {

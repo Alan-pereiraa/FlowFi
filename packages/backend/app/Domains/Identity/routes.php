@@ -15,10 +15,6 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// These must stay inside the auth:sanctum group: UserService::findOwned()
-// type-hints a non-nullable User, so a guest reaching the controller would be
-// a 500 instead of a 401. The numeric constraint means a non-numeric id never
-// matches a route, so the router answers 404 before any code runs.
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class)
         ->only(['show', 'update', 'destroy'])

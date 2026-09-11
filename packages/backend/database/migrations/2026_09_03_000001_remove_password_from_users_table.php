@@ -7,14 +7,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * Authentication is OTP-only: the password column goes away and only the
-     * email is required to create an account. Each Schema::table call is kept
-     * separate on purpose: changing a column's nullability rebuilds the whole
-     * table on SQLite.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
@@ -27,11 +19,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * Password hashes cannot be restored; the column comes back nullable.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

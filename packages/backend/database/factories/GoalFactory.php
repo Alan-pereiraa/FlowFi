@@ -3,20 +3,11 @@
 namespace Database\Factories;
 
 use App\Domains\Identity\Models\User;
-use App\Domains\Ledger\Models\Goal;
 use App\Domains\Shared\Constants\IconCatalog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<Goal>
- */
 class GoalFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [

@@ -2,18 +2,11 @@
 
 namespace App\Domains\Ledger\Resources;
 
-use App\Domains\Ledger\Models\Goal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin Goal
- */
 class GoalResource extends JsonResource
 {
-    /**
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [

@@ -9,10 +9,6 @@ interface OtpCodeRepositoryInterface
 {
     public function create(string $email, string $codeHash, CarbonInterface $expiresAt): OtpCode;
 
-    /**
-     * Latest row for the email regardless of its state. Locked for update so
-     * concurrent verifications serialize on the attempts counter.
-     */
     public function findLatestByEmail(string $email): ?OtpCode;
 
     public function incrementAttempts(OtpCode $code): OtpCode;

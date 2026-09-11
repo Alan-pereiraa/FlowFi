@@ -13,25 +13,11 @@ class AuthService
         private readonly OtpService $otp,
     ) {}
 
-    /**
-     * Issue a one-time code to the email. Behaves identically whether or not
-     * an account exists, so the endpoint cannot be used to enumerate users.
-     */
     public function requestOtp(string $email): void
     {
         $this->otp->issue($email);
     }
 
-    /**
-     * Burn the code, then sign in the matching user or create one. The code
-     * is consumed (and committed) before the account check on purpose: a
-     * deactivated account is only revealed to someone who proved they own
-     * the mailbox.
-     *
-     * @return array{user: User, token: string}
-     *
-     * @throws ValidationException
-     */
     public function verifyOtp(string $email, string $code): array
     {
         $this->otp->consume($email, $code);
