@@ -4,6 +4,7 @@ namespace App\Domains\Identity\Models;
 
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
+use App\Domains\Ledger\Models\Transaction;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -37,5 +38,10 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 }

@@ -10,22 +10,31 @@ class Money implements CastsAttributes
 {
     public function get(Model $model, string $key, mixed $value, array $attributes): ?string
     {
-        if ($value === null) {
-            return null;
-        }
+        return $value === null ? null : self::toDecimal((int) $value);
+    }
 
-        $cents = (int) $value;
+    public function set(Model $model, string $key, mixed $value, array $attributes): ?int
+    {
+        return $value === null ? null : self::toCents($value, $key);
+    }
+
+    /**
+     * Integer cents -> two-decimal string ("150050" -> "1500.50").
+     */
+    public static function toDecimal(int $cents): string
+    {
         $magnitude = abs($cents);
 
         return sprintf('%s%d.%02d', $cents < 0 ? '-' : '', intdiv($magnitude, 100), $magnitude % 100);
     }
 
-    public function set(Model $model, string $key, mixed $value, array $attributes): ?int
+    /**
+     * Decimal string/number -> integer cents, with string arithmetic so there is no rounding drift.
+     * Shared beyond the cast itself: Ledger's installment planner needs the same conversion to sum
+     * and split amounts without ever touching floats.
+     */
+    public static function toCents(mixed $value, string $key = 'value'): int
     {
-        if ($value === null) {
-            return null;
-        }
-
         if (is_float($value)) {
             $value = number_format($value, 2, '.', '');
         }
