@@ -5,7 +5,7 @@ namespace App\Domains\Notification\Service;
 use App\Domains\Identity\Models\User;
 use App\Domains\Notification\Models\Notification;
 use App\Domains\Notification\Repositories\NotificationRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class NotificationService
@@ -14,9 +14,9 @@ class NotificationService
         private readonly NotificationRepositoryInterface $notifications
     ) {}
 
-    public function list(User $user): Collection
+    public function list(User $user, int $perPage, ?string $status = null): LengthAwarePaginator
     {
-        return $this->notifications->listFor($user);
+        return $this->notifications->listFor($user, $perPage, $status);
     }
 
     public function findOwned(User $user, int $id): Notification

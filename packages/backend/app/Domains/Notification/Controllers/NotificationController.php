@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use App\Domains\Notification\Requests\ListNotificationsRequest;
 
 class NotificationController extends Controller
 {
@@ -15,9 +16,13 @@ class NotificationController extends Controller
         private readonly NotificationService $notifications
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(ListNotificationsRequest $request): AnonymousResourceCollection
     {
-        return NotificationResource::collection($this->notifications->list($request->user()));
+        return NotificationResource::collection($this->notifications->list(
+            $request->user(),
+            min(max($request->integer('per_page', 20), 1), 100),
+            $request->validated('status')
+        ));
     }
 
     public function markAsRead(Request $request, int $id): NotificationResource

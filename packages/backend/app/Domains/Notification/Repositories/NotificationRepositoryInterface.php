@@ -3,12 +3,12 @@
 namespace App\Domains\Notification\Repositories;
 
 use App\Domains\Notification\Models\Notification;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Domains\Identity\Models\User;
 
 interface NotificationRepositoryInterface
 {
-    public function listFor(User $user): Collection;
+    public function listFor(User $user, int $perPage, ?string $status = null): LengthAwarePaginator;
 
     public function findFor(User $user, int $notificationId): ?Notification;
 
