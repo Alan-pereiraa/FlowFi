@@ -10,6 +10,8 @@ use App\Domains\Ledger\Repositories\CategoryRepositoryInterface;
 use App\Domains\Ledger\Repositories\EloquentCategoryRepository;
 use App\Domains\Ledger\Repositories\EloquentGoalRepository;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
+use App\Domains\Notification\Repositories\EloquentNotificationRepository;
+use App\Domains\Notification\Repositories\NotificationRepositoryInterface;
 use App\Domains\Shared\Repositories\AppearanceRepositoryInterface;
 use App\Domains\Shared\Repositories\EloquentAppearanceRepository;
 use Illuminate\Support\ServiceProvider;
@@ -22,5 +24,6 @@ class DomainServiceProvider extends ServiceProvider
         GoalRepositoryInterface::class => EloquentGoalRepository::class,
         CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
+        NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
     ];
 }
