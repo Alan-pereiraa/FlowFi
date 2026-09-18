@@ -2,13 +2,13 @@
 
 namespace App\Domains\Notification\Controllers;
 
+use App\Domains\Notification\Requests\ListNotificationsRequest;
 use App\Domains\Notification\Resources\NotificationResource;
 use App\Domains\Notification\Service\NotificationService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use App\Http\Controllers\Controller;
-use App\Domains\Notification\Requests\ListNotificationsRequest;
 
 class NotificationController extends Controller
 {

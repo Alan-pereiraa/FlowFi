@@ -2,9 +2,9 @@
 
 namespace App\Domains\Notification\Repositories;
 
+use App\Domains\Identity\Models\User;
 use App\Domains\Notification\Models\Notification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use App\Domains\Identity\Models\User;
 
 interface NotificationRepositoryInterface
 {
