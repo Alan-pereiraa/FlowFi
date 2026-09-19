@@ -202,6 +202,36 @@ class TransactionTest extends TestCase
             ->assertJsonValidationErrors('installments');
     }
 
+    public function test_deleting_a_transaction_soft_deletes_its_installments(): void
+    {
+        [$user, $token] = $this->authenticated();
+        $category = Category::factory()->for($user)->create();
+
+        $transactionId = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'date' => '2026-01-01',
+            'total_amount' => '90.00',
+            'installments_count' => 3,
+            'period_unit' => 'month',
+        ])->json('data.id');
+
+        $installmentIds = Transaction::withTrashed()
+            ->findOrFail($transactionId)
+            ->installments()
+            ->pluck('id');
+
+        $this->withToken($token)
+            ->deleteJson("/api/v1/transactions/{$transactionId}")
+            ->assertNoContent();
+
+        $this->assertSoftDeleted('transactions', ['id' => $transactionId]);
+
+        foreach ($installmentIds as $installmentId) {
+            $this->assertSoftDeleted('installments', ['id' => $installmentId]);
+        }
+    }
+
     public function test_guest_cannot_access_transactions(): void
     {
         $this->getJson('/api/v1/transactions')->assertUnauthorized();
