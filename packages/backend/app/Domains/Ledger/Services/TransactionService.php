@@ -93,7 +93,14 @@ class TransactionService
 
     public function delete(Transaction $transaction): void
     {
-        $this->transactions->delete($transaction);
+        // Installment is an auxiliary table of Transaction, not its own module: deleting
+        // the parent must soft-delete every installment that belongs to it. The FK's
+        // cascadeOnDelete() never fires for this — SoftDeletes turns delete() into an
+        // UPDATE (deleted_at), not a real SQL DELETE, so cascade it explicitly here.
+        DB::transaction(function () use ($transaction): void {
+            $transaction->installments()->delete();
+            $this->transactions->delete($transaction);
+        });
     }
 
     public function payInstallment(User $user, int $transactionId, int $installmentId): Installment
