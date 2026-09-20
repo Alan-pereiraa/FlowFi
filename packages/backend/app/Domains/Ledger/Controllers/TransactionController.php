@@ -4,6 +4,7 @@ namespace App\Domains\Ledger\Controllers;
 
 use App\Domains\Ledger\Requests\StoreTransactionRequest;
 use App\Domains\Ledger\Requests\UpdateTransactionRequest;
+use App\Domains\Ledger\Resources\InstallmentResource;
 use App\Domains\Ledger\Resources\TransactionResource;
 use App\Domains\Ledger\Services\TransactionService;
 use App\Http\Controllers\Controller;
@@ -47,5 +48,17 @@ class TransactionController extends Controller
         $this->transactions->delete($this->transactions->findOwned($request->user(), $id));
 
         return response()->noContent();
+    }
+
+    /**
+     * Installment is an auxiliary table of Transaction, not a sibling module: it has no
+     * CRUD or Controller of its own, so this one action lives here rather than behind a
+     * dedicated InstallmentController.
+     */
+    public function payInstallment(Request $request, int $id, int $installmentId): InstallmentResource
+    {
+        return new InstallmentResource(
+            $this->transactions->payInstallment($request->user(), $id, $installmentId),
+        );
     }
 }

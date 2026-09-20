@@ -2,7 +2,6 @@
 
 use App\Domains\Ledger\Controllers\CategoryController;
 use App\Domains\Ledger\Controllers\GoalController;
-use App\Domains\Ledger\Controllers\InstallmentController;
 use App\Domains\Ledger\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +18,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['transactions' => 'id'])
         ->where(['id' => '[0-9]+']);
 
-    Route::patch('transactions/{transactionId}/installments/{installmentId}/pay', [InstallmentController::class, 'pay'])
-        ->whereNumber(['transactionId', 'installmentId']);
+    // Installment is an auxiliary table of Transaction, not a resource of its own — no
+    // dedicated controller, just this one action on TransactionController.
+    Route::patch('transactions/{id}/installments/{installmentId}/pay', [TransactionController::class, 'payInstallment'])
+        ->whereNumber(['id', 'installmentId']);
 });
