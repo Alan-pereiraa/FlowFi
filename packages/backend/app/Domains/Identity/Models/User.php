@@ -5,10 +5,14 @@ namespace App\Domains\Identity\Models;
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
 <<<<<<< HEAD
+<<<<<<< HEAD
 use App\Domains\Notification\Models\Notification;
 =======
 use App\Domains\Ledger\Models\Transaction;
 >>>>>>> 5a24d02 (Ledger: add Transaction/Installment domain (single, periodic and custom schedules))
+=======
+use App\Domains\Ledger\Models\Transaction;
+>>>>>>> 5a24d02581a4c82846cd1dae491d8db69418a0de
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -44,6 +48,7 @@ class User extends Authenticatable
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
@@ -52,5 +57,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Transaction::class);
 >>>>>>> 5a24d02 (Ledger: add Transaction/Installment domain (single, periodic and custom schedules))
+=======
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+>>>>>>> 5a24d02581a4c82846cd1dae491d8db69418a0de
     }
 }
