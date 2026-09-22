@@ -2,20 +2,59 @@
 
 namespace App\Domains\Ledger\Services;
 
+use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Shared\Casts\Money;
 use Carbon\CarbonImmutable;
 
-/**
- * Pure scheduling logic for a transaction's installments — no persistence, no ownership
- * checks. Given either an explicit list of installments or a count + period, it returns
- * an ordered list of ['step' => int, 'amount' => int cents, 'date' => CarbonImmutable].
- */
 class InstallmentPlanner
 {
-    /**
-     * @param  array<int, array{amount: string, date: string}>|null  $explicitInstallments
-     * @return list<array{step: int, amount: int, date: CarbonImmutable}>
-     */
+    public function planFromInput(array $input): array
+    {
+        $date = CarbonImmutable::createFromFormat('Y-m-d', $input['date'])->startOfDay();
+        $explicit = $input['installments'] ?? null;
+
+        if ($explicit !== null) {
+            $rows = $this->plan(0, $date, $explicit, 1, null, null);
+
+            return [
+                'rows' => $rows,
+                'total_amount_cents' => array_sum(array_column($rows, 'amount')),
+                'schedule_type' => Transaction::SCHEDULE_CUSTOM,
+            ];
+        }
+
+        $count = max(1, (int) ($input['installments_count'] ?? 1));
+        $totalAmountCents = Money::toCents($input['total_amount'], 'total_amount');
+
+        $rows = $this->plan(
+            $totalAmountCents,
+            $date,
+            null,
+            $count,
+            $input['period_unit'] ?? null,
+            isset($input['period_interval']) ? (int) $input['period_interval'] : null,
+        );
+
+        return [
+            'rows' => $rows,
+            'total_amount_cents' => $totalAmountCents,
+            'schedule_type' => $count > 1 ? Transaction::SCHEDULE_PERIODIC : Transaction::SCHEDULE_SINGLE,
+        ];
+    }
+
+    public function transactionScheduleAttributes(array $plan, array $input): array
+    {
+        $isPeriodic = $plan['schedule_type'] === Transaction::SCHEDULE_PERIODIC;
+
+        return [
+            'total_amount' => Money::toDecimal($plan['total_amount_cents']),
+            'installments_count' => count($plan['rows']),
+            'schedule_type' => $plan['schedule_type'],
+            'period_unit' => $isPeriodic ? ($input['period_unit'] ?? 'month') : null,
+            'period_interval' => $isPeriodic ? (int) ($input['period_interval'] ?? 1) : null,
+        ];
+    }
+
     public function plan(
         int $totalAmountCents,
         CarbonImmutable $transactionDate,
@@ -45,10 +84,6 @@ class InstallmentPlanner
         );
     }
 
-    /**
-     * @param  array<int, array{amount: string, date: string}>  $installments
-     * @return list<array{step: int, amount: int, date: CarbonImmutable}>
-     */
     private function fromExplicit(array $installments): array
     {
         $rows = array_map(
@@ -72,9 +107,6 @@ class InstallmentPlanner
         ));
     }
 
-    /**
-     * @return list<array{step: int, amount: int, date: CarbonImmutable}>
-     */
     private function evenSplit(
         int $totalAmountCents,
         CarbonImmutable $transactionDate,
@@ -90,7 +122,6 @@ class InstallmentPlanner
         for ($step = 1; $step <= $count; $step++) {
             $plan[] = [
                 'step' => $step,
-                // Front-load the leftover cents so the schedule always sums back to the exact total.
                 'amount' => $base + ($step <= $remainder ? 1 : 0),
                 'date' => $this->addPeriod($transactionDate, $periodUnit, $periodInterval * ($step - 1)),
             ];

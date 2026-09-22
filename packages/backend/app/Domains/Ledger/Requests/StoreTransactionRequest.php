@@ -34,12 +34,10 @@ class StoreTransactionRequest extends FormRequest
             'date' => ['required', 'date_format:Y-m-d'],
             'total_amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
 
-            // Either an explicit, per-installment schedule (mixed periods) ...
             'installments' => ['nullable', 'array', 'min:1', 'max:120', 'prohibits:installments_count,period_unit,period_interval'],
             'installments.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required', 'date_format:Y-m-d'],
 
-            // ... or a count + fixed period, evenly split. Omitting both means a single payment.
             'installments_count' => ['nullable', 'integer', 'min:1', 'max:120'],
             'period_unit' => ['nullable', 'string', Rule::in(Transaction::PERIOD_UNITS)],
             'period_interval' => ['nullable', 'integer', 'min:1', 'max:365'],

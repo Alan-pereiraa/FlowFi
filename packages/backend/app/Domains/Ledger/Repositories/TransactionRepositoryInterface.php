@@ -4,11 +4,13 @@ namespace App\Domains\Ledger\Repositories;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Transaction;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use App\Domains\Ledger\Models\Installment;
 
 interface TransactionRepositoryInterface
 {
-    public function listFor(User $user): Collection;
+    public function listFor(User $user, int $perPage, ?array $filters): LengthAwarePaginator;
 
     public function findFor(User $user, int $id): ?Transaction;
 
@@ -17,4 +19,10 @@ interface TransactionRepositoryInterface
     public function update(Transaction $transaction, array $attributes): Transaction;
 
     public function delete(Transaction $transaction): void;
+
+    public function replaceInstallments(Transaction $transaction, array $installments): Collection;
+
+    public function findInstallmentFor(Transaction $transaction, int $installmentId): ?Installment;
+
+    public function markInstallmentPaid(Installment $installment): Installment;
 }

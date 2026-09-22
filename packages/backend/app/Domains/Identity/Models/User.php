@@ -4,8 +4,8 @@ namespace App\Domains\Identity\Models;
 
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
-use App\Domains\Notification\Models\Notification;
 use App\Domains\Ledger\Models\Transaction;
+use App\Domains\Notification\Models\Notification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;

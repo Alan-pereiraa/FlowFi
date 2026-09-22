@@ -22,18 +22,14 @@ class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /** The ERD leaves `type` open-ended; FlowFi models it as income vs. expense. */
     public const array TYPES = ['income', 'expense'];
 
     public const array PERIOD_UNITS = ['day', 'week', 'month', 'year'];
 
-    /** A single payment: exactly one installment, due on the transaction date. */
     public const string SCHEDULE_SINGLE = 'single';
 
-    /** Evenly split across `installments_count` installments, `period_interval` `period_unit` apart. */
     public const string SCHEDULE_PERIODIC = 'periodic';
 
-    /** Caller supplied each installment's own amount and date explicitly (mixed periods). */
     public const string SCHEDULE_CUSTOM = 'custom';
 
     public const array SCHEDULE_TYPES = [self::SCHEDULE_SINGLE, self::SCHEDULE_PERIODIC, self::SCHEDULE_CUSTOM];

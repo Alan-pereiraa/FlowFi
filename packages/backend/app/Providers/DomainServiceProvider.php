@@ -9,10 +9,8 @@ use App\Domains\Identity\Repositories\UserRepositoryInterface;
 use App\Domains\Ledger\Repositories\CategoryRepositoryInterface;
 use App\Domains\Ledger\Repositories\EloquentCategoryRepository;
 use App\Domains\Ledger\Repositories\EloquentGoalRepository;
-use App\Domains\Ledger\Repositories\EloquentInstallmentRepository;
 use App\Domains\Ledger\Repositories\EloquentTransactionRepository;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
-use App\Domains\Ledger\Repositories\InstallmentRepositoryInterface;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
 use App\Domains\Notification\Repositories\EloquentNotificationRepository;
 use App\Domains\Notification\Repositories\NotificationRepositoryInterface;
@@ -28,7 +26,6 @@ class DomainServiceProvider extends ServiceProvider
         GoalRepositoryInterface::class => EloquentGoalRepository::class,
         CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
         TransactionRepositoryInterface::class => EloquentTransactionRepository::class,
-        InstallmentRepositoryInterface::class => EloquentInstallmentRepository::class,
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
         NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
     ];

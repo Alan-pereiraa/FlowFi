@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use App\Domains\Ledger\Requests\ListTransactionRequest;
 
 class TransactionController extends Controller
 {
@@ -19,9 +20,13 @@ class TransactionController extends Controller
         private readonly TransactionService $transactions,
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(ListTransactionRequest $request): AnonymousResourceCollection
     {
-        return TransactionResource::collection($this->transactions->list($request->user()));
+        return TransactionResource::collection($this->transactions->list(
+            $request->user(),
+            min(max($request->integer('per_page', 20), 1), 100),
+            $request->only(['type', 'category_id', 'date_from', 'date_to'])
+        ));
     }
 
     public function store(StoreTransactionRequest $request): JsonResponse
@@ -50,11 +55,6 @@ class TransactionController extends Controller
         return response()->noContent();
     }
 
-    /**
-     * Installment is an auxiliary table of Transaction, not a sibling module: it has no
-     * CRUD or Controller of its own, so this one action lives here rather than behind a
-     * dedicated InstallmentController.
-     */
     public function payInstallment(Request $request, int $id, int $installmentId): InstallmentResource
     {
         return new InstallmentResource(

@@ -8,12 +8,6 @@ use InvalidArgumentException;
 
 trait ValidatesInstallmentPlan
 {
-    /**
-     * Whenever both an explicit `installments` list and a `total_amount` are present (either
-     * may come from the request or, on update, be filled in from the existing transaction),
-     * the two must agree in cents. Malformed values are left alone here — the field-level
-     * rules already report those.
-     */
     protected function checkInstallmentsSumMatchesTotal(Validator $validator): void
     {
         $installments = $this->input('installments');
@@ -42,7 +36,6 @@ trait ValidatesInstallmentPlan
                 $validator->errors()->add('installments', 'The installment amounts must add up to the total amount.');
             }
         } catch (InvalidArgumentException) {
-            // Malformed total_amount is already reported by its own rule.
         }
     }
 }
