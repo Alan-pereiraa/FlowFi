@@ -12,6 +12,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Domains\Shared\Casts\Money;
 
 class TransactionService
 {
@@ -22,6 +23,7 @@ class TransactionService
     public function __construct(
         private readonly TransactionRepositoryInterface $transactions,
         private readonly InstallmentPlanner $planner,
+        private readonly GoalService $goals,
     ) {}
 
     public function list(User $user, int $perPage, array $filters = []): LengthAwarePaginator
@@ -49,7 +51,7 @@ class TransactionService
             $plan = $this->planner->planFromInput($data);
 
             $transaction = $this->transactions->create($user, [
-                'category_id' => $data['category_id'],
+                'category_id' => $data['category_id'] ?? null,
                 'goal_id' => $data['goal_id'] ?? null,
                 'type' => $data['type'],
                 'description' => $data['description'] ?? null,
@@ -57,7 +59,15 @@ class TransactionService
                 ...$this->planner->transactionScheduleAttributes($plan, $data),
             ]);
 
-            $this->transactions->replaceInstallments($transaction, $plan['rows']);
+            $installments = $this->transactions->replaceInstallments($transaction, $plan['rows']);
+
+            $effect = $this->goalEffect($transaction);
+
+            $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
+
+            if ($transaction->type === Transaction::TYPE_TRANSFER) {
+                $this->transactions->markInstallmentPaid($installments->first());
+            }
 
             return $transaction->load('installments');
         });
@@ -66,6 +76,9 @@ class TransactionService
     public function update(Transaction $transaction, array $data): Transaction
     {
         return DB::transaction(function () use ($transaction, $data): Transaction {
+            $oldGoalId = $transaction->goal_id;
+            $oldEffect = $this->goalEffect($transaction);
+
             $simple = Arr::only($data, self::SIMPLE_KEYS);
 
             if ($simple !== []) {
@@ -81,8 +94,15 @@ class TransactionService
                 $this->transactions->update($transaction, $this->planner->transactionScheduleAttributes($plan, $planInput));
                 $this->transactions->replaceInstallments($transaction, $plan['rows']);
             }
+            
+            if (Arr::hasAny($data, ['goal_id', ...self::SCHEDULE_KEYS])) {
+                $transaction->refresh();
 
-            return $transaction->refresh()->load('installments');
+                $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
+                $this->adjustGoalCurrentAmount($transaction->goal_id, $this->goalEffect($transaction));
+            }
+
+            return $transaction->load('installments');
         });
     }
 
@@ -91,6 +111,10 @@ class TransactionService
         DB::transaction(function () use ($transaction): void {
             $transaction->installments()->delete();
             $this->transactions->delete($transaction);
+
+            $effect = $this->goalEffect($transaction);
+
+            $this->adjustGoalCurrentAmount($transaction->goal_id, -$effect);
         });
     }
 
@@ -138,6 +162,30 @@ class TransactionService
             'period_unit' => array_key_exists('period_unit', $data) ? $data['period_unit'] : $transaction->period_unit,
             'period_interval' => array_key_exists('period_interval', $data) ? $data['period_interval'] : $transaction->period_interval,
         ];
+    }
+
+    private function goalEffect(Transaction $transaction): int
+    {
+        if ($transaction->goal_id === null) {
+            return 0;
+        }
+
+        $cents = Money::toCents($transaction->total_amount);
+
+        return match ($transaction->type) {
+            Transaction::TYPE_TRANSFER => $cents,
+            Transaction::TYPE_EXPENSE => -$cents,
+            default => 0,
+        };
+    }
+
+    private function adjustGoalCurrentAmount(?int $goalId, int $cents): void
+    {
+        if ($goalId === null || $cents === 0) {
+            return;
+        }
+
+        $this->goals->adjustCurrentAmount($goalId, $cents);
     }
 
 }

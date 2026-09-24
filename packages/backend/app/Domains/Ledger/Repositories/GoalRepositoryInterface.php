@@ -17,4 +17,8 @@ interface GoalRepositoryInterface
     public function update(Goal $goal, array $attributes): Goal;
 
     public function delete(Goal $goal): void;
+
+    public function adjustCurrentAmount(int $goalId, int $cents): bool;
+
+    public function hasTransactions(Goal $goal): bool;
 }

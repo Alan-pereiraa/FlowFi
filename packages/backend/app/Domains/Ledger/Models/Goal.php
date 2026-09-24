@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['user_id', 'name', 'icon', 'color', 'target_amount', 'expires_at'])]
 #[UseFactory(GoalFactory::class)]
@@ -23,6 +24,7 @@ class Goal extends Model implements HasAppearance
     {
         return [
             'target_amount' => Money::class,
+            'current_amount' => Money::class,
             'expires_at' => 'date',
         ];
     }
@@ -31,4 +33,13 @@ class Goal extends Model implements HasAppearance
     {
         return $this->belongsTo(User::class);
     }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    protected $attributes = [
+        'current_amount' => 0,
+    ];
 }

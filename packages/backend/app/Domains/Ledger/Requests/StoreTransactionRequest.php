@@ -16,7 +16,9 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'category_id' => [
-                'required',
+                'nullable',
+                'required_unless:type,transfer',
+                'prohibited_if:type,transfer',
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
@@ -24,6 +26,8 @@ class StoreTransactionRequest extends FormRequest
             ],
             'goal_id' => [
                 'nullable',
+                'required_if:type,transfer',
+                'prohibited_if:type,income',
                 'integer',
                 Rule::exists('goals', 'id')
                     ->where('user_id', $this->user()->id)
@@ -34,13 +38,30 @@ class StoreTransactionRequest extends FormRequest
             'date' => ['required', 'date_format:Y-m-d'],
             'total_amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
 
-            'installments' => ['nullable', 'array', 'min:1', 'max:120', 'prohibits:installments_count,period_unit,period_interval'],
+            'installments' => [
+                'nullable',
+                'array',
+                'min:1',
+                'max:120',
+                'prohibits:installments_count,period_unit,period_interval',
+                'prohibited_if:type,transfer',
+            ],
             'installments.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required', 'date_format:Y-m-d'],
 
             'installments_count' => ['nullable', 'integer', 'min:1', 'max:120'],
-            'period_unit' => ['nullable', 'string', Rule::in(Transaction::PERIOD_UNITS)],
-            'period_interval' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'period_unit' => [
+                'nullable',
+                'string', Rule::in(Transaction::PERIOD_UNITS),
+                'prohibited_if:type,transfer',
+            ],
+            'period_interval' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:365',
+                'prohibited_if:type,transfer',
+            ],
         ];
     }
 
@@ -51,11 +72,19 @@ class StoreTransactionRequest extends FormRequest
 
             $hasExplicitInstallments = is_array($this->input('installments'));
             $installmentsCount = (int) ($this->input('installments_count') ?? 1);
+            $isTransfer = $this->input('type') === Transaction::TYPE_TRANSFER;
 
-            if (! $hasExplicitInstallments && $installmentsCount > 1 && ! $this->filled('period_unit')) {
+            if (! $isTransfer && ! $hasExplicitInstallments && $installmentsCount > 1 && ! $this->filled('period_unit')) {
                 $validator->errors()->add(
                     'period_unit',
                     'A period is required when splitting a transaction into more than one installment.',
+                );
+            }
+
+            if ($isTransfer && $installmentsCount > 1) {
+                $validator->errors()->add(
+                    'installments_count',
+                    'Transfers cannot be split into multiple installments.',
                 );
             }
         });

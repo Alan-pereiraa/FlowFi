@@ -22,7 +22,13 @@ class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const array TYPES = ['income', 'expense'];
+    public const string TYPE_INCOME = 'income';
+
+    public const string TYPE_EXPENSE = 'expense';
+
+    public const string TYPE_TRANSFER = 'transfer';
+
+    public const array TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE, self::TYPE_TRANSFER];
 
     public const array PERIOD_UNITS = ['day', 'week', 'month', 'year'];
 

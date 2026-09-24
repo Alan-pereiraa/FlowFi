@@ -13,18 +13,24 @@ class UpdateTransactionRequest extends FormRequest
 {
     use ValidatesInstallmentPlan;
 
+    private Transaction $transaction;
+
     public function authorize(TransactionService $transactions): bool
     {
-        $transactions->findOwned($this->user(), (int) $this->route('id'));
+        $this->transaction =$transactions->findOwned($this->user(), (int) $this->route('id'));
 
         return true;
     }
 
     public function rules(): array
     {
+
+        $type = $this->transaction->type;
+
         return [
             'category_id' => [
                 'sometimes',
+                Rule::prohibitedIf($type === Transaction::TYPE_TRANSFER),
                 'required',
                 'integer',
                 Rule::exists('categories', 'id')
@@ -33,13 +39,14 @@ class UpdateTransactionRequest extends FormRequest
             ],
             'goal_id' => [
                 'sometimes',
+                Rule::prohibitedIf($type === TRANSACTION::TYPE_INCOME),
+                Rule::requiredIf($type === Transaction::TYPE_TRANSFER),
                 'nullable',
                 'integer',
                 Rule::exists('goals', 'id')
                     ->where('user_id', $this->user()->id)
                     ->whereNull('deleted_at'),
             ],
-            'type' => ['sometimes', 'required', 'string', Rule::in(Transaction::TYPES)],
             'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'total_amount' => ['sometimes', 'required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],

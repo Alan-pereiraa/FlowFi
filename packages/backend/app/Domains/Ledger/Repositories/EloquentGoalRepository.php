@@ -34,4 +34,20 @@ class EloquentGoalRepository implements GoalRepositoryInterface
     {
         $goal->delete();
     }
+
+    public function adjustCurrentAmount(int $goalId, int $cents): bool
+    {
+        $query = Goal::whereKey($goalId);
+
+        if ($cents < 0) {
+            $query->where('current_amount', '>=', abs($cents));
+        }
+
+        return $query->increment('current_amount', $cents) > 0;
+    }
+
+    public function hasTransactions(Goal $goal): bool
+    {
+        return $goal->transactions()->exists();
+    }
 }

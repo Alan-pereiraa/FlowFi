@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class GoalService
 {
@@ -51,6 +52,25 @@ class GoalService
 
     public function delete(Goal $goal): void
     {
+        if ($this->goals->hasTransactions($goal)) {
+            throw ValidationException::withMessages([
+                'goal' => 'Cannot delete a goal that has transactions.',
+            ]);
+        }
+
         $this->goals->delete($goal);
+    }
+
+    public function adjustCurrentAmount(int $goalId, int $cents): void
+    {
+        if ($cents === 0) {
+            return;
+        }
+
+        if (! $this->goals->adjustCurrentAmount($goalId, $cents)) {
+            throw ValidationException::withMessages([
+                'goal_id' => 'The goal does not have enough balance for this transaction.',
+            ]);
+        }
     }
 }
