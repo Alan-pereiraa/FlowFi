@@ -3,11 +3,11 @@
 namespace App\Domains\Ledger\Repositories;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
+use App\Domains\Shared\Casts\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use App\Domains\Ledger\Models\Installment;
-use App\Domains\Shared\Casts\Money;
 
 class EloquentTransactionRepository implements TransactionRepositoryInterface
 {

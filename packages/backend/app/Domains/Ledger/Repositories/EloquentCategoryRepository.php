@@ -44,7 +44,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             ->lockForUpdate()
             ->firstOrfail();
     }
-    
+
     public function spentInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int
     {
         return (int) Installment::query()

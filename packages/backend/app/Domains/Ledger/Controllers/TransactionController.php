@@ -2,6 +2,7 @@
 
 namespace App\Domains\Ledger\Controllers;
 
+use App\Domains\Ledger\Requests\ListTransactionRequest;
 use App\Domains\Ledger\Requests\StoreTransactionRequest;
 use App\Domains\Ledger\Requests\UpdateTransactionRequest;
 use App\Domains\Ledger\Resources\InstallmentResource;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use App\Domains\Ledger\Requests\ListTransactionRequest;
 
 class TransactionController extends Controller
 {

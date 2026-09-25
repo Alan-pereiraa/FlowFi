@@ -8,7 +8,6 @@ use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
-
     private const array DEFAULTS = [
         ['name' => 'Alimentação', 'icon' => 'restaurant', 'color' => '#FF7043'],
         ['name' => 'Moradia', 'icon' => 'home', 'color' => '#8D6E63'],

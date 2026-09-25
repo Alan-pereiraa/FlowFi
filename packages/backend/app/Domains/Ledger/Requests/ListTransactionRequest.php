@@ -2,9 +2,9 @@
 
 namespace App\Domains\Ledger\Requests;
 
+use App\Domains\Ledger\Models\Transaction;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Domains\Ledger\Models\Transaction;
 
 class ListTransactionRequest extends FormRequest
 {

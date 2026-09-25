@@ -17,7 +17,7 @@ class UpdateTransactionRequest extends FormRequest
 
     public function authorize(TransactionService $transactions): bool
     {
-        $this->transaction =$transactions->findOwned($this->user(), (int) $this->route('id'));
+        $this->transaction = $transactions->findOwned($this->user(), (int) $this->route('id'));
 
         return true;
     }
@@ -39,7 +39,7 @@ class UpdateTransactionRequest extends FormRequest
             ],
             'goal_id' => [
                 'sometimes',
-                Rule::prohibitedIf($type === TRANSACTION::TYPE_INCOME),
+                Rule::prohibitedIf($type === Transaction::TYPE_INCOME),
                 Rule::requiredIf($type === Transaction::TYPE_TRANSFER),
                 'nullable',
                 'integer',

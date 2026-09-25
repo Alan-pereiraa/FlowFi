@@ -6,14 +6,13 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use App\Domains\Shared\Casts\Money;
+use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use App\Domains\Shared\Casts\Money;
-use Carbon\CarbonImmutable;
 
 class TransactionService
 {
@@ -202,5 +201,4 @@ class TransactionService
 
         $this->goals->adjustCurrentAmount($goalId, $cents);
     }
-
 }
