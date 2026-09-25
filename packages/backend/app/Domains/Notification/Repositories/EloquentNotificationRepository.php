@@ -23,6 +23,11 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
         return $user->notifications()->find($notificationId);
     }
 
+    public function create(User $user, array $attributes): Notification
+    {
+        return $user->notifications()->create($attributes);
+    }
+
     public function markAsRead(Notification $notification): Notification
     {
         $notification->read_at = now();

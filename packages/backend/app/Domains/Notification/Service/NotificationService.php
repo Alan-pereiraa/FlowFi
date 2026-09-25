@@ -3,6 +3,7 @@
 namespace App\Domains\Notification\Service;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Notification\Enums\NotificationType;
 use App\Domains\Notification\Models\Notification;
 use App\Domains\Notification\Repositories\NotificationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -23,6 +24,21 @@ class NotificationService
     {
         return $this->notifications->findFor($user, $id)
             ?? throw new ModelNotFoundException('Not found.');
+    }
+
+    public function notify(
+        User $user,
+        string $title,
+        string $message,
+        NotificationType $type,
+        string $subject
+    ): Notification {
+        return $this->notifications->create($user, [
+            'title' => $title,
+            'message' => $message,
+            'type' => $type,
+            'subject' => $subject,
+        ]);
     }
 
     public function markAsRead(Notification $notification): Notification

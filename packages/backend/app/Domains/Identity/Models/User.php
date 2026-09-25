@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Models;
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
 use App\Domains\Ledger\Models\Transaction;
+use App\Domains\Notification\Models\DeviceToken;
 use App\Domains\Notification\Models\Notification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -38,6 +39,11 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
     }
 
     public function notifications(): HasMany

@@ -12,6 +12,8 @@ interface NotificationRepositoryInterface
 
     public function findFor(User $user, int $notificationId): ?Notification;
 
+    public function create(User $user, array $attributes): Notification;
+
     public function markAsRead(Notification $notification): Notification;
 
     public function delete(Notification $notification): void;

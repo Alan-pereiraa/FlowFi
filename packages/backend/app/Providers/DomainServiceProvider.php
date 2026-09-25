@@ -12,6 +12,8 @@ use App\Domains\Ledger\Repositories\EloquentGoalRepository;
 use App\Domains\Ledger\Repositories\EloquentTransactionRepository;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
+use App\Domains\Notification\Repositories\DeviceTokenRepositoryInterface;
+use App\Domains\Notification\Repositories\EloquentDeviceTokenRepository;
 use App\Domains\Notification\Repositories\EloquentNotificationRepository;
 use App\Domains\Notification\Repositories\NotificationRepositoryInterface;
 use App\Domains\Shared\Repositories\AppearanceRepositoryInterface;
@@ -28,5 +30,6 @@ class DomainServiceProvider extends ServiceProvider
         TransactionRepositoryInterface::class => EloquentTransactionRepository::class,
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
         NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
+        DeviceTokenRepositoryInterface::class => EloquentDeviceTokenRepository::class,
     ];
 }
