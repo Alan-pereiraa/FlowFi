@@ -4,6 +4,9 @@ namespace App\Domains\Ledger\Repositories;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Category;
+use App\Domains\Ledger\Models\Installment;
+use App\Domains\Ledger\Models\Transaction;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentCategoryRepository implements CategoryRepositoryInterface
@@ -33,5 +36,23 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function delete(Category $category): void
     {
         $category->delete();
+    }
+
+    public function findForLimitCheck(int $categoryId): Category
+    {
+        return Category::whereKey($categoryId)
+            ->lockForUpdate()
+            ->firstOrfail();
+    }
+    
+    public function spentInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int
+    {
+        return (int) Installment::query()
+            ->whereBetween('date', [$month->startOfMonth()->toDateString(), $month->endOfMonth()->toDateString()])
+            ->whereHas('transaction', fn ($query) => $query
+                ->where('category_id', $category->id)
+                ->where('type', Transaction::TYPE_EXPENSE)
+                ->when($ignoreTransactionId, fn ($query, $id) => $query->whereKeyNot($id)))
+            ->sum('amount');
     }
 }

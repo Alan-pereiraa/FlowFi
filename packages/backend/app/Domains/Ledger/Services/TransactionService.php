@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Domains\Shared\Casts\Money;
+use Carbon\CarbonImmutable;
 
 class TransactionService
 {
@@ -24,6 +25,7 @@ class TransactionService
         private readonly TransactionRepositoryInterface $transactions,
         private readonly InstallmentPlanner $planner,
         private readonly GoalService $goals,
+        private readonly CategoryService $categories,
     ) {}
 
     public function list(User $user, int $perPage, array $filters = []): LengthAwarePaginator
@@ -49,6 +51,10 @@ class TransactionService
     {
         return DB::transaction(function () use ($user, $data): Transaction {
             $plan = $this->planner->planFromInput($data);
+
+            if ($data['type'] === Transaction::TYPE_EXPENSE) {
+                $this->categories->ensureInMonthLimit($data['category_id'], $plan['rows'], null);
+            }
 
             $transaction = $this->transactions->create($user, [
                 'category_id' => $data['category_id'] ?? null,
@@ -94,12 +100,21 @@ class TransactionService
                 $this->transactions->update($transaction, $this->planner->transactionScheduleAttributes($plan, $planInput));
                 $this->transactions->replaceInstallments($transaction, $plan['rows']);
             }
-            
-            if (Arr::hasAny($data, ['goal_id', ...self::SCHEDULE_KEYS])) {
-                $transaction->refresh();
 
+            $transaction->refresh();
+
+            if (Arr::hasAny($data, ['goal_id', ...self::SCHEDULE_KEYS])) {
                 $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
                 $this->adjustGoalCurrentAmount($transaction->goal_id, $this->goalEffect($transaction));
+            }
+
+            if ($transaction->type === Transaction::TYPE_EXPENSE && Arr::hasAny($data, ['category_id', ...self::SCHEDULE_KEYS])) {
+                $rows = $transaction->installments->map(fn (Installment $installment) => [
+                    'date' => CarbonImmutable::parse($installment->date),
+                    'amount' => Money::toCents($installment->amount),
+                ])->all();
+
+                $this->categories->ensureInMonthLimit($transaction->category_id, $rows, $transaction->id);
             }
 
             return $transaction->load('installments');

@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use App\Domains\Shared\Casts\Money;
+use Carbon\CarbonImmutable;
+use Illuminate\Validation\ValidationException;
 
 class CategoryService
 {
@@ -52,5 +55,35 @@ class CategoryService
     public function delete(Category $category): void
     {
         $this->categories->delete($category);
+    }
+
+    public function ensureInMonthLimit(int $categoryId, array $installments, ?int $ignoreTransactionId = null): void
+    {
+        $category = $this->categories->findForLimitCheck($categoryId);
+
+        if ($category->limit_amount === null) {
+            return;
+        }
+
+        $limit = Money::toCents($category->limit_amount);
+
+        $installmentsByMonth = [];
+
+        foreach ($installments as $installment) {
+            $month = $installment['date']->format('Y-m');
+
+            $installmentsByMonth[$month] = ($installmentsByMonth[$month] ?? 0) + $installment['amount'];
+        }
+
+        foreach ($installmentsByMonth as $month => $total) {
+            $monthStart = CarbonImmutable::createFromFormat('!Y-m', $month);
+            $spent = $this->categories->spentInMonthCents($category, $monthStart, $ignoreTransactionId);
+
+            if ($spent + $total > $limit) {
+                throw ValidationException::withMessages([
+                    'total_amount' => "This transaction exceeds the category limit for {$month}.",
+                ]);
+            }
+        }
     }
 }
