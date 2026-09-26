@@ -4,6 +4,7 @@ namespace App\Domains\Ledger\Repositories;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Goal;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 interface GoalRepositoryInterface
@@ -21,4 +22,6 @@ interface GoalRepositoryInterface
     public function adjustCurrentAmount(int $goalId, int $cents): bool;
 
     public function hasTransactions(Goal $goal): bool;
+
+    public function unreachedExpiringBetween(CarbonInterface $from, CarbonInterface $to): Collection;
 }

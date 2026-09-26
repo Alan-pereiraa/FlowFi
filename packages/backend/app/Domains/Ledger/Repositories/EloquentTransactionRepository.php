@@ -6,7 +6,9 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Shared\Casts\Money;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class EloquentTransactionRepository implements TransactionRepositoryInterface
@@ -81,5 +83,27 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         ])->save();
 
         return $installment;
+    }
+
+    public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        return $this->pendingExpenseInstallments()
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+    }
+
+    public function overduePendingExpenseInstallments(CarbonInterface $today): Collection
+    {
+        return $this->pendingExpenseInstallments()
+            ->where('date', '<', $today->toDateString())
+            ->get();
+    }
+
+    private function pendingExpenseInstallments(): Builder
+    {
+        return Installment::query()
+            ->where('status', Installment::STATUS_PENDING)
+            ->whereHas('transaction', fn ($query) => $query->where('type', Transaction::TYPE_EXPENSE))
+            ->with(['transaction.user', 'transaction.category']);
     }
 }

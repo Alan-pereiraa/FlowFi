@@ -4,6 +4,7 @@ namespace App\Domains\Ledger\Repositories;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Goal;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class EloquentGoalRepository implements GoalRepositoryInterface
@@ -49,5 +50,14 @@ class EloquentGoalRepository implements GoalRepositoryInterface
     public function hasTransactions(Goal $goal): bool
     {
         return $goal->transactions()->exists();
+    }
+
+    public function unreachedExpiringBetween(CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        return Goal::query()
+            ->whereBetween('expires_at', [$from->toDateString(), $to->toDateString()])
+            ->whereColumn('current_amount', '<', 'target_amount')
+            ->with('user')
+            ->get();
     }
 }

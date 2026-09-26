@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['user_id', 'title', 'message', 'type', 'subject', 'read_at'])]
+#[Fillable(['user_id', 'title', 'message', 'type', 'subject', 'subject_id', 'read_at'])]
 #[UseFactory(NotificationFactory::class)]
 class Notification extends Model
 {

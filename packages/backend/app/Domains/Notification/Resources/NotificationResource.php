@@ -15,6 +15,7 @@ class NotificationResource extends JsonResource
             'message' => $this->message,
             'type' => $this->type,
             'subject' => $this->subject,
+            'subject_id' => $this->subject_id,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

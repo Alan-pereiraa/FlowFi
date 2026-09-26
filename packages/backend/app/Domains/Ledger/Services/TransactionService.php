@@ -8,9 +8,11 @@ use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
 use App\Domains\Shared\Casts\Money;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -66,6 +68,10 @@ class TransactionService
 
             $installments = $this->transactions->replaceInstallments($transaction, $plan['rows']);
 
+            if ($transaction->type === Transaction::TYPE_EXPENSE) {
+                $this->categories->warnIfNearLimit($user, $transaction->category_id);
+            }
+
             $effect = $this->goalEffect($transaction);
 
             $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
@@ -114,6 +120,8 @@ class TransactionService
                 ])->all();
 
                 $this->categories->ensureInMonthLimit($transaction->category_id, $rows, $transaction->id);
+
+                $this->categories->warnIfNearLimit($transaction->user, $transaction->category_id);
             }
 
             return $transaction->load('installments');
@@ -143,6 +151,16 @@ class TransactionService
         }
 
         return $this->transactions->markInstallmentPaid($installment);
+    }
+
+    public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        return $this->transactions->pendingExpenseInstallmentsDueBetween($from, $to);
+    }
+
+    public function overduePendingExpenseInstallments(CarbonInterface $today): Collection
+    {
+        return $this->transactions->overduePendingExpenseInstallments($today);
     }
 
     private function guardAgainstPaidInstallments(Transaction $transaction): void

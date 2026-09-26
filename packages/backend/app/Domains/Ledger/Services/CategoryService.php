@@ -5,6 +5,8 @@ namespace App\Domains\Ledger\Services;
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Repositories\CategoryRepositoryInterface;
+use App\Domains\Notification\Enums\NotificationType;
+use App\Domains\Notification\Service\NotificationService;
 use App\Domains\Shared\Casts\Money;
 use App\Domains\Shared\Services\AppearanceService;
 use Carbon\CarbonImmutable;
@@ -19,6 +21,7 @@ class CategoryService
     public function __construct(
         private readonly CategoryRepositoryInterface $categories,
         private readonly AppearanceService $appearance,
+        private readonly NotificationService $notifications
     ) {}
 
     public function list(User $user): Collection
@@ -84,6 +87,30 @@ class CategoryService
                     'total_amount' => "This transaction exceeds the category limit for {$month}.",
                 ]);
             }
+        }
+    }
+
+    public function warnIfNearLimit(User $user, int $categoryId): void
+    {
+        $category = $this->categories->findForLimitCheck($categoryId);
+
+        if ($category->limit_amount === null) {
+            return;
+        }
+
+        $limit = Money::toCents($category->limit_amount);
+        $spent = $this->categories->spentInMonthCents($category, CarbonImmutable::now());
+
+        if ($spent * 100 >= $limit * 80) {
+            $this->notifications->notifyOnce(
+                $user,
+                'Category limit warning',
+                "You have spent over 80% of your limit for the category \"{$category->name}\".",
+                NotificationType::Warning,
+                'category_limit_warning',
+                $category->id,
+                CarbonImmutable::now()->startOfMonth()
+            );
         }
     }
 }

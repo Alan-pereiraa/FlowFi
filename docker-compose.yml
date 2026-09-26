@@ -45,5 +45,15 @@ services:
       - /app/build
       - pub-cache:/root/.pub-cache
 
+  scheduler:
+    build:
+      context: docker
+      dockerfile: api.Dockerfile
+    volumes:
+      - ./packages/backend:/app
+    entrypoint: ["php", "artisan", "schedule:work"]
+    depends_on:
+      - api
+
 volumes:
   pub-cache:
