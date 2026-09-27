@@ -24,7 +24,6 @@ class UpdateTransactionRequest extends FormRequest
 
     public function rules(): array
     {
-
         $type = $this->transaction->type;
 
         return [
@@ -47,6 +46,7 @@ class UpdateTransactionRequest extends FormRequest
                     ->where('user_id', $this->user()->id)
                     ->whereNull('deleted_at'),
             ],
+            'type' => ['prohibited'],
             'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'total_amount' => ['sometimes', 'required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],

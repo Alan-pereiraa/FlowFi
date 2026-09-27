@@ -20,7 +20,7 @@ class TransactionService
 {
     private const array SCHEDULE_KEYS = ['total_amount', 'installments', 'installments_count', 'period_unit', 'period_interval'];
 
-    private const array SIMPLE_KEYS = ['category_id', 'goal_id', 'type', 'description', 'date'];
+    private const array SIMPLE_KEYS = ['category_id', 'goal_id', 'description', 'date'];
 
     public function __construct(
         private readonly TransactionRepositoryInterface $transactions,
