@@ -2,15 +2,14 @@
 
 namespace App\Domains\Identity\Controllers;
 
+use App\Domains\Identity\Requests\LogoutRequest;
 use App\Domains\Identity\Requests\RequestOtpRequest;
 use App\Domains\Identity\Requests\VerifyOtpRequest;
 use App\Domains\Identity\Resources\UserResource;
 use App\Domains\Identity\Services\AuthService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
-
 class AuthController extends Controller
 {
     public function __construct(
@@ -92,9 +91,10 @@ class AuthController extends Controller
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
         ],
     )]
-    public function logout(Request $request): JsonResponse
+
+    public function logout(LogoutRequest $request): JsonResponse
     {
-        $this->auth->logout($request->user());
+        $this->auth->logout($request->user(), $request->validated('device_token'));
 
         return response()->json(['message' => 'Logged out.']);
     }

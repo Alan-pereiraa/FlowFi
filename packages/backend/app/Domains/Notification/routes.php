@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Notification\Controllers\DeviceTokenController;
 use App\Domains\Notification\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,4 +12,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead'])
         ->whereNumber('id');
+
+    Route::post('notifications/devices', [DeviceTokenController::class, 'store']);
+    Route::delete('notifications/devices', [DeviceTokenController::class, 'destroy']);
 });

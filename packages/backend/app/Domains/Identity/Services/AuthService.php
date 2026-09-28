@@ -4,13 +4,16 @@ namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Repositories\UserRepositoryInterface;
+use App\Domains\Notification\Service\NotificationService;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly OtpService $otp,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function requestOtp(string $email): void
@@ -45,8 +48,16 @@ class AuthService
         ];
     }
 
-    public function logout(User $user): void
+    public function logout(User $user, ?string $deviceToken = null): void
     {
-        $user->currentAccessToken()?->delete();
+        if ($deviceToken !== null) {
+            $this->notifications->unregisterDevice($user, $deviceToken);
+        }
+
+        $token = $user->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
     }
 }
