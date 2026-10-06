@@ -7,7 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+<<<<<<< HEAD
         "darkaonline/l5-swagger": "^11.1",
+=======
+        "kreait/laravel-firebase": "^7.2",
+>>>>>>> 4604c09 (feat: adding a notification sending queue for the FCM service, including error handling)
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0"

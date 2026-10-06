@@ -55,5 +55,15 @@ services:
     depends_on:
       - api
 
+  queue:
+    build:
+      context: docker
+      dockerfile: api.Dockerfile
+    volumes:
+      - ./packages/backend:/app
+    entrypoint: ["php", "artisan", "queue:work"]
+    depends_on:
+      - api
+
 volumes:
   pub-cache:

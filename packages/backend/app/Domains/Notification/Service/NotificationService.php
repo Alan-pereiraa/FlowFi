@@ -5,6 +5,7 @@ namespace App\Domains\Notification\Service;
 use App\Domains\Identity\Models\User;
 use App\Domains\Notification\Enums\DevicePlatform;
 use App\Domains\Notification\Enums\NotificationType;
+use App\Domains\Notification\Jobs\SendPushNotification;
 use App\Domains\Notification\Models\DeviceToken;
 use App\Domains\Notification\Models\Notification;
 use App\Domains\Notification\Repositories\DeviceTokenRepositoryInterface;
@@ -39,13 +40,19 @@ class NotificationService
         string $subject,
         ?int $subjectId = null
     ): Notification {
-        return $this->notifications->create($user, [
+        $notification = $this->notifications->create($user, [
             'title' => $title,
             'message' => $message,
             'type' => $type,
             'subject' => $subject,
             'subject_id' => $subjectId,
         ]);
+
+        foreach ($this->deviceTokens->tokensFor($user) as $token) {
+            SendPushNotification::dispatch($notification, $token)->afterCommit();
+        }
+
+        return $notification;
     }
 
     public function notifyOnce(
@@ -82,5 +89,10 @@ class NotificationService
     public function unregisterDevice(User $user, string $token): void
     {
         $this->deviceTokens->deleteFor($user, $token);
+    }
+
+    public function forgetDevice(string $token): void
+    {
+        $this->deviceTokens->deleteByToken($token);
     }
 }
