@@ -46,3 +46,9 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Claude Code local instructions
+/CLAUDE.md
+
+# Local design reference (Figma export)
+/docs/design/
