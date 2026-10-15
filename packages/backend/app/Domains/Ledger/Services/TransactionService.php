@@ -7,14 +7,20 @@ use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
 use App\Domains\Shared\Casts\Money;
+use App\Domains\Shared\Services\GeminiClient;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use DateTimeImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TransactionService
 {
@@ -22,11 +28,48 @@ class TransactionService
 
     private const array SIMPLE_KEYS = ['category_id', 'goal_id', 'description', 'date'];
 
+    private const string DRAFT_INSTRUCTIONS = <<<'TEXT'
+        You turn a short note, written or spoken in Brazilian Portuguese, into a draft transaction for a personal finance app. Amounts are in Brazilian reais (BRL).
+
+        Fill in every field. Use null for anything the note does not state or clearly imply:
+        - type: "expense" for money spent, "income" for money received, "transfer" for money put aside into one of the user's goals. Use "expense" when unsure.
+        - total_amount: the full amount as a decimal string with a dot and two decimal places, e.g. "1250.90". For a split purchase it is the total, not the value of each installment.
+        - date: YYYY-MM-DD. Resolve relative dates ("hoje", "ontem", "sexta passada") against the given today date; use today when no date is mentioned.
+        - description: a short label for what was bought, paid or received, in Portuguese (e.g. "Celular", "Uber", "Salário"). Null only when the note names nothing.
+        - category_id: the id of the best-matching category from the given list. Null for a transfer.
+        - goal_id: the id of a goal from the given list. Required for a transfer; for an expense only when the money is taken out of that goal; null for income.
+        - installments_count, period_unit, period_interval: set them whenever the note says the amount is split ("em 12x", "parcelado em 3 vezes", "3 parcelas a cada 15 dias"); otherwise null. installments_count is the number of installments. period_unit is day, week, month or year, "month" unless the note says otherwise. period_interval is how many period_units between installments, 1 unless the note says otherwise.
+
+        Only use ids that appear in the given lists. If nothing matches, use null.
+        TEXT;
+
+    // Every key is required (nullable where it can be unknown): Gemini may skip optional properties.
+    private const array DRAFT_SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'type' => ['type' => 'string', 'enum' => Transaction::TYPES],
+            'total_amount' => ['type' => ['string', 'null'], 'description' => 'Decimal with a dot and two places, e.g. "50.00".'],
+            'date' => ['type' => 'string', 'format' => 'date'],
+            'description' => ['type' => ['string', 'null']],
+            'category_id' => ['type' => ['integer', 'null']],
+            'goal_id' => ['type' => ['integer', 'null']],
+            'installments_count' => ['type' => ['integer', 'null'], 'minimum' => 1, 'maximum' => 120],
+            'period_unit' => ['anyOf' => [['type' => 'string', 'enum' => Transaction::PERIOD_UNITS], ['type' => 'null']]],
+            'period_interval' => ['type' => ['integer', 'null'], 'minimum' => 1, 'maximum' => 365],
+        ],
+        'required' => [
+            'type', 'total_amount', 'date', 'description', 'category_id', 'goal_id',
+            'installments_count', 'period_unit', 'period_interval',
+        ],
+        'additionalProperties' => false,
+    ];
+
     public function __construct(
         private readonly TransactionRepositoryInterface $transactions,
         private readonly InstallmentPlanner $planner,
         private readonly GoalService $goals,
         private readonly CategoryService $categories,
+        private readonly GeminiClient $gemini,
     ) {}
 
     public function list(User $user, int $perPage, array $filters = []): LengthAwarePaginator
@@ -153,6 +196,41 @@ class TransactionService
         return $this->transactions->markInstallmentPaid($installment);
     }
 
+    /**
+     * Suggests a POST /transactions body for the client to confirm; nothing is saved here, so
+     * every rule (ownership, limits, goal balance) still runs when the client posts it.
+     */
+    public function draftFromRawContext(User $user, string $rawContext): array
+    {
+        $categories = $this->categories->list($user);
+        $goals = $this->goals->list($user);
+        $today = CarbonImmutable::now('America/Sao_Paulo')->toDateString();
+
+        $output = $this->gemini->interact([
+            'model' => config('services.gemini.draft_model'),
+            'system_instruction' => self::DRAFT_INSTRUCTIONS,
+            'input' => implode("\n\n", [
+                "Today: {$today}",
+                'Categories: '.$this->idNameList($categories),
+                'Goals: '.$this->idNameList($goals),
+                "Note:\n{$rawContext}",
+            ]),
+            'response_format' => [[
+                'type' => 'text',
+                'mime_type' => 'application/json',
+                'schema' => self::DRAFT_SCHEMA,
+            ]],
+        ]);
+
+        $draft = json_decode($output, true);
+
+        if (! is_array($draft)) {
+            throw new HttpException(502, 'The AI provider returned an invalid draft. Try again or fill in the transaction manually.');
+        }
+
+        return $this->normalizeDraft($draft, $categories->modelKeys(), $goals->modelKeys(), $today);
+    }
+
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
     {
         return $this->transactions->pendingExpenseInstallmentsDueBetween($from, $to);
@@ -218,5 +296,52 @@ class TransactionService
         }
 
         $this->goals->adjustCurrentAmount($goalId, $cents);
+    }
+
+    private function idNameList(Collection $models): string
+    {
+        return json_encode(
+            $models->map(fn (Model $model): array => ['id' => $model->id, 'name' => $model->name])->values(),
+            JSON_UNESCAPED_UNICODE,
+        );
+    }
+
+    private function normalizeDraft(array $draft, array $categoryIds, array $goalIds, string $today): array
+    {
+        $type = in_array($draft['type'] ?? null, Transaction::TYPES, true) ? $draft['type'] : Transaction::TYPE_EXPENSE;
+
+        try {
+            $cents = isset($draft['total_amount']) ? Money::toCents($draft['total_amount']) : 0;
+        } catch (InvalidArgumentException) {
+            $cents = 0;
+        }
+
+        $date = $draft['date'] ?? null;
+        $parsedDate = is_string($date) ? DateTimeImmutable::createFromFormat('!Y-m-d', $date) : false;
+
+        $description = is_string($draft['description'] ?? null) ? Str::limit(trim($draft['description']), 1000, '') : '';
+
+        $isSplit = $type !== Transaction::TYPE_TRANSFER && (int) ($draft['installments_count'] ?? 1) > 1;
+        $periodInterval = (int) ($draft['period_interval'] ?? 0);
+
+        return [
+            'type' => $type,
+            'total_amount' => $cents > 0 ? Money::toDecimal($cents) : null,
+            'date' => $parsedDate && $parsedDate->format('Y-m-d') === $date ? $date : $today,
+            'description' => $description === '' ? null : $description,
+            'category_id' => $type !== Transaction::TYPE_TRANSFER && in_array($draft['category_id'] ?? null, $categoryIds, true)
+                ? $draft['category_id']
+                : null,
+            'goal_id' => $type !== Transaction::TYPE_INCOME && in_array($draft['goal_id'] ?? null, $goalIds, true)
+                ? $draft['goal_id']
+                : null,
+            'installments_count' => $isSplit ? min((int) $draft['installments_count'], 120) : null,
+            'period_unit' => match (true) {
+                ! $isSplit => null,
+                in_array($draft['period_unit'] ?? null, Transaction::PERIOD_UNITS, true) => $draft['period_unit'],
+                default => 'month',
+            },
+            'period_interval' => $isSplit && $periodInterval >= 1 && $periodInterval <= 365 ? $periodInterval : null,
+        ];
     }
 }

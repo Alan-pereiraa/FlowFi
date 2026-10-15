@@ -22,4 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // dedicated controller, just this one action on TransactionController.
     Route::patch('transactions/{id}/installments/{installmentId}/pay', [TransactionController::class, 'payInstallment'])
         ->whereNumber(['id', 'installmentId']);
+
+    // Read-only: returns a POST /transactions body for the client to confirm; nothing is saved.
+    Route::post('transactions/draft', [TransactionController::class, 'draft'])
+        ->middleware('throttle:transaction-draft');
 });

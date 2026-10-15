@@ -2,12 +2,15 @@
 
 namespace App\Domains\Ledger\Controllers;
 
+use App\Domains\Ledger\Requests\DraftTransactionRequest;
 use App\Domains\Ledger\Requests\ListTransactionRequest;
 use App\Domains\Ledger\Requests\StoreTransactionRequest;
 use App\Domains\Ledger\Requests\UpdateTransactionRequest;
 use App\Domains\Ledger\Resources\InstallmentResource;
+use App\Domains\Ledger\Resources\TransactionDraftResource;
 use App\Domains\Ledger\Resources\TransactionResource;
 use App\Domains\Ledger\Services\TransactionService;
+use App\Domains\Shared\Services\TranscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +22,7 @@ class TransactionController extends Controller
 {
     public function __construct(
         private readonly TransactionService $transactions,
+        private readonly TranscriptionService $transcriptions,
     ) {}
 
     #[OA\Get(
@@ -235,5 +239,67 @@ class TransactionController extends Controller
         return new InstallmentResource(
             $this->transactions->payInstallment($request->user(), $id, $installmentId),
         );
+    }
+
+    #[OA\Post(
+        path: '/transactions/draft',
+        operationId: 'draftTransaction',
+        tags: ['Transactions'],
+        summary: 'Draft a transaction from audio or raw text',
+        description: 'Transcribes `audio` (or takes `raw_context` as is) and asks the AI provider for a draft shaped like the POST /transactions body. Nothing is saved: show the draft to the user, have them fill in any required field that came back null, then send it to POST /transactions.',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: [
+                new OA\MediaType(
+                    mediaType: 'multipart/form-data',
+                    schema: new OA\Schema(
+                        required: ['audio'],
+                        properties: [
+                            new OA\Property(
+                                property: 'audio',
+                                type: 'string',
+                                format: 'binary',
+                                description: 'Voice note up to 2 MB: m4a, mp4, webm, ogg, mp3, wav, flac or aac',
+                            ),
+                        ],
+                    ),
+                ),
+                new OA\JsonContent(
+                    required: ['raw_context'],
+                    properties: [
+                        new OA\Property(
+                            property: 'raw_context',
+                            type: 'string',
+                            maxLength: 1000,
+                            example: 'gastei 50 reais no mercado hoje',
+                        ),
+                    ],
+                ),
+            ],
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Draft ready for the user to confirm',
+                content: new OA\JsonContent(ref: '#/components/schemas/TransactionDraftResponse'),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+            new OA\Response(response: 429, ref: '#/components/responses/TooManyRequestsResponse'),
+            new OA\Response(response: 502, ref: '#/components/responses/UpstreamErrorResponse'),
+            new OA\Response(response: 503, ref: '#/components/responses/UpstreamErrorResponse'),
+        ],
+    )]
+    public function draft(DraftTransactionRequest $request): TransactionDraftResource
+    {
+        $rawContext = $request->hasFile('audio')
+            ? $this->transcriptions->transcribe($request->file('audio'))
+            : $request->validated('raw_context');
+
+        return new TransactionDraftResource([
+            'transcript' => $rawContext,
+            'transaction' => $this->transactions->draftFromRawContext($request->user(), $rawContext),
+        ]);
     }
 }

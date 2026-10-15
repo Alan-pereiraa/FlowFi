@@ -78,6 +78,19 @@ use OpenApi\Attributes as OA;
         ],
     ),
 )]
+#[OA\Response(
+    response: 'UpstreamErrorResponse',
+    description: 'The AI provider failed (502) or is busy (503); retry or fill in the transaction manually',
+    content: new OA\JsonContent(
+        properties: [
+            new OA\Property(
+                property: 'message',
+                type: 'string',
+                example: 'The AI provider could not process this request. Try again or fill in the transaction manually.',
+            ),
+        ],
+    ),
+)]
 #[OA\Schema(
     schema: 'PaginationLinks',
     type: 'object',
@@ -591,6 +604,30 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'data', ref: '#/components/schemas/Transaction'),
+    ],
+)]
+#[OA\Schema(
+    schema: 'TransactionDraft',
+    type: 'object',
+    properties: [
+        new OA\Property(
+            property: 'transcript',
+            type: 'string',
+            description: 'Text the draft was built from: the transcription of `audio`, or `raw_context` as sent',
+            example: 'gastei 50 reais no mercado hoje',
+        ),
+        new OA\Property(
+            property: 'transaction',
+            ref: '#/components/schemas/StoreTransactionRequest',
+            description: 'Body for POST /transactions. Every key is present; null means the AI could not tell. `installments` is never drafted.',
+        ),
+    ],
+)]
+#[OA\Schema(
+    schema: 'TransactionDraftResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'data', ref: '#/components/schemas/TransactionDraft'),
     ],
 )]
 #[OA\Schema(
