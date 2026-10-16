@@ -2,12 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../features/categories/presentation/pages/category_form_page.dart';
 import '../features/identity/presentation/controllers/session_controller.dart';
 import '../features/identity/presentation/controllers/session_state.dart';
 import '../features/identity/presentation/pages/login_page.dart';
 import '../features/identity/presentation/pages/profile_form_page.dart';
 import '../features/identity/presentation/pages/profile_success_page.dart';
 import '../features/identity/presentation/pages/splash_page.dart';
+import '../features/transactions/presentation/pages/transaction_form_page.dart';
+import '../features/transactions/presentation/pages/transactions_page.dart';
 import '../shared/widgets/empty_state.dart';
 import 'routes.dart';
 import 'shell/app_shell.dart';
@@ -57,14 +60,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.profileSuccess,
         builder: (_, _) => const ProfileSuccessPage(),
       ),
+      GoRoute(
+        path: Routes.newCategory,
+        builder: (_, _) => const CategoryFormPage(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(navigationShell: shell),
         branches: [
           _comingSoonBranch(Routes.dashboard, Icons.home_outlined, 'Dashboard'),
-          _comingSoonBranch(
-            Routes.transactions,
-            Icons.receipt_long_outlined,
-            'Transações',
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.transactions,
+                builder: (_, _) => const TransactionsPage(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, _) => const TransactionFormPage(),
+                  ),
+                  GoRoute(
+                    path: ':id/edit',
+                    builder: (_, state) => TransactionFormPage(
+                      transactionId: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           _comingSoonBranch(Routes.goals, Icons.savings_outlined, 'Metas'),
           _comingSoonBranch(Routes.forecast, Icons.trending_up, 'Previsões'),
