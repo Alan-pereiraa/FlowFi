@@ -8,6 +8,9 @@ abstract final class Routes {
   static const profileSuccess = '/profile/success';
   static const dashboard = '/dashboard';
   static const transactions = '/transactions';
+  static const newTransaction = '/transactions/new';
+  static String editTransaction(int id) => '/transactions/$id/edit';
+  static const newCategory = '/categories/new';
   static const goals = '/goals';
   static const forecast = '/forecast';
 }
