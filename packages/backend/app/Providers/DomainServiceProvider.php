@@ -9,8 +9,10 @@ use App\Domains\Identity\Repositories\UserRepositoryInterface;
 use App\Domains\Ledger\Repositories\CategoryRepositoryInterface;
 use App\Domains\Ledger\Repositories\EloquentCategoryRepository;
 use App\Domains\Ledger\Repositories\EloquentGoalRepository;
+use App\Domains\Ledger\Repositories\EloquentRecurringTransactionRepository;
 use App\Domains\Ledger\Repositories\EloquentTransactionRepository;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
+use App\Domains\Ledger\Repositories\RecurringTransactionRepositoryInterface;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
 use App\Domains\Notification\Contracts\PushSender;
 use App\Domains\Notification\Repositories\DeviceTokenRepositoryInterface;
@@ -30,6 +32,7 @@ class DomainServiceProvider extends ServiceProvider
         GoalRepositoryInterface::class => EloquentGoalRepository::class,
         CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
         TransactionRepositoryInterface::class => EloquentTransactionRepository::class,
+        RecurringTransactionRepositoryInterface::class => EloquentRecurringTransactionRepository::class,
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
         NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
         DeviceTokenRepositoryInterface::class => EloquentDeviceTokenRepository::class,

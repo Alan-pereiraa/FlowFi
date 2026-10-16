@@ -21,6 +21,7 @@ class TransactionResource extends JsonResource
             'schedule_type' => $this->schedule_type,
             'period_unit' => $this->period_unit,
             'period_interval' => $this->period_interval,
+            'recurring_transaction_id' => $this->recurring_transaction_id,
             'installments' => InstallmentResource::collection($this->whenLoaded('installments')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

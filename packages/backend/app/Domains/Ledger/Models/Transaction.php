@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'user_id', 'category_id', 'goal_id', 'type', 'description', 'date',
     'total_amount', 'installments_count', 'schedule_type', 'period_unit', 'period_interval',
+    'recurring_transaction_id',
 ])]
 #[UseFactory(TransactionFactory::class)]
 class Transaction extends Model
@@ -63,6 +64,11 @@ class Transaction extends Model
     public function goal(): BelongsTo
     {
         return $this->belongsTo(Goal::class);
+    }
+
+    public function recurringTransaction(): BelongsTo
+    {
+        return $this->belongsTo(RecurringTransaction::class);
     }
 
     public function installments(): HasMany

@@ -106,6 +106,7 @@ class TransactionService
                 'type' => $data['type'],
                 'description' => $data['description'] ?? null,
                 'date' => $data['date'],
+                'recurring_transaction_id' => $data['recurring_transaction_id'] ?? null,
                 ...$this->planner->transactionScheduleAttributes($plan, $data),
             ]);
 

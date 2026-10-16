@@ -4,6 +4,7 @@ namespace App\Domains\Identity\Models;
 
 use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Goal;
+use App\Domains\Ledger\Models\RecurringTransaction;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Notification\Models\DeviceToken;
 use App\Domains\Notification\Models\Notification;
@@ -54,5 +55,10 @@ class User extends Authenticatable
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function recurringTransactions(): HasMany
+    {
+        return $this->hasMany(RecurringTransaction::class);
     }
 }

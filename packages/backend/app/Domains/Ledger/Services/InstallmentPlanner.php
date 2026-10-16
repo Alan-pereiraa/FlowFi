@@ -4,10 +4,15 @@ namespace App\Domains\Ledger\Services;
 
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Shared\Casts\Money;
+use App\Domains\Shared\Services\PeriodCalculator;
 use Carbon\CarbonImmutable;
 
 class InstallmentPlanner
 {
+    public function __construct(
+        private readonly PeriodCalculator $periods,
+    ) {}
+
     public function planFromInput(array $input): array
     {
         $date = CarbonImmutable::createFromFormat('Y-m-d', $input['date'])->startOfDay();
@@ -123,20 +128,10 @@ class InstallmentPlanner
             $plan[] = [
                 'step' => $step,
                 'amount' => $base + ($step <= $remainder ? 1 : 0),
-                'date' => $this->addPeriod($transactionDate, $periodUnit, $periodInterval * ($step - 1)),
+                'date' => $this->periods->occurrenceDate($transactionDate, $periodUnit, $periodInterval, $step - 1),
             ];
         }
 
         return $plan;
-    }
-
-    private function addPeriod(CarbonImmutable $date, string $unit, int $amount): CarbonImmutable
-    {
-        return match ($unit) {
-            'day' => $date->addDays($amount),
-            'week' => $date->addWeeks($amount),
-            'year' => $date->addYears($amount),
-            default => $date->addMonths($amount),
-        };
     }
 }

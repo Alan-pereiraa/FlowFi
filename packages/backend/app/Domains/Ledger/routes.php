@@ -2,6 +2,7 @@
 
 use App\Domains\Ledger\Controllers\CategoryController;
 use App\Domains\Ledger\Controllers\GoalController;
+use App\Domains\Ledger\Controllers\RecurringTransactionController;
 use App\Domains\Ledger\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // dedicated controller, just this one action on TransactionController.
     Route::patch('transactions/{id}/installments/{installmentId}/pay', [TransactionController::class, 'payInstallment'])
         ->whereNumber(['id', 'installmentId']);
+
+    Route::apiResource('recurring-transactions', RecurringTransactionController::class)
+        ->parameters(['recurring-transactions' => 'id'])
+        ->where(['id' => '[0-9]+']);
+
+    Route::patch('recurring-transactions/{id}/end', [RecurringTransactionController::class, 'end'])
+        ->whereNumber('id');
 
     // Read-only: returns a POST /transactions body for the client to confirm; nothing is saved.
     Route::post('transactions/draft', [TransactionController::class, 'draft'])

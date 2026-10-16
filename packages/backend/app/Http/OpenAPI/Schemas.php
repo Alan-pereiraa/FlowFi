@@ -34,6 +34,10 @@ use OpenApi\Attributes as OA;
     name: 'Transactions',
     description: 'Income, expense and transfer transactions and their installments',
 )]
+#[OA\Tag(
+    name: 'Recurring transactions',
+    description: 'Templates that create one ordinary transaction per occurrence (salary, rent, a monthly deposit into a goal)',
+)]
 #[OA\Tag(name: 'Notifications', description: 'In-app notifications')]
 #[OA\Tag(name: 'Icons', description: 'Icon catalog usable by categories and goals')]
 #[OA\Response(
@@ -347,6 +351,12 @@ use OpenApi\Attributes as OA;
         ),
         new OA\Property(property: 'period_interval', type: 'integer', nullable: true, example: 1),
         new OA\Property(
+            property: 'recurring_transaction_id',
+            type: 'integer',
+            nullable: true,
+            description: 'Recurring transaction that generated this one; null for transactions created directly',
+        ),
+        new OA\Property(
             property: 'installments',
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Installment'),
@@ -493,6 +503,133 @@ use OpenApi\Attributes as OA;
     ],
 )]
 #[OA\Schema(
+    schema: 'RecurringTransaction',
+    type: 'object',
+    description: 'Template repeated in full every period. `next_occurrence_on` is null once it has ended or generated every occurrence.',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'category_id', type: 'integer', nullable: true, example: 5),
+        new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
+        new OA\Property(
+            property: 'type',
+            type: 'string',
+            enum: ['income', 'expense', 'transfer'],
+            example: 'income',
+        ),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Salary'),
+        new OA\Property(
+            property: 'amount',
+            type: 'string',
+            format: 'decimal',
+            description: 'Amount of every occurrence (not split)',
+            example: '5000.00',
+        ),
+        new OA\Property(
+            property: 'period_unit',
+            type: 'string',
+            enum: ['day', 'week', 'month', 'year'],
+            example: 'month',
+        ),
+        new OA\Property(property: 'period_interval', type: 'integer', example: 1),
+        new OA\Property(property: 'start_date', type: 'string', format: 'date', example: '2027-01-05'),
+        new OA\Property(property: 'end_date', type: 'string', format: 'date', nullable: true),
+        new OA\Property(property: 'occurrences', type: 'integer', nullable: true),
+        new OA\Property(property: 'generated_count', type: 'integer', example: 3),
+        new OA\Property(
+            property: 'next_occurrence_on',
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            example: '2027-04-05',
+        ),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+    ],
+)]
+#[OA\Schema(
+    schema: 'StoreRecurringTransactionRequest',
+    type: 'object',
+    required: ['type', 'amount', 'period_unit', 'start_date'],
+    description: 'Same `type` rules as StoreTransactionRequest for `category_id` and `goal_id`. Send `end_date` or `occurrences` to stop it, or neither to repeat until ended; sending both returns 422.',
+    properties: [
+        new OA\Property(
+            property: 'type',
+            type: 'string',
+            enum: ['income', 'expense', 'transfer'],
+            example: 'income',
+        ),
+        new OA\Property(
+            property: 'category_id',
+            type: 'integer',
+            nullable: true,
+            description: 'Required unless type=transfer; forbidden for transfer',
+            example: 5,
+        ),
+        new OA\Property(
+            property: 'goal_id',
+            type: 'integer',
+            nullable: true,
+            description: 'Required for transfer; forbidden for income; optional for expense',
+        ),
+        new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000, example: 'Salary'),
+        new OA\Property(
+            property: 'amount',
+            type: 'string',
+            format: 'decimal',
+            description: '0.01 to 99999999.99, repeated in full on every occurrence',
+            example: '5000.00',
+        ),
+        new OA\Property(
+            property: 'period_unit',
+            type: 'string',
+            enum: ['day', 'week', 'month', 'year'],
+            example: 'month',
+        ),
+        new OA\Property(
+            property: 'period_interval',
+            type: 'integer',
+            nullable: true,
+            minimum: 1,
+            maximum: 365,
+            description: 'Units between occurrences (default 1)',
+            example: 1,
+        ),
+        new OA\Property(
+            property: 'start_date',
+            type: 'string',
+            format: 'date',
+            description: 'First occurrence. Up to one year in the past; past occurrences are created on save.',
+            example: '2027-01-05',
+        ),
+        new OA\Property(
+            property: 'end_date',
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            description: 'Last day an occurrence may fall on. Mutually exclusive with occurrences.',
+        ),
+        new OA\Property(
+            property: 'occurrences',
+            type: 'integer',
+            nullable: true,
+            minimum: 2,
+            maximum: 120,
+            description: 'Total number of occurrences. Mutually exclusive with end_date.',
+        ),
+    ],
+)]
+#[OA\Schema(
+    schema: 'UpdateRecurringTransactionRequest',
+    type: 'object',
+    description: 'All fields optional; only future occurrences pick them up. `type`, `period_unit`, `period_interval`, `start_date`, `end_date` and `occurrences` cannot be changed (422): end it and create a new one instead.',
+    properties: [
+        new OA\Property(property: 'category_id', type: 'integer', example: 5),
+        new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000),
+        new OA\Property(property: 'amount', type: 'string', format: 'decimal', example: '5500.00'),
+    ],
+)]
+#[OA\Schema(
     schema: 'Notification',
     type: 'object',
     properties: [
@@ -604,6 +741,24 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'data', ref: '#/components/schemas/Transaction'),
+    ],
+)]
+#[OA\Schema(
+    schema: 'RecurringTransactionResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'data', ref: '#/components/schemas/RecurringTransaction'),
+    ],
+)]
+#[OA\Schema(
+    schema: 'RecurringTransactionListResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(
+            property: 'data',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/RecurringTransaction'),
+        ),
     ],
 )]
 #[OA\Schema(
