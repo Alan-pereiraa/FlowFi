@@ -22,13 +22,13 @@ class RecurringTransactionController extends Controller
     #[OA\Get(
         path: '/recurring-transactions',
         operationId: 'listRecurringTransactions',
-        tags: ['Recurring transactions'],
-        summary: 'List recurring transactions',
+        tags: ['Transações recorrentes'],
+        summary: 'Listar transações recorrentes',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'All recurring transactions of the authenticated user, active and ended',
+                description: 'Todas as transações recorrentes do usuário autenticado, ativas e encerradas',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -42,9 +42,9 @@ class RecurringTransactionController extends Controller
     #[OA\Post(
         path: '/recurring-transactions',
         operationId: 'createRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'Create recurring transaction',
-        description: 'Occurrences due on or before today are generated immediately as ordinary transactions.',
+        tags: ['Transações recorrentes'],
+        summary: 'Criar transação recorrente',
+        description: 'As ocorrências com data até hoje são geradas na hora como transações comuns.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -53,7 +53,7 @@ class RecurringTransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Recurring transaction created',
+                description: 'Transação recorrente criada',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -70,8 +70,8 @@ class RecurringTransactionController extends Controller
     #[OA\Get(
         path: '/recurring-transactions/{id}',
         operationId: 'getRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'Get recurring transaction',
+        tags: ['Transações recorrentes'],
+        summary: 'Buscar transação recorrente',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -79,7 +79,7 @@ class RecurringTransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recurring transaction',
+                description: 'Transação recorrente',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -94,9 +94,9 @@ class RecurringTransactionController extends Controller
     #[OA\Put(
         path: '/recurring-transactions/{id}',
         operationId: 'putRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'Update recurring transaction (PUT)',
-        description: 'Uses the same partial-update behavior as PATCH.',
+        tags: ['Transações recorrentes'],
+        summary: 'Atualizar transação recorrente (PUT)',
+        description: 'Usa o mesmo comportamento de atualização parcial do PATCH.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -108,7 +108,7 @@ class RecurringTransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recurring transaction updated',
+                description: 'Transação recorrente atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -119,9 +119,9 @@ class RecurringTransactionController extends Controller
     #[OA\Patch(
         path: '/recurring-transactions/{id}',
         operationId: 'updateRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'Update recurring transaction',
-        description: 'Only future occurrences pick up the change; transactions already generated are not touched.',
+        tags: ['Transações recorrentes'],
+        summary: 'Atualizar transação recorrente',
+        description: 'Só as próximas ocorrências recebem a alteração; as transações já geradas não mudam.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -133,7 +133,7 @@ class RecurringTransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recurring transaction updated',
+                description: 'Transação recorrente atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -151,9 +151,9 @@ class RecurringTransactionController extends Controller
     #[OA\Patch(
         path: '/recurring-transactions/{id}/end',
         operationId: 'endRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'End recurring transaction',
-        description: 'Stops generating occurrences from today on. Transactions already generated are kept. Idempotent.',
+        tags: ['Transações recorrentes'],
+        summary: 'Encerrar transação recorrente',
+        description: 'Para de gerar ocorrências a partir de hoje. As transações já geradas são mantidas. Pode ser chamada mais de uma vez sem efeito extra.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -161,7 +161,7 @@ class RecurringTransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recurring transaction ended',
+                description: 'Transação recorrente encerrada',
                 content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -178,15 +178,15 @@ class RecurringTransactionController extends Controller
     #[OA\Delete(
         path: '/recurring-transactions/{id}',
         operationId: 'deleteRecurringTransaction',
-        tags: ['Recurring transactions'],
-        summary: 'Delete recurring transaction',
-        description: 'Transactions already generated are kept.',
+        tags: ['Transações recorrentes'],
+        summary: 'Apagar transação recorrente',
+        description: 'As transações já geradas são mantidas.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagada'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
         ],

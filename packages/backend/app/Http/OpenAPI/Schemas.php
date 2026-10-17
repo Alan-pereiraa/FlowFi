@@ -35,8 +35,8 @@ use OpenApi\Attributes as OA;
     description: 'Income, expense and transfer transactions and their installments',
 )]
 #[OA\Tag(
-    name: 'Recurring transactions',
-    description: 'Templates that create one ordinary transaction per occurrence (salary, rent, a monthly deposit into a goal)',
+    name: 'Transações recorrentes',
+    description: 'Moldes que criam uma transação comum a cada ocorrência (salário, aluguel, um depósito mensal numa meta)',
 )]
 #[OA\Tag(name: 'Notifications', description: 'In-app notifications')]
 #[OA\Tag(name: 'Icons', description: 'Icon catalog usable by categories and goals')]
