@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../features/categories/presentation/categories_routes.dart';
+import '../features/goals/presentation/goals_route.dart';
 import '../features/identity/presentation/controllers/session_controller.dart';
 import '../features/identity/presentation/controllers/session_state.dart';
 import '../features/identity/presentation/pages/login_page.dart';
@@ -57,6 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.profileSuccess,
         builder: (_, _) => const ProfileSuccessPage(),
       ),
+      ...categoryFormRoutes(),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(navigationShell: shell),
         branches: [
@@ -66,8 +69,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             Icons.receipt_long_outlined,
             'Transações',
           ),
-          _comingSoonBranch(Routes.goals, Icons.savings_outlined, 'Metas'),
-          _comingSoonBranch(Routes.forecast, Icons.trending_up, 'Previsões'),
+          StatefulShellBranch(routes: [goalsRoute()]),
+          StatefulShellBranch(routes: [categoriesRoute()]),
         ],
       ),
     ],
