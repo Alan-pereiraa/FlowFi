@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "280070132958",
+    "project_id": "flowfi-8c356",
+    "storage_bucket": "flowfi-8c356.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280070132958:android:72f688bc52037101035e4f",
+        "android_client_info": {
+          "package_name": "com.flowfi.flowfi_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBV0uCbNUfHw-KO6B_avn_96ZNbF-43DJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
