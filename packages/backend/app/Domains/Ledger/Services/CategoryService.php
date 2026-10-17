@@ -57,6 +57,12 @@ class CategoryService
 
     public function delete(Category $category): void
     {
+        if ($this->categories->hasActiveRecurringTransactions($category) || $this->categories->hasTransactions($category)) {
+            throw ValidationException::withMessages([
+                'category' => 'Não é possível apagar uma categoria que possui transações ou recorrências ativas.',
+            ]);
+        }
+
         $this->categories->delete($category);
     }
 

@@ -151,6 +151,7 @@ class CategoryController extends Controller
         operationId: 'deleteCategory',
         tags: ['Categories'],
         summary: 'Delete category',
+        description: 'Refused (422) while the category has transactions or an active recurring transaction; end the recurring transaction first.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -159,6 +160,7 @@ class CategoryController extends Controller
             new OA\Response(response: 204, description: 'Deleted'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
         ],
     )]
     public function destroy(Request $request, int $id): Response

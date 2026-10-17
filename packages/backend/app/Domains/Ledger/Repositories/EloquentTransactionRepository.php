@@ -88,14 +88,15 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
     {
         return $this->pendingExpenseInstallments()
-            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->whereDate('date', '>=', $from->toDateString())
+            ->whereDate('date', '<=', $to->toDateString())
             ->get();
     }
 
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection
     {
         return $this->pendingExpenseInstallments()
-            ->where('date', '<', $today->toDateString())
+            ->whereDate('date', '<', $today->toDateString())
             ->get();
     }
 

@@ -32,6 +32,11 @@ class Category extends Model implements HasAppearance
         return $this->belongsTo(User::class);
     }
 
+    public function recurringTransactions(): HasMany
+    {
+        return $this->hasMany(RecurringTransaction::class);
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
