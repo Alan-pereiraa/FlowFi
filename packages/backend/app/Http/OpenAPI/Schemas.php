@@ -606,7 +606,8 @@ use OpenApi\Attributes as OA;
             type: 'string',
             format: 'date',
             nullable: true,
-            description: 'Last day an occurrence may fall on. Mutually exclusive with occurrences.',
+            description: 'Opcional. Até quando repetir: a última ocorrência cai no máximo nesta data, que não pode ser antes de start_date. Não pode ser enviado junto com occurrences (422).',
+            example: '2027-06-30',
         ),
         new OA\Property(
             property: 'occurrences',
@@ -614,7 +615,8 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 2,
             maximum: 120,
-            description: 'Total number of occurrences. Mutually exclusive with end_date.',
+            description: 'Opcional. Quantas vezes a transação se repete no total; depois da última, a recorrência para sozinha (ex.: 6 = de 16/10/2026 a 16/03/2027, mensal). Não pode ser enviado junto com end_date (422). Sem end_date e sem occurrences, repete até ser encerrada.',
+            example: 6,
         ),
     ],
 )]

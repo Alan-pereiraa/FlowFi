@@ -48,7 +48,49 @@ class RecurringTransactionController extends Controller
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/StoreRecurringTransactionRequest'),
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/StoreRecurringTransactionRequest',
+                examples: [
+                    new OA\Examples(
+                        example: 'ate_cancelar',
+                        summary: 'Até cancelar (sem end_date nem occurrences)',
+                        value: [
+                            'type' => 'income',
+                            'category_id' => 5,
+                            'amount' => '5000.00',
+                            'description' => 'Salário',
+                            'period_unit' => 'month',
+                            'start_date' => '2026-10-16',
+                        ],
+                    ),
+                    new OA\Examples(
+                        example: 'n_vezes',
+                        summary: 'Por um número de vezes (occurrences)',
+                        value: [
+                            'type' => 'income',
+                            'category_id' => 5,
+                            'amount' => '2000.00',
+                            'description' => 'Freela',
+                            'period_unit' => 'month',
+                            'start_date' => '2026-10-16',
+                            'occurrences' => 6,
+                        ],
+                    ),
+                    new OA\Examples(
+                        example: 'ate_uma_data',
+                        summary: 'Até uma data (end_date)',
+                        value: [
+                            'type' => 'transfer',
+                            'goal_id' => 2,
+                            'amount' => '200.00',
+                            'description' => 'Viagem',
+                            'period_unit' => 'month',
+                            'start_date' => '2026-10-16',
+                            'end_date' => '2027-06-30',
+                        ],
+                    ),
+                ],
+            ),
         ),
         responses: [
             new OA\Response(
@@ -91,31 +133,6 @@ class RecurringTransactionController extends Controller
         return new RecurringTransactionResource($this->recurring->findOwned($request->user(), $id));
     }
 
-    #[OA\Put(
-        path: '/recurring-transactions/{id}',
-        operationId: 'putRecurringTransaction',
-        tags: ['Transações recorrentes'],
-        summary: 'Atualizar transação recorrente (PUT)',
-        description: 'Usa o mesmo comportamento de atualização parcial do PATCH.',
-        security: [['sanctum' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/IdPath'),
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/UpdateRecurringTransactionRequest'),
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Transação recorrente atualizada',
-                content: new OA\JsonContent(ref: '#/components/schemas/RecurringTransactionResponse'),
-            ),
-            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
-        ],
-    )]
     #[OA\Patch(
         path: '/recurring-transactions/{id}',
         operationId: 'updateRecurringTransaction',
