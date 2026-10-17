@@ -74,8 +74,9 @@ class AppShell extends ConsumerWidget {
             label: 'Metas',
           ),
           NavigationDestination(
-            icon: Icon(Icons.trending_up),
-            label: 'Previsões',
+            icon: Icon(Icons.category_outlined),
+            selectedIcon: Icon(Icons.category),
+            label: 'Categorias',
           ),
         ],
       ),
