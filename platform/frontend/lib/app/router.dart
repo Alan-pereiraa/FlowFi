@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../features/categories/presentation/pages/category_form_page.dart';
+import '../features/categories/presentation/categories_routes.dart';
+import '../features/goals/presentation/goals_route.dart';
 import '../features/identity/presentation/controllers/session_controller.dart';
 import '../features/identity/presentation/controllers/session_state.dart';
 import '../features/identity/presentation/pages/login_page.dart';
@@ -62,8 +64,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.newCategory,
-        builder: (_, _) => const CategoryFormPage(),
+        builder: (_, _) => const CategoryQuickFormPage(),
       ),
+      ...categoryFormRoutes(),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(navigationShell: shell),
         branches: [
@@ -88,8 +91,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          _comingSoonBranch(Routes.goals, Icons.savings_outlined, 'Metas'),
-          _comingSoonBranch(Routes.forecast, Icons.trending_up, 'Previsões'),
+          StatefulShellBranch(routes: [goalsRoute()]),
+          StatefulShellBranch(routes: [categoriesRoute()]),
         ],
       ),
     ],
