@@ -16,8 +16,11 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.onSubmitted,
+    this.prefix,
     this.suffix,
     this.enabled = true,
+    this.readOnly = false,
+    this.onTap,
     this.autofillHints,
     this.textCapitalization = TextCapitalization.none,
   });
@@ -33,8 +36,15 @@ class AppTextField extends StatelessWidget {
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// Replaces [icon] when the leading slot needs to be interactive.
+  final Widget? prefix;
   final Widget? suffix;
   final bool enabled;
+
+  /// For fields filled by a picker ([onTap]) instead of the keyboard.
+  final bool readOnly;
+  final VoidCallback? onTap;
   final Iterable<String>? autofillHints;
   final TextCapitalization textCapitalization;
 
@@ -44,6 +54,8 @@ class AppTextField extends StatelessWidget {
     final field = TextFormField(
       controller: controller,
       enabled: enabled,
+      readOnly: readOnly,
+      onTap: onTap,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       inputFormatters: inputFormatters,
@@ -56,9 +68,11 @@ class AppTextField extends StatelessWidget {
         hintText: hint,
         errorText: errorText,
         errorMaxLines: 2,
-        prefixIcon: icon == null
-            ? null
-            : Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+        prefixIcon:
+            prefix ??
+            (icon == null
+                ? null
+                : Icon(icon, color: theme.colorScheme.onSurfaceVariant)),
         suffixIcon: suffix,
       ),
     );
