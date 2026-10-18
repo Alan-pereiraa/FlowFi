@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domains\Dashboard\Repositories\DashboardRepositoryInterface;
+use App\Domains\Dashboard\Repositories\EloquentDashboardRepository;
 use App\Domains\Identity\Repositories\EloquentOtpCodeRepository;
 use App\Domains\Identity\Repositories\EloquentUserRepository;
 use App\Domains\Identity\Repositories\OtpCodeRepositoryInterface;
@@ -31,5 +33,9 @@ class DomainServiceProvider extends ServiceProvider
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
         NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
         DeviceTokenRepositoryInterface::class => EloquentDeviceTokenRepository::class,
+<<<<<<< Updated upstream
+=======
+        DashboardRepositoryInterface::class => EloquentDashboardRepository::class,
+>>>>>>> Stashed changes
     ];
 }
