@@ -1,8 +1,10 @@
 import '../../../../shared/money/money.dart';
+import '../../../../shared/utils/money.dart' as cents;
 import '../../domain/entities/category.dart';
 import '../../domain/entities/category_input.dart';
 
 /// Mirrors the backend `CategoryResource` (the inner object).
+/// Mirrors the backend `CategoryResource` (the inner object, without envelope).
 class CategoryDto {
   const CategoryDto({
     required this.id,
@@ -17,7 +19,9 @@ class CategoryDto {
     name: json['name'] as String,
     icon: json['icon'] as String,
     color: json['color'] as String,
-    limitAmount: json['limit_amount'] as String?,
+    // limitAmount: json['limit_amount'] as String?,
+    // Decimal string ("1500.00") or null; toString() also tolerates a number.
+    limitAmount: json['limit_amount']?.toString(),
   );
 
   final int id;
@@ -32,6 +36,7 @@ class CategoryDto {
     icon: icon,
     color: color,
     limitAmount: limitAmount == null ? null : Money.parse(limitAmount!),
+    limitCents: cents.Money.parseApi(limitAmount),
   );
 
   static Map<String, dynamic> inputToJson(CategoryInput input) => {

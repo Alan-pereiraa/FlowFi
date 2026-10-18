@@ -64,7 +64,7 @@ abstract final class AppearancePicker {
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             children: [
-              for (final group in AppIcons.groups.values)
+              for (final group in AppIcons.groupsByKey.values)
                 for (final MapEntry(key: name, value: icon) in group.entries)
                   IconButton(
                     tooltip: name,
