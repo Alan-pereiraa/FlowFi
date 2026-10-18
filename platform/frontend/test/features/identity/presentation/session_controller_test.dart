@@ -7,6 +7,7 @@ import 'package:flowfi_app/features/identity/domain/repositories/auth_repository
 import 'package:flowfi_app/features/identity/domain/repositories/user_repository.dart';
 import 'package:flowfi_app/features/identity/presentation/controllers/session_controller.dart';
 import 'package:flowfi_app/features/identity/presentation/controllers/session_state.dart';
+import 'package:flowfi_app/features/notifications/presentation/push_registration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -15,15 +16,21 @@ class _MockAuth extends Mock implements AuthRepository {}
 
 class _MockUsers extends Mock implements UserRepository {}
 
+class _MockPush extends Mock implements PushRegistration {}
+
 void main() {
   late _MockAuth auth;
   late _MockUsers users;
   late UnauthorizedSignal signal;
+  late _MockPush push;
 
   setUp(() {
     auth = _MockAuth();
     users = _MockUsers();
     signal = UnauthorizedSignal();
+    push = _MockPush();
+    when(() => push.start()).thenAnswer((_) async {});
+    when(() => push.stop()).thenAnswer((_) async {});
     when(() => auth.clearSession()).thenAnswer((_) async {});
   });
 
@@ -32,6 +39,7 @@ void main() {
       authRepositoryProvider.overrideWithValue(auth),
       userRepositoryProvider.overrideWithValue(users),
       unauthorizedSignalProvider.overrideWithValue(signal),
+      pushRegistrationProvider.overrideWithValue(push),
     ],
   );
 
