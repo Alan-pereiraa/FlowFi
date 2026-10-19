@@ -38,13 +38,7 @@ class DomainServiceProvider extends ServiceProvider
         AppearanceRepositoryInterface::class => EloquentAppearanceRepository::class,
         NotificationRepositoryInterface::class => EloquentNotificationRepository::class,
         DeviceTokenRepositoryInterface::class => EloquentDeviceTokenRepository::class,
-<<<<<<< HEAD
         PushSender::class => FcmPushSender::class,
-=======
-<<<<<<< Updated upstream
-=======
         DashboardRepositoryInterface::class => EloquentDashboardRepository::class,
->>>>>>> Stashed changes
->>>>>>> 04a9d5e (feat: add dashboard routes, schemas, and tests)
     ];
 }
