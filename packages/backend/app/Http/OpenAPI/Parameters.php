@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
     name: 'id',
     in: 'path',
     required: true,
-    description: 'Resource ID',
+    description: 'ID do recurso',
     schema: new OA\Schema(type: 'integer', minimum: 1),
 )]
 class Parameters {}

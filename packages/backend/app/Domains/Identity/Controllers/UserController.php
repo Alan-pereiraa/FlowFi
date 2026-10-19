@@ -19,9 +19,9 @@ class UserController extends Controller
     #[OA\Get(
         path: '/users/{id}',
         operationId: 'getUser',
-        tags: ['Users'],
-        summary: 'Get user',
-        description: 'Only the authenticated user\'s own ID is accessible; any other ID returns 404.',
+        tags: ['Usuários'],
+        summary: 'Buscar usuário',
+        description: 'Só o ID do próprio usuário autenticado é acessível; qualquer outro ID retorna 404.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -29,7 +29,7 @@ class UserController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'User',
+                description: 'Usuário',
                 content: new OA\JsonContent(ref: '#/components/schemas/UserResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -44,9 +44,9 @@ class UserController extends Controller
     #[OA\Put(
         path: '/users/{id}',
         operationId: 'putUser',
-        tags: ['Users'],
-        summary: 'Update user (PUT)',
-        description: 'Uses the same partial-update behavior as PATCH.',
+        tags: ['Usuários'],
+        summary: 'Atualizar usuário (PUT)',
+        description: 'Mesmo comportamento de atualização parcial do PATCH.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -58,7 +58,7 @@ class UserController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'User updated',
+                description: 'Usuário atualizado',
                 content: new OA\JsonContent(ref: '#/components/schemas/UserResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -69,8 +69,8 @@ class UserController extends Controller
     #[OA\Patch(
         path: '/users/{id}',
         operationId: 'updateUser',
-        tags: ['Users'],
-        summary: 'Update user',
+        tags: ['Usuários'],
+        summary: 'Atualizar usuário',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -82,7 +82,7 @@ class UserController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'User updated',
+                description: 'Usuário atualizado',
                 content: new OA\JsonContent(ref: '#/components/schemas/UserResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -100,14 +100,14 @@ class UserController extends Controller
     #[OA\Delete(
         path: '/users/{id}',
         operationId: 'deleteUser',
-        tags: ['Users'],
-        summary: 'Delete user',
+        tags: ['Usuários'],
+        summary: 'Apagar usuário',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagado'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
         ],

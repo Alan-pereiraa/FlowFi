@@ -12,13 +12,13 @@ class IconController extends Controller
     #[OA\Get(
         path: '/icons',
         operationId: 'listIcons',
-        tags: ['Icons'],
-        summary: 'List available icons',
+        tags: ['Ícones'],
+        summary: 'Listar ícones disponíveis',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Icons grouped by category',
+                description: 'Ícones agrupados por categoria',
                 content: new OA\JsonContent(ref: '#/components/schemas/IconCatalogResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),

@@ -11,7 +11,7 @@ use OpenApi\Attributes as OA;
 #[OA\Info(
     title: 'FlowFi API',
     version: '1.0.0',
-    description: 'Personal financial control API. Organize your money across goals, categories and transactions with flexible installment schedules.',
+    description: 'API de controle financeiro pessoal. Organize seu dinheiro em metas, categorias e transações com parcelamentos flexíveis.',
     contact: new OA\Contact(email: 'dev@flowfi.local'),
     license: new OA\License(name: 'MIT'),
 )]
@@ -20,29 +20,29 @@ use OpenApi\Attributes as OA;
     securityScheme: 'sanctum',
     type: 'http',
     scheme: 'bearer',
-    bearerFormat: 'Sanctum token',
-    description: 'Token returned by POST /auth/otp/verify. Send it as `Authorization: Bearer <token>`.',
+    bearerFormat: 'Token Sanctum',
+    description: 'Token devolvido por POST /auth/otp/verify. Envie como `Authorization: Bearer <token>`.',
 )]
-#[OA\Tag(name: 'Authentication', description: 'Passwordless login with an emailed one-time code')]
-#[OA\Tag(name: 'Users', description: 'Profile of the authenticated user')]
-#[OA\Tag(name: 'Goals', description: 'Savings goals')]
+#[OA\Tag(name: 'Autenticação', description: 'Login sem senha com um código de uso único enviado por e-mail')]
+#[OA\Tag(name: 'Usuários', description: 'Perfil do usuário autenticado')]
+#[OA\Tag(name: 'Metas', description: 'Metas de economia')]
 #[OA\Tag(
-    name: 'Categories',
-    description: 'Transaction categories, optionally with a monthly spending limit',
+    name: 'Categorias',
+    description: 'Categorias de transação, opcionalmente com um limite mensal de gastos',
 )]
 #[OA\Tag(
-    name: 'Transactions',
-    description: 'Income, expense and transfer transactions and their installments',
+    name: 'Transações',
+    description: 'Transações de receita, despesa e transferência e suas parcelas',
 )]
 #[OA\Tag(
     name: 'Transações recorrentes',
     description: 'Moldes que criam uma transação comum a cada ocorrência (salário, aluguel, um depósito mensal numa meta)',
 )]
-#[OA\Tag(name: 'Notifications', description: 'In-app notifications')]
-#[OA\Tag(name: 'Icons', description: 'Icon catalog usable by categories and goals')]
+#[OA\Tag(name: 'Notificações', description: 'Notificações dentro do app')]
+#[OA\Tag(name: 'Ícones', description: 'Catálogo de ícones usados por categorias e metas')]
 #[OA\Response(
     response: 'UnauthorizedResponse',
-    description: 'Missing or invalid token',
+    description: 'Token ausente ou inválido',
     content: new OA\JsonContent(
         properties: [
             new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
@@ -51,7 +51,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'NotFoundResponse',
-    description: 'Resource not found (or not owned by the authenticated user)',
+    description: 'Recurso não encontrado (ou não pertence ao usuário autenticado)',
     content: new OA\JsonContent(
         properties: [
             new OA\Property(property: 'message', type: 'string', example: 'Not found.'),
@@ -60,7 +60,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'ValidationErrorResponse',
-    description: 'Validation error',
+    description: 'Erro de validação',
     content: new OA\JsonContent(
         properties: [
             new OA\Property(property: 'message', type: 'string', example: 'The name field is required.'),
@@ -75,7 +75,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'TooManyRequestsResponse',
-    description: 'Rate limit exceeded',
+    description: 'Limite de requisições excedido',
     content: new OA\JsonContent(
         properties: [
             new OA\Property(property: 'message', type: 'string', example: 'Too Many Attempts.'),
@@ -84,7 +84,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'UpstreamErrorResponse',
-    description: 'The AI provider failed (502) or is busy (503); retry or fill in the transaction manually',
+    description: 'O provedor de IA falhou (502) ou está sobrecarregado (503); tente de novo ou preencha a transação manualmente',
     content: new OA\JsonContent(
         properties: [
             new OA\Property(
@@ -146,7 +146,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateUserRequest',
     type: 'object',
-    description: 'All fields optional. `email` cannot be null and must be unique.',
+    description: 'Todos os campos são opcionais. `email` não pode ser null e deve ser único.',
     properties: [
         new OA\Property(property: 'first_name', type: 'string', nullable: true, maxLength: 255),
         new OA\Property(property: 'last_name', type: 'string', nullable: true, maxLength: 255),
@@ -159,11 +159,11 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'name', type: 'string', example: 'Groceries'),
+        new OA\Property(property: 'name', type: 'string', example: 'Mercado'),
         new OA\Property(
             property: 'icon',
             type: 'string',
-            description: 'Name from GET /icons',
+            description: 'Nome vindo de GET /icons',
             example: 'shopping_cart',
         ),
         new OA\Property(property: 'color', type: 'string', pattern: '^#[0-9A-Fa-f]{6}$', example: '#4CAF50'),
@@ -172,7 +172,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             format: 'decimal',
             nullable: true,
-            description: 'Monthly spending limit',
+            description: 'Limite mensal de gastos',
             example: '1500.00',
         ),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
@@ -188,20 +188,20 @@ use OpenApi\Attributes as OA;
             property: 'name',
             type: 'string',
             maxLength: 255,
-            description: 'Unique among the user\'s categories',
-            example: 'Groceries',
+            description: 'Único entre as categorias do usuário',
+            example: 'Mercado',
         ),
         new OA\Property(
             property: 'icon',
             type: 'string',
-            description: 'Name from GET /icons',
+            description: 'Nome vindo de GET /icons',
             example: 'shopping_cart',
         ),
         new OA\Property(
             property: 'color',
             type: 'string',
             pattern: '^#[0-9A-Fa-f]{6}$',
-            description: '#RRGGBB, upper or lower case',
+            description: '#RRGGBB, maiúsculas ou minúsculas',
             example: '#4CAF50',
         ),
         new OA\Property(
@@ -209,7 +209,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             format: 'decimal',
             nullable: true,
-            description: '0.01 to 99999999.99, up to 2 decimal places',
+            description: 'De 0.01 a 99999999.99, com até 2 casas decimais',
             example: '1500.00',
         ),
     ],
@@ -217,7 +217,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateCategoryRequest',
     type: 'object',
-    description: 'All fields optional. `name`, `icon` and `color` cannot be null.',
+    description: 'Todos os campos são opcionais. `name`, `icon` e `color` não podem ser null.',
     properties: [
         new OA\Property(property: 'name', type: 'string', maxLength: 255),
         new OA\Property(property: 'icon', type: 'string'),
@@ -230,7 +230,7 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'name', type: 'string', example: 'Trip to Japan'),
+        new OA\Property(property: 'name', type: 'string', example: 'Viagem ao Japão'),
         new OA\Property(property: 'icon', type: 'string', example: 'flight'),
         new OA\Property(property: 'color', type: 'string', pattern: '^#[0-9A-Fa-f]{6}$', example: '#2196F3'),
         new OA\Property(property: 'target_amount', type: 'string', format: 'decimal', example: '10000.00'),
@@ -238,7 +238,7 @@ use OpenApi\Attributes as OA;
             property: 'current_amount',
             type: 'string',
             format: 'decimal',
-            description: 'Balance accumulated through transfers',
+            description: 'Saldo acumulado por meio de transferências',
             example: '2500.00',
         ),
         new OA\Property(property: 'expires_at', type: 'string', format: 'date', nullable: true),
@@ -255,13 +255,13 @@ use OpenApi\Attributes as OA;
             property: 'name',
             type: 'string',
             maxLength: 255,
-            description: 'Unique among the user\'s goals',
-            example: 'Trip to Japan',
+            description: 'Único entre as metas do usuário',
+            example: 'Viagem ao Japão',
         ),
         new OA\Property(
             property: 'icon',
             type: 'string',
-            description: 'Name from GET /icons',
+            description: 'Nome vindo de GET /icons',
             example: 'flight',
         ),
         new OA\Property(property: 'color', type: 'string', pattern: '^#[0-9A-Fa-f]{6}$', example: '#2196F3'),
@@ -269,7 +269,7 @@ use OpenApi\Attributes as OA;
             property: 'target_amount',
             type: 'string',
             format: 'decimal',
-            description: '0.01 to 99999999.99, up to 2 decimal places',
+            description: 'De 0.01 a 99999999.99, com até 2 casas decimais',
             example: '10000.00',
         ),
         new OA\Property(
@@ -284,7 +284,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateGoalRequest',
     type: 'object',
-    description: 'All fields optional. `name`, `icon`, `color` and `target_amount` cannot be null.',
+    description: 'Todos os campos são opcionais. `name`, `icon`, `color` e `target_amount` não podem ser null.',
     properties: [
         new OA\Property(property: 'name', type: 'string', maxLength: 255),
         new OA\Property(property: 'icon', type: 'string'),
@@ -296,13 +296,13 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'Installment',
     type: 'object',
-    description: 'A single payment within a transaction\'s schedule',
+    description: 'Um pagamento do cronograma de uma transação',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(
             property: 'step',
             type: 'integer',
-            description: 'Order in the schedule (1, 2, 3...)',
+            description: 'Posição no cronograma (1, 2, 3...)',
             example: 1,
         ),
         new OA\Property(property: 'amount', type: 'string', format: 'decimal', example: '50.17'),
@@ -316,7 +316,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'Transaction',
     type: 'object',
-    description: 'A money movement with its payment schedule. `category_id` is null for transfers.',
+    description: 'Uma movimentação de dinheiro com seu cronograma de pagamento. `category_id` é null em transferências.',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'category_id', type: 'integer', nullable: true, example: 5),
@@ -331,7 +331,7 @@ use OpenApi\Attributes as OA;
             property: 'description',
             type: 'string',
             nullable: true,
-            example: 'Groceries for the month',
+            example: 'Compras do mês',
         ),
         new OA\Property(property: 'date', type: 'string', format: 'date', example: '2026-01-15'),
         new OA\Property(property: 'total_amount', type: 'string', format: 'decimal', example: '150.50'),
@@ -354,7 +354,7 @@ use OpenApi\Attributes as OA;
             property: 'recurring_transaction_id',
             type: 'integer',
             nullable: true,
-            description: 'Recurring transaction that generated this one; null for transactions created directly',
+            description: 'Transação recorrente que gerou esta; null para transações criadas diretamente',
         ),
         new OA\Property(
             property: 'installments',
@@ -369,7 +369,7 @@ use OpenApi\Attributes as OA;
     schema: 'StoreTransactionRequest',
     type: 'object',
     required: ['type', 'date', 'total_amount'],
-    description: 'Rules depend on `type`. expense: `category_id` required, `goal_id` optional. income: `category_id` required, `goal_id` forbidden. transfer: `goal_id` required, `category_id`, `installments`, `period_unit` and `period_interval` forbidden, and it cannot be split (`installments_count` must be 1). Send either `installments` (custom schedule) or `installments_count` + `period_*` (even split); mixing them returns 422.',
+    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório, `goal_id` proibido. transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; e não pode ser parcelada (`installments_count` deve ser 1). Envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422.',
     properties: [
         new OA\Property(
             property: 'type',
@@ -381,21 +381,21 @@ use OpenApi\Attributes as OA;
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Required unless type=transfer; forbidden for transfer',
+            description: 'Obrigatório, exceto quando type=transfer; proibido em transfer',
             example: 5,
         ),
         new OA\Property(
             property: 'goal_id',
             type: 'integer',
             nullable: true,
-            description: 'Required for transfer; forbidden for income; optional for expense',
+            description: 'Obrigatório em transfer; proibido em income; opcional em expense',
         ),
         new OA\Property(
             property: 'description',
             type: 'string',
             nullable: true,
             maxLength: 1000,
-            example: 'Groceries',
+            example: 'Mercado',
         ),
         new OA\Property(
             property: 'date',
@@ -408,7 +408,7 @@ use OpenApi\Attributes as OA;
             property: 'total_amount',
             type: 'string',
             format: 'decimal',
-            description: '0.01 to 99999999.99, up to 2 decimal places',
+            description: 'De 0.01 a 99999999.99, com até 2 casas decimais',
             example: '150.50',
         ),
         new OA\Property(
@@ -417,7 +417,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minItems: 1,
             maxItems: 120,
-            description: 'Custom schedule. The amounts must add up to total_amount (422 otherwise). Mutually exclusive with installments_count, period_unit and period_interval (422). Forbidden for transfer.',
+            description: 'Cronograma personalizado. A soma dos valores deve ser igual a total_amount (senão, 422). Não pode ser combinado com installments_count, period_unit e period_interval (422). Proibido em transfer.',
             items: new OA\Items(
                 type: 'object',
                 required: ['amount', 'date'],
@@ -426,7 +426,7 @@ use OpenApi\Attributes as OA;
                         property: 'amount',
                         type: 'string',
                         format: 'decimal',
-                        description: '0.01 to 99999999.99',
+                        description: 'De 0.01 a 99999999.99',
                         example: '50.17',
                     ),
                     new OA\Property(property: 'date', type: 'string', format: 'date', example: '2026-01-15'),
@@ -439,7 +439,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 1,
             maximum: 120,
-            description: 'Number of equal installments (default 1)',
+            description: 'Quantidade de parcelas iguais (padrão 1)',
             example: 3,
         ),
         new OA\Property(
@@ -447,7 +447,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             enum: ['day', 'week', 'month', 'year'],
             nullable: true,
-            description: 'Required when installments_count > 1. Forbidden for transfer.',
+            description: 'Obrigatório quando installments_count > 1. Proibido em transfer.',
             example: 'month',
         ),
         new OA\Property(
@@ -456,7 +456,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 1,
             maximum: 365,
-            description: 'Units between installments (default 1). Forbidden for transfer.',
+            description: 'Unidades de período entre as parcelas (padrão 1). Proibido em transfer.',
             example: 1,
         ),
     ],
@@ -464,7 +464,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateTransactionRequest',
     type: 'object',
-    description: 'All fields optional. `type` cannot be changed (sending it returns 422). `category_id` is forbidden on transfers and `goal_id` is forbidden on income (required on transfers). Sending any schedule field (total_amount, installments, installments_count, period_unit, period_interval) regenerates the whole schedule, which returns 422 if the transaction already has a paid installment.',
+    description: 'Todos os campos são opcionais. `type` não pode ser alterado (enviá-lo retorna 422). `category_id` é proibido em transferências e `goal_id` é proibido em receitas (obrigatório em transferências). Enviar qualquer campo do cronograma (total_amount, installments, installments_count, period_unit, period_interval) gera o cronograma inteiro de novo, o que retorna 422 se a transação já tiver alguma parcela paga.',
     properties: [
         new OA\Property(property: 'category_id', type: 'integer', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
@@ -476,7 +476,7 @@ use OpenApi\Attributes as OA;
             type: 'array',
             minItems: 1,
             maxItems: 120,
-            description: 'Custom schedule. Mutually exclusive with installments_count, period_unit and period_interval.',
+            description: 'Cronograma personalizado. Não pode ser combinado com installments_count, period_unit e period_interval.',
             items: new OA\Items(
                 type: 'object',
                 required: ['amount', 'date'],
@@ -505,7 +505,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'RecurringTransaction',
     type: 'object',
-    description: 'Template repeated in full every period. `next_occurrence_on` is null once it has ended or generated every occurrence.',
+    description: 'Molde repetido integralmente a cada período. `next_occurrence_on` fica null depois que ela é encerrada ou gera todas as ocorrências.',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'category_id', type: 'integer', nullable: true, example: 5),
@@ -516,12 +516,12 @@ use OpenApi\Attributes as OA;
             enum: ['income', 'expense', 'transfer'],
             example: 'income',
         ),
-        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Salary'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Salário'),
         new OA\Property(
             property: 'amount',
             type: 'string',
             format: 'decimal',
-            description: 'Amount of every occurrence (not split)',
+            description: 'Valor de cada ocorrência (não é dividido)',
             example: '5000.00',
         ),
         new OA\Property(
@@ -550,7 +550,7 @@ use OpenApi\Attributes as OA;
     schema: 'StoreRecurringTransactionRequest',
     type: 'object',
     required: ['type', 'amount', 'period_unit', 'start_date'],
-    description: 'Same `type` rules as StoreTransactionRequest for `category_id` and `goal_id`. Send `end_date` or `occurrences` to stop it, or neither to repeat until ended; sending both returns 422.',
+    description: 'Mesmas regras de `type` do StoreTransactionRequest para `category_id` e `goal_id`. Envie `end_date` ou `occurrences` para definir o fim, ou nenhum dos dois para repetir até ser encerrada; enviar os dois retorna 422.',
     properties: [
         new OA\Property(
             property: 'type',
@@ -562,21 +562,21 @@ use OpenApi\Attributes as OA;
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Required unless type=transfer; forbidden for transfer',
+            description: 'Obrigatório, exceto quando type=transfer; proibido em transfer',
             example: 5,
         ),
         new OA\Property(
             property: 'goal_id',
             type: 'integer',
             nullable: true,
-            description: 'Required for transfer; forbidden for income; optional for expense',
+            description: 'Obrigatório em transfer; proibido em income; opcional em expense',
         ),
-        new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000, example: 'Salary'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000, example: 'Salário'),
         new OA\Property(
             property: 'amount',
             type: 'string',
             format: 'decimal',
-            description: '0.01 to 99999999.99, repeated in full on every occurrence',
+            description: 'De 0.01 a 99999999.99, repetido integralmente em cada ocorrência',
             example: '5000.00',
         ),
         new OA\Property(
@@ -591,14 +591,14 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 1,
             maximum: 365,
-            description: 'Units between occurrences (default 1)',
+            description: 'Unidades de período entre as ocorrências (padrão 1)',
             example: 1,
         ),
         new OA\Property(
             property: 'start_date',
             type: 'string',
             format: 'date',
-            description: 'First occurrence. Up to one year in the past; past occurrences are created on save.',
+            description: 'Primeira ocorrência. Pode estar até um ano no passado; as ocorrências passadas são criadas ao salvar.',
             example: '2027-01-05',
         ),
         new OA\Property(
@@ -623,7 +623,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateRecurringTransactionRequest',
     type: 'object',
-    description: 'All fields optional; only future occurrences pick them up. `type`, `period_unit`, `period_interval`, `start_date`, `end_date` and `occurrences` cannot be changed (422): end it and create a new one instead.',
+    description: 'Todos os campos são opcionais; só as próximas ocorrências recebem a alteração. `type`, `period_unit`, `period_interval`, `start_date`, `end_date` e `occurrences` não podem ser alterados (422): encerre esta e crie outra.',
     properties: [
         new OA\Property(property: 'category_id', type: 'integer', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
@@ -642,13 +642,13 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'subject',
             type: 'string',
-            description: 'Kind of entity the notification refers to',
+            description: 'Tipo de evento ou entidade a que a notificação se refere',
         ),
         new OA\Property(
             property: 'subject_id',
             type: 'integer',
             nullable: true,
-            description: 'ID of that entity',
+            description: 'ID dessa entidade',
         ),
         new OA\Property(property: 'read_at', type: 'string', format: 'date-time', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
@@ -658,7 +658,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'IconCatalog',
     type: 'object',
-    description: 'Icons of one group',
+    description: 'Ícones de um grupo',
     properties: [
         new OA\Property(property: 'category', type: 'string', example: 'finance'),
         new OA\Property(
@@ -697,7 +697,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'code',
             type: 'string',
-            description: 'Numeric code with exactly config(\'auth.otp.length\') digits (6 by default)',
+            description: 'Código numérico com exatamente config(\'auth.otp.length\') dígitos (6 por padrão)',
             example: '123456',
         ),
     ],
@@ -770,13 +770,13 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'transcript',
             type: 'string',
-            description: 'Text the draft was built from: the transcription of `audio`, or `raw_context` as sent',
+            description: 'Texto usado para montar o rascunho: a transcrição de `audio`, ou `raw_context` como foi enviado',
             example: 'gastei 50 reais no mercado hoje',
         ),
         new OA\Property(
             property: 'transaction',
             ref: '#/components/schemas/StoreTransactionRequest',
-            description: 'Body for POST /transactions. Every key is present; null means the AI could not tell. `installments` is never drafted.',
+            description: 'Corpo para POST /transactions. Todas as chaves estão presentes; null significa que a IA não conseguiu identificar. `installments` nunca é preenchido no rascunho.',
         ),
     ],
 )]

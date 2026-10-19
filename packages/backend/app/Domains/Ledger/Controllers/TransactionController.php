@@ -28,14 +28,14 @@ class TransactionController extends Controller
     #[OA\Get(
         path: '/transactions',
         operationId: 'listTransactions',
-        tags: ['Transactions'],
-        summary: 'List transactions (paginated)',
+        tags: ['Transações'],
+        summary: 'Listar transações (paginado)',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'per_page',
                 in: 'query',
-                description: 'Page size; values outside 1-100 are clamped',
+                description: 'Tamanho da página; valores fora de 1 a 100 são ajustados ao limite',
                 schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20),
             ),
             new OA\Parameter(
@@ -47,20 +47,20 @@ class TransactionController extends Controller
             new OA\Parameter(
                 name: 'date_from',
                 in: 'query',
-                description: 'Only transactions whose installments are all on or after this date',
+                description: 'Só transações com todas as parcelas nesta data ou depois',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
             new OA\Parameter(
                 name: 'date_to',
                 in: 'query',
-                description: 'Only transactions whose installments are all on or before this date; must be >= date_from',
+                description: 'Só transações com todas as parcelas nesta data ou antes; deve ser >= date_from',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Paginated transactions, newest first',
+                description: 'Transações paginadas, das mais recentes para as mais antigas',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionPageResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -79,9 +79,9 @@ class TransactionController extends Controller
     #[OA\Post(
         path: '/transactions',
         operationId: 'createTransaction',
-        tags: ['Transactions'],
-        summary: 'Create transaction',
-        description: 'Also returns 422 when an expense would exceed the category\'s monthly limit, or when the goal does not have enough balance for the transaction.',
+        tags: ['Transações'],
+        summary: 'Criar transação',
+        description: 'Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -90,7 +90,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Transaction created with its installments',
+                description: 'Transação criada com suas parcelas',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -107,8 +107,8 @@ class TransactionController extends Controller
     #[OA\Get(
         path: '/transactions/{id}',
         operationId: 'getTransaction',
-        tags: ['Transactions'],
-        summary: 'Get transaction',
+        tags: ['Transações'],
+        summary: 'Buscar transação',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -116,7 +116,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Transaction with installments',
+                description: 'Transação com as parcelas',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -131,9 +131,9 @@ class TransactionController extends Controller
     #[OA\Put(
         path: '/transactions/{id}',
         operationId: 'putTransaction',
-        tags: ['Transactions'],
-        summary: 'Update transaction (PUT)',
-        description: 'Uses the same partial-update behavior as PATCH.',
+        tags: ['Transações'],
+        summary: 'Atualizar transação (PUT)',
+        description: 'Mesmo comportamento de atualização parcial do PATCH.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -145,7 +145,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Transaction updated',
+                description: 'Transação atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -156,8 +156,8 @@ class TransactionController extends Controller
     #[OA\Patch(
         path: '/transactions/{id}',
         operationId: 'updateTransaction',
-        tags: ['Transactions'],
-        summary: 'Update transaction',
+        tags: ['Transações'],
+        summary: 'Atualizar transação',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -169,7 +169,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Transaction updated',
+                description: 'Transação atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -187,15 +187,15 @@ class TransactionController extends Controller
     #[OA\Delete(
         path: '/transactions/{id}',
         operationId: 'deleteTransaction',
-        tags: ['Transactions'],
-        summary: 'Delete transaction',
-        description: 'Soft-deletes the transaction and its installments and reverts its effect on the goal balance.',
+        tags: ['Transações'],
+        summary: 'Apagar transação',
+        description: 'Faz soft delete da transação e das parcelas e desfaz o efeito dela no saldo da meta.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagada'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
         ],
@@ -210,9 +210,9 @@ class TransactionController extends Controller
     #[OA\Patch(
         path: '/transactions/{id}/installments/{installmentId}/pay',
         operationId: 'payInstallment',
-        tags: ['Transactions'],
-        summary: 'Mark installment as paid',
-        description: 'Returns 422 when the installment is already paid.',
+        tags: ['Transações'],
+        summary: 'Marcar parcela como paga',
+        description: 'Retorna 422 quando a parcela já está paga.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -226,7 +226,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Installment marked as paid',
+                description: 'Parcela marcada como paga',
                 content: new OA\JsonContent(ref: '#/components/schemas/InstallmentResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -244,9 +244,9 @@ class TransactionController extends Controller
     #[OA\Post(
         path: '/transactions/draft',
         operationId: 'draftTransaction',
-        tags: ['Transactions'],
-        summary: 'Draft a transaction from audio or raw text',
-        description: 'Transcribes `audio` (or takes `raw_context` as is) and asks the AI provider for a draft shaped like the POST /transactions body. Nothing is saved: show the draft to the user, have them fill in any required field that came back null, then send it to POST /transactions.',
+        tags: ['Transações'],
+        summary: 'Gerar rascunho de transação a partir de áudio ou texto',
+        description: 'Transcreve `audio` (ou usa `raw_context` como veio) e pede ao provedor de IA um rascunho no formato do corpo de POST /transactions. Nada é salvo: mostre o rascunho ao usuário, peça que preencha os campos obrigatórios que vieram null e então envie para POST /transactions.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -260,7 +260,7 @@ class TransactionController extends Controller
                                 property: 'audio',
                                 type: 'string',
                                 format: 'binary',
-                                description: 'Voice note up to 2 MB: m4a, mp4, webm, ogg, mp3, wav, flac or aac',
+                                description: 'Áudio de até 2 MB: m4a, mp4, webm, ogg, mp3, wav, flac ou aac',
                             ),
                         ],
                     ),
@@ -281,7 +281,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Draft ready for the user to confirm',
+                description: 'Rascunho pronto para o usuário confirmar',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionDraftResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),

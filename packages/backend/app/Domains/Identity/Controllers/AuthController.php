@@ -19,9 +19,9 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/auth/otp/request',
         operationId: 'requestOtp',
-        tags: ['Authentication'],
-        summary: 'Request an OTP code',
-        description: 'Emails a one-time code (config auth.otp.length digits, 6 by default) that expires in config auth.otp.expire minutes. Throttled per email and per IP.',
+        tags: ['Autenticação'],
+        summary: 'Solicitar código OTP',
+        description: 'Envia por e-mail um código de uso único (config auth.otp.length dígitos, 6 por padrão) que expira em config auth.otp.expire minutos. Limitado por e-mail e por IP.',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/RequestOtpRequest'),
@@ -29,7 +29,7 @@ class AuthController extends Controller
         responses: [
             new OA\Response(
                 response: 202,
-                description: 'Code sent to the email address',
+                description: 'Código enviado para o e-mail',
                 content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse'),
             ),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
@@ -46,9 +46,9 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/auth/otp/verify',
         operationId: 'verifyOtp',
-        tags: ['Authentication'],
-        summary: 'Verify OTP and log in',
-        description: 'Consumes the code. Creates the account on the first login. Deactivated accounts get 422.',
+        tags: ['Autenticação'],
+        summary: 'Verificar OTP e entrar',
+        description: 'Consome o código. Cria a conta no primeiro login. Contas desativadas recebem 422.',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/VerifyOtpRequest'),
@@ -56,7 +56,7 @@ class AuthController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Login successful',
+                description: 'Login realizado',
                 content: new OA\JsonContent(ref: '#/components/schemas/AuthTokenResponse'),
             ),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
@@ -79,13 +79,13 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/auth/logout',
         operationId: 'logout',
-        tags: ['Authentication'],
-        summary: 'Log out (revoke current token)',
+        tags: ['Autenticação'],
+        summary: 'Sair (revoga o token atual)',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Logged out',
+                description: 'Sessão encerrada',
                 content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),

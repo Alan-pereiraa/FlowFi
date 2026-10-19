@@ -22,13 +22,13 @@ class GoalController extends Controller
     #[OA\Get(
         path: '/goals',
         operationId: 'listGoals',
-        tags: ['Goals'],
-        summary: 'List goals',
+        tags: ['Metas'],
+        summary: 'Listar metas',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'All goals of the authenticated user',
+                description: 'Todas as metas do usuário autenticado',
                 content: new OA\JsonContent(ref: '#/components/schemas/GoalListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -42,8 +42,8 @@ class GoalController extends Controller
     #[OA\Post(
         path: '/goals',
         operationId: 'createGoal',
-        tags: ['Goals'],
-        summary: 'Create goal',
+        tags: ['Metas'],
+        summary: 'Criar meta',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -52,7 +52,7 @@ class GoalController extends Controller
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Goal created',
+                description: 'Meta criada',
                 content: new OA\JsonContent(ref: '#/components/schemas/GoalResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -69,8 +69,8 @@ class GoalController extends Controller
     #[OA\Get(
         path: '/goals/{id}',
         operationId: 'getGoal',
-        tags: ['Goals'],
-        summary: 'Get goal',
+        tags: ['Metas'],
+        summary: 'Buscar meta',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -78,7 +78,7 @@ class GoalController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Goal',
+                description: 'Meta',
                 content: new OA\JsonContent(ref: '#/components/schemas/GoalResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -93,9 +93,9 @@ class GoalController extends Controller
     #[OA\Put(
         path: '/goals/{id}',
         operationId: 'putGoal',
-        tags: ['Goals'],
-        summary: 'Update goal (PUT)',
-        description: 'Uses the same partial-update behavior as PATCH.',
+        tags: ['Metas'],
+        summary: 'Atualizar meta (PUT)',
+        description: 'Mesmo comportamento de atualização parcial do PATCH.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -107,7 +107,7 @@ class GoalController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Goal updated',
+                description: 'Meta atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/GoalResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -118,8 +118,8 @@ class GoalController extends Controller
     #[OA\Patch(
         path: '/goals/{id}',
         operationId: 'updateGoal',
-        tags: ['Goals'],
-        summary: 'Update goal',
+        tags: ['Metas'],
+        summary: 'Atualizar meta',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -131,7 +131,7 @@ class GoalController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Goal updated',
+                description: 'Meta atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/GoalResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -149,14 +149,14 @@ class GoalController extends Controller
     #[OA\Delete(
         path: '/goals/{id}',
         operationId: 'deleteGoal',
-        tags: ['Goals'],
-        summary: 'Delete goal',
+        tags: ['Metas'],
+        summary: 'Apagar meta',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagada'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),

@@ -20,14 +20,14 @@ class NotificationController extends Controller
     #[OA\Get(
         path: '/notifications',
         operationId: 'listNotifications',
-        tags: ['Notifications'],
-        summary: 'List notifications (paginated)',
+        tags: ['Notificações'],
+        summary: 'Listar notificações (paginado)',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'per_page',
                 in: 'query',
-                description: 'Page size; values outside 1-100 are clamped',
+                description: 'Tamanho da página; valores fora de 1 a 100 são ajustados ao limite',
                 schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 20),
             ),
             new OA\Parameter(
@@ -39,7 +39,7 @@ class NotificationController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Paginated notifications',
+                description: 'Notificações paginadas',
                 content: new OA\JsonContent(ref: '#/components/schemas/NotificationPageResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -58,8 +58,8 @@ class NotificationController extends Controller
     #[OA\Patch(
         path: '/notifications/{id}/read',
         operationId: 'markNotificationAsRead',
-        tags: ['Notifications'],
-        summary: 'Mark notification as read',
+        tags: ['Notificações'],
+        summary: 'Marcar notificação como lida',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -67,7 +67,7 @@ class NotificationController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Notification marked as read',
+                description: 'Notificação marcada como lida',
                 content: new OA\JsonContent(ref: '#/components/schemas/NotificationResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -84,14 +84,14 @@ class NotificationController extends Controller
     #[OA\Delete(
         path: '/notifications/{id}',
         operationId: 'deleteNotification',
-        tags: ['Notifications'],
-        summary: 'Delete notification',
+        tags: ['Notificações'],
+        summary: 'Apagar notificação',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagada'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
         ],

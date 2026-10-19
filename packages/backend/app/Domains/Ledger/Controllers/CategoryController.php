@@ -22,13 +22,13 @@ class CategoryController extends Controller
     #[OA\Get(
         path: '/categories',
         operationId: 'listCategories',
-        tags: ['Categories'],
-        summary: 'List categories',
+        tags: ['Categorias'],
+        summary: 'Listar categorias',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'All categories of the authenticated user',
+                description: 'Todas as categorias do usuário autenticado',
                 content: new OA\JsonContent(ref: '#/components/schemas/CategoryListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -42,8 +42,8 @@ class CategoryController extends Controller
     #[OA\Post(
         path: '/categories',
         operationId: 'createCategory',
-        tags: ['Categories'],
-        summary: 'Create category',
+        tags: ['Categorias'],
+        summary: 'Criar categoria',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -52,7 +52,7 @@ class CategoryController extends Controller
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Category created',
+                description: 'Categoria criada',
                 content: new OA\JsonContent(ref: '#/components/schemas/CategoryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -69,8 +69,8 @@ class CategoryController extends Controller
     #[OA\Get(
         path: '/categories/{id}',
         operationId: 'getCategory',
-        tags: ['Categories'],
-        summary: 'Get category',
+        tags: ['Categorias'],
+        summary: 'Buscar categoria',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -78,7 +78,7 @@ class CategoryController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Category',
+                description: 'Categoria',
                 content: new OA\JsonContent(ref: '#/components/schemas/CategoryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -93,9 +93,9 @@ class CategoryController extends Controller
     #[OA\Put(
         path: '/categories/{id}',
         operationId: 'putCategory',
-        tags: ['Categories'],
-        summary: 'Update category (PUT)',
-        description: 'Uses the same partial-update behavior as PATCH.',
+        tags: ['Categorias'],
+        summary: 'Atualizar categoria (PUT)',
+        description: 'Mesmo comportamento de atualização parcial do PATCH.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -107,7 +107,7 @@ class CategoryController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Category updated',
+                description: 'Categoria atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/CategoryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -118,8 +118,8 @@ class CategoryController extends Controller
     #[OA\Patch(
         path: '/categories/{id}',
         operationId: 'updateCategory',
-        tags: ['Categories'],
-        summary: 'Update category',
+        tags: ['Categorias'],
+        summary: 'Atualizar categoria',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -131,7 +131,7 @@ class CategoryController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Category updated',
+                description: 'Categoria atualizada',
                 content: new OA\JsonContent(ref: '#/components/schemas/CategoryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -149,15 +149,15 @@ class CategoryController extends Controller
     #[OA\Delete(
         path: '/categories/{id}',
         operationId: 'deleteCategory',
-        tags: ['Categories'],
-        summary: 'Delete category',
-        description: 'Refused (422) while the category has transactions or an active recurring transaction; end the recurring transaction first.',
+        tags: ['Categorias'],
+        summary: 'Apagar categoria',
+        description: 'Recusado (422) enquanto a categoria tiver transações ou uma transação recorrente ativa; encerre a transação recorrente antes.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 204, description: 'Apagada'),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
