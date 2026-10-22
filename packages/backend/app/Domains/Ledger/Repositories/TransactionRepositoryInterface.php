@@ -39,5 +39,5 @@ interface TransactionRepositoryInterface
      */
     public function paidTotalsFor(User $user, ?CarbonInterface $from = null, ?CarbonInterface $to = null): array;
 
-    public function latestFor(User $user, int $limit): Collection;
+    public function latestFor(User $user, int $limit, CarbonInterface $until): Collection;
 }

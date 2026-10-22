@@ -81,7 +81,7 @@ class DashboardController extends Controller
         operationId: 'listDashboardRecentTransactions',
         tags: ['Dashboard'],
         summary: 'Últimas transações',
-        description: 'As transações mais recentes pela data, da mais nova para a mais antiga.',
+        description: 'As transações mais recentes pela data, da mais nova para a mais antiga. Transações com data futura não entram.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(

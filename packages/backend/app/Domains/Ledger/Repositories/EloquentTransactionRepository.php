@@ -121,9 +121,10 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         ];
     }
 
-    public function latestFor(User $user, int $limit): Collection
+    public function latestFor(User $user, int $limit, CarbonInterface $until): Collection
     {
         return $user->transactions()
+            ->whereDate('date', '<=', $until->toDateString())
             ->with(['category' => fn ($query) => $query->withTrashed()])
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')

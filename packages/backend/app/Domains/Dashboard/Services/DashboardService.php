@@ -40,6 +40,6 @@ class DashboardService
 
     public function recentTransactions(User $user, int $limit): Collection
     {
-        return $this->transactions->latest($user, $limit);
+        return $this->transactions->latest($user, $limit, CarbonImmutable::today());
     }
 }

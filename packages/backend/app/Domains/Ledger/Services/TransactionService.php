@@ -250,9 +250,9 @@ class TransactionService
         return $this->transactions->paidTotalsFor($user, $from, $to);
     }
 
-    public function latest(User $user, int $limit): Collection
+    public function latest(User $user, int $limit, CarbonInterface $until): Collection
     {
-        return $this->transactions->latestFor($user, $limit);
+        return $this->transactions->latestFor($user, $limit, $until);
     }
 
     private function guardAgainstPaidInstallments(Transaction $transaction): void
