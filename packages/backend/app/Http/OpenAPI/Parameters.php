@@ -16,4 +16,15 @@ use OpenApi\Attributes as OA;
     description: 'ID do recurso',
     schema: new OA\Schema(type: 'integer', minimum: 1),
 )]
+#[OA\Parameter(
+    parameter: 'DashboardMonth',
+    name: 'month',
+    in: 'query',
+    description: 'Mês de referência dos blocos do painel. Por padrão, considera o mês atual.',
+    schema: new OA\Schema(
+        type: 'string',
+        pattern: '^\d{4}-(0[1-9]|1[0-2])$',
+        example: '2026-09',
+    ),
+)]
 class Parameters {}
