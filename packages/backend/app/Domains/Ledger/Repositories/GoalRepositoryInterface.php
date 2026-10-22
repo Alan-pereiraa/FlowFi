@@ -11,6 +11,8 @@ interface GoalRepositoryInterface
 {
     public function listFor(User $user): Collection;
 
+    public function latestFor(User $user, int $limit): Collection;
+
     public function findFor(User $user, int $id): ?Goal;
 
     public function create(User $user, array $attributes): Goal;

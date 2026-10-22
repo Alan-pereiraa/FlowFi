@@ -14,6 +14,11 @@ class EloquentGoalRepository implements GoalRepositoryInterface
         return $user->goals()->orderBy('created_at')->orderBy('id')->get();
     }
 
+    public function latestFor(User $user, int $limit): Collection
+    {
+        return $user->goals()->orderBy('created_at', 'desc')->orderBy('id', 'desc')->limit($limit)->get();
+    }
+
     public function findFor(User $user, int $id): ?Goal
     {
         return $user->goals()->find($id);

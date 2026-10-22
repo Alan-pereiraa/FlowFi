@@ -30,4 +30,14 @@ interface TransactionRepositoryInterface
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection;
 
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection;
+
+    /**
+     * Paid income and expense installments of the user due inside [$from, $to], in cents. Transfers are left out.
+     * A null bound leaves that side open.
+     *
+     * @return array{income: int, expense: int}
+     */
+    public function paidTotalsFor(User $user, ?CarbonInterface $from = null, ?CarbonInterface $to = null): array;
+
+    public function latestFor(User $user, int $limit): Collection;
 }

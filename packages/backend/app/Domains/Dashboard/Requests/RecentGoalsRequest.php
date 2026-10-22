@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Domains\Dashboard\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class RecentGoalsRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            'limit' => ['bail', 'sometimes', 'integer', 'min:1', 'max:10'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'limit.integer' => 'O limite deve ser um número inteiro.',
+            'limit.min' => 'O limite deve ser no mínimo :min.',
+            'limit.max' => 'O limite deve ser no máximo :max.',
+        ];
+    }
+}

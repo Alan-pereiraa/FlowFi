@@ -242,6 +242,19 @@ class TransactionService
         return $this->transactions->overduePendingExpenseInstallments($today);
     }
 
+    /**
+     * @return array{income: int, expense: int}
+     */
+    public function paidTotals(User $user, ?CarbonInterface $from = null, ?CarbonInterface $to = null): array
+    {
+        return $this->transactions->paidTotalsFor($user, $from, $to);
+    }
+
+    public function latest(User $user, int $limit): Collection
+    {
+        return $this->transactions->latestFor($user, $limit);
+    }
+
     private function guardAgainstPaidInstallments(Transaction $transaction): void
     {
         $hasPaidInstallment = $transaction->installments()

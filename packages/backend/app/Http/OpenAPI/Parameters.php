@@ -20,7 +20,7 @@ use OpenApi\Attributes as OA;
     parameter: 'DashboardMonth',
     name: 'month',
     in: 'query',
-    description: 'Mês de referência dos blocos do painel. Por padrão, considera o mês atual.',
+    description: 'Mês de referência das entradas e saídas. Por padrão, considera o mês atual.',
     schema: new OA\Schema(
         type: 'string',
         pattern: '^\d{4}-(0[1-9]|1[0-2])$',

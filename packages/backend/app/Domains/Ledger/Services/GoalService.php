@@ -25,6 +25,11 @@ class GoalService
         return $this->goals->listFor($user);
     }
 
+    public function latest(User $user, int $limit): Collection
+    {
+        return $this->goals->latestFor($user, $limit);
+    }
+
     public function create(User $user, array $data): Goal
     {
         return $this->goals->create($user, $this->appearance->normalize($data));
