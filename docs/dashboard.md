@@ -2,7 +2,8 @@
 
 Read-only endpoints behind the app's home screen (`app/Domains/Dashboard`). Everything is scoped to the
 authenticated user, so there is nothing to pass but filters. All routes are `GET`, live under `/api/v1`
-and need `Authorization: Bearer <token>`.
+and need `Authorization: Bearer <token>`. They are documented in the Swagger UI (`/api/docs`, tag
+**Dashboard**); the schemas are in `app/Http/OpenAPI/DashboardSchemas.php`.
 
 | Route | Returns (`data`) | Query string |
 |---|---|---|
