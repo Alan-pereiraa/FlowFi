@@ -14,4 +14,5 @@ abstract final class Routes {
   static const newCategory = '/categories/new';
   static const goals = '/goals';
   static const forecast = '/forecast';
+  static const notifications = '/notifications';
 }
