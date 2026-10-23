@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../shared/widgets/app_add_card.dart';
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
@@ -62,6 +62,12 @@ class CategoriesPage extends ConsumerWidget {
           ],
         ),
       );
+    } else if (state.categories.isEmpty) {
+      body = const EmptyState(
+        icon: Icons.category_outlined,
+        title: 'Nenhuma categoria ainda',
+        message: 'Organize seus gastos e defina um limite mensal.',
+      );
     } else {
       body = ResponsiveGrid(
         minTileWidth: 340,
@@ -74,11 +80,6 @@ class CategoriesPage extends ConsumerWidget {
                 extra: category,
               ),
             ),
-          AppAddCard(
-            title: 'Nova categoria',
-            message: 'Organize seus gastos e defina um limite mensal.',
-            onTap: create,
-          ),
         ],
       );
     }
