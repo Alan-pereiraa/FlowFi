@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../domain/entities/category.dart';
-import '../../domain/entities/category_input.dart';
 import '../../domain/entities/category_draft.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../datasources/categories_api.dart';
@@ -21,12 +20,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<List<Category>> list() async {
     final dtos = await guardApi(_api.listCategories);
     return [for (final dto in dtos) dto.toEntity()];
-  }
-
-  @override
-  Future<Category> createFromInput(CategoryInput input) async {
-    final dto = await guardApi(() => _api.create(input));
-    return dto.toEntity();
   }
 
   Future<List<Category>> listCategories() async {

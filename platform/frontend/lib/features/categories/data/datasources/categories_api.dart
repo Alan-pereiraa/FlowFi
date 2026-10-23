@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception.dart';
-import '../../domain/entities/category_input.dart';
 import '../models/category_draft_dto.dart';
 import '../models/category_dto.dart';
 
@@ -23,16 +22,6 @@ class CategoriesApi {
     return (response.data!['data'] as List<dynamic>)
         .map((item) => CategoryDto.fromJson(item as Map<String, dynamic>))
         .toList();
-  }
-
-  Future<CategoryDto> create(CategoryInput input) async {
-    final response = await _send(
-      () => _dio.post<Map<String, dynamic>>(
-        '/categories',
-        data: CategoryDto.inputToJson(input),
-      ),
-    );
-    return CategoryDto.fromJson(response.data!['data'] as Map<String, dynamic>);
   }
 
   Future<List<CategoryDto>> listCategories() async {

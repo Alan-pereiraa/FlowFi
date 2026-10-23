@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../shared/errors/ledger_error_messages.dart';
 import '../../data/repositories/category_repository_impl.dart';
-import '../../domain/entities/category_input.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/category_draft.dart';
 import 'categories_list_controller.dart';
 import 'category_form_state.dart';
@@ -21,33 +20,6 @@ class CategoryFormController extends Notifier<CategoryFormState> {
 
   @override
   CategoryFormState build() => const CategoryFormState();
-
-  Future<void> save(CategoryInput input) async {
-    if (state.saving) return;
-    state = const CategoryFormState(saving: true);
-    try {
-      final category = await ref
-          .read(categoryRepositoryProvider)
-          .createFromInput(input);
-      if (!ref.mounted) return;
-      state = CategoryFormState(created: category);
-      // The categories list is now stale.
-      ref.invalidate(categoriesListControllerProvider);
-    } on ValidationFailure catch (failure) {
-      if (!ref.mounted) return;
-      final fieldErrors = {
-        for (final field in _fields)
-          field: ?ErrorMessages.forField(failure, field),
-      };
-      state = CategoryFormState(
-        fieldErrors: fieldErrors,
-        formError: fieldErrors.isEmpty ? ErrorMessages.general(failure) : null,
-      );
-    } on Failure catch (failure) {
-      if (!ref.mounted) return;
-      state = CategoryFormState(formError: ErrorMessages.general(failure));
-    }
-  }
 
   /// Fetches a category to edit when the screen was opened by id alone (a deep
   /// link or a browser refresh on web) and nothing was handed over.
@@ -97,7 +69,7 @@ class CategoryFormController extends Notifier<CategoryFormState> {
   }
 
   Future<void> _save(
-    Future<Object> Function() call,
+    Future<Category> Function() call,
     CategoryOutcome outcome,
   ) async {
     if (state.busy) return;
@@ -107,9 +79,13 @@ class CategoryFormController extends Notifier<CategoryFormState> {
       formError: () => null,
     );
     try {
-      await call();
+      final category = await call();
       if (!ref.mounted) return;
-      state = state.copyWith(saving: false, outcome: () => outcome);
+      state = state.copyWith(
+        saving: false,
+        created: () => outcome == CategoryOutcome.created ? category : null,
+        outcome: () => outcome,
+      );
       // The list behind this form is now stale.
       ref.invalidate(categoriesListControllerProvider);
     } on ValidationFailure catch (failure) {

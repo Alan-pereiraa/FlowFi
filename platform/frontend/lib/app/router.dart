@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../features/categories/presentation/pages/category_form_page.dart';
 import '../features/categories/presentation/categories_routes.dart';
 import '../features/goals/presentation/goals_route.dart';
 import '../features/identity/presentation/controllers/session_controller.dart';
@@ -61,10 +60,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.profileSuccess,
         builder: (_, _) => const ProfileSuccessPage(),
-      ),
-      GoRoute(
-        path: Routes.newCategory,
-        builder: (_, _) => const CategoryQuickFormPage(),
       ),
       ...categoryFormRoutes(),
       StatefulShellRoute.indexedStack(

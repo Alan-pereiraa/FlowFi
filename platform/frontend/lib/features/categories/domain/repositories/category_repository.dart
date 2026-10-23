@@ -1,5 +1,4 @@
 import '../entities/category.dart';
-import '../entities/category_input.dart';
 import '../entities/category_draft.dart';
 
 /// The caller's categories on `/categories`. Throws `Failure`.
@@ -7,8 +6,6 @@ import '../entities/category_draft.dart';
 abstract interface class CategoryRepository {
   /// Every live category, oldest first (the endpoint is not paginated).
   Future<List<Category>> list();
-
-  Future<Category> createFromInput(CategoryInput input);
 
   Future<Category> show(int id);
 
