@@ -38,4 +38,12 @@ void main() {
       'Ontem, 28 de fevereiro',
     );
   });
+
+  test('short day labels', () {
+    expect(Dates.shortDay(DateTime(2026, 10, 24), today: today), 'Hoje');
+    expect(Dates.shortDay(DateTime(2026, 10, 23), today: today), 'Ontem');
+    expect(Dates.shortDay(DateTime(2026, 10, 10), today: today), '10 Out');
+    expect(Dates.shortDay(DateTime(2026, 3, 5), today: today), '5 Mar');
+    expect(Dates.shortDay(DateTime(2025, 12, 31), today: today), '31 Dez 2025');
+  });
 }
