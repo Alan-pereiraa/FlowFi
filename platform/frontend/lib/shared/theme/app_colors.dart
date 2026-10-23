@@ -10,6 +10,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.inputBorder,
     required this.progressTrack,
     required this.heroGradient,
+    required this.info,
+    required this.warning,
   });
 
   static const light = AppColors(
@@ -22,6 +24,8 @@ class AppColors extends ThemeExtension<AppColors> {
       end: Alignment.bottomRight,
       colors: [Color(0xFF1B6524), Color(0xFF00530C)],
     ),
+    info: Color(0xFF00796B),
+    warning: Color(0xFFB26A00),
   );
 
   final Color success;
@@ -29,6 +33,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color inputBorder;
   final Color progressTrack;
   final LinearGradient heroGradient;
+  final Color info;
+  final Color warning;
 
   @override
   AppColors copyWith({
@@ -37,6 +43,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? inputBorder,
     Color? progressTrack,
     LinearGradient? heroGradient,
+    Color? info,
+    Color? warning,
   }) {
     return AppColors(
       success: success ?? this.success,
@@ -44,6 +52,8 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBorder: inputBorder ?? this.inputBorder,
       progressTrack: progressTrack ?? this.progressTrack,
       heroGradient: heroGradient ?? this.heroGradient,
+      info: info ?? this.info,
+      warning: warning ?? this.warning,
     );
   }
 
@@ -56,6 +66,8 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBorder: Color.lerp(inputBorder, other.inputBorder, t)!,
       progressTrack: Color.lerp(progressTrack, other.progressTrack, t)!,
       heroGradient: LinearGradient.lerp(heroGradient, other.heroGradient, t)!,
+      info: Color.lerp(info, other.info, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
     );
   }
 }
