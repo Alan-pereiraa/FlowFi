@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../features/dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../features/identity/presentation/controllers/session_controller.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../routes.dart';
@@ -11,6 +12,8 @@ class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
+
+  static const _dashboardIndex = 0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,10 +56,16 @@ class AppShell extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onDestinationSelected: (index) {
+          if (index == _dashboardIndex &&
+              index != navigationShell.currentIndex) {
+            ref.read(dashboardControllerProvider.notifier).load();
+          }
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

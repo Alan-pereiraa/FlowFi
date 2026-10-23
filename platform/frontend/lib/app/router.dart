@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../features/categories/presentation/categories_routes.dart';
+import '../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../features/goals/presentation/goals_route.dart';
 import '../features/identity/presentation/controllers/session_controller.dart';
 import '../features/identity/presentation/controllers/session_state.dart';
@@ -12,7 +13,6 @@ import '../features/identity/presentation/pages/profile_success_page.dart';
 import '../features/identity/presentation/pages/splash_page.dart';
 import '../features/transactions/presentation/pages/transaction_form_page.dart';
 import '../features/transactions/presentation/pages/transactions_page.dart';
-import '../shared/widgets/empty_state.dart';
 import 'routes.dart';
 import 'shell/app_shell.dart';
 
@@ -65,7 +65,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(navigationShell: shell),
         branches: [
-          _comingSoonBranch(Routes.dashboard, Icons.home_outlined, 'Dashboard'),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.dashboard,
+                builder: (_, _) => const DashboardPage(),
+                routes: [
+                  GoRoute(
+                    path: 'new-transaction',
+                    builder: (_, _) => const TransactionFormPage(),
+                  ),
+                ],
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -99,20 +112,3 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
-
-// Placeholder tabs until each feature slice exists.
-StatefulShellBranch _comingSoonBranch(
-  String path,
-  IconData icon,
-  String title,
-) {
-  return StatefulShellBranch(
-    routes: [
-      GoRoute(
-        path: path,
-        builder: (_, _) =>
-            EmptyState(icon: icon, title: title, message: 'Em breve.'),
-      ),
-    ],
-  );
-}
