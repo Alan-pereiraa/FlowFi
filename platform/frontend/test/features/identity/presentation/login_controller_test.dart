@@ -8,6 +8,7 @@ import 'package:flowfi_app/features/identity/domain/repositories/user_repository
 import 'package:flowfi_app/features/identity/presentation/controllers/login_controller.dart';
 import 'package:flowfi_app/features/identity/presentation/controllers/session_controller.dart';
 import 'package:flowfi_app/features/identity/presentation/controllers/session_state.dart';
+import 'package:flowfi_app/features/notifications/presentation/push_registration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -16,18 +17,24 @@ class _MockAuth extends Mock implements AuthRepository {}
 
 class _MockUsers extends Mock implements UserRepository {}
 
+class _MockPush extends Mock implements PushRegistration {}
+
 void main() {
   late _MockAuth auth;
   late ProviderContainer container;
+  late _MockPush push;
 
   setUp(() async {
     auth = _MockAuth();
+    push = _MockPush();
+    when(() => push.start()).thenAnswer((_) async {});
     when(() => auth.storedUserId()).thenAnswer((_) async => null);
     container = ProviderContainer.test(
       overrides: [
         authRepositoryProvider.overrideWithValue(auth),
         userRepositoryProvider.overrideWithValue(_MockUsers()),
         unauthorizedSignalProvider.overrideWithValue(UnauthorizedSignal()),
+        pushRegistrationProvider.overrideWithValue(push),
       ],
     );
     container.listen(sessionControllerProvider, (_, _) {});

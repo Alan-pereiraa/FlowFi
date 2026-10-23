@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/unauthorized_signal.dart';
+import '../../../notifications/presentation/push_registration.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../domain/entities/user.dart';
@@ -43,6 +44,7 @@ class SessionController extends Notifier<SessionState> {
       final user = await ref.read(userRepositoryProvider).show(userId);
       if (!ref.mounted) return;
       state = SessionState.fromUser(user);
+      unawaited(ref.read(pushRegistrationProvider).start());
     } on UnauthorizedFailure {
       if (ref.mounted) state = const SessionUnauthenticated();
     } on NotFoundFailure {
@@ -56,11 +58,16 @@ class SessionController extends Notifier<SessionState> {
     }
   }
 
-  void signedIn(User user) => state = SessionState.fromUser(user);
+  void signedIn(User user) {
+    state = SessionState.fromUser(user);
+    unawaited(ref.read(pushRegistrationProvider).start());
+  }
 
   void userUpdated(User user) => state = SessionState.fromUser(user);
 
   Future<void> logout() async {
+    // Before the API token is cleared: unregistering the device needs it.
+    await ref.read(pushRegistrationProvider).stop();
     await ref.read(authRepositoryProvider).logout();
     if (ref.mounted) state = const SessionUnauthenticated();
   }
@@ -70,6 +77,7 @@ class SessionController extends Notifier<SessionState> {
   Future<void> deleteAccount() async {
     final user = state.user;
     if (user == null) return;
+    await ref.read(pushRegistrationProvider).stop();
     await ref.read(userRepositoryProvider).destroy(user.id);
     await ref.read(authRepositoryProvider).clearSession();
     if (ref.mounted) state = const SessionUnauthenticated();
