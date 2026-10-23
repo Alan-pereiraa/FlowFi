@@ -61,7 +61,8 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
       _fill(initial);
     } else {
       Future.microtask(
-        () => ref.read(goalDetailControllerProvider.notifier).load(widget.goalId),
+        () =>
+            ref.read(goalDetailControllerProvider.notifier).load(widget.goalId),
       );
     }
   }
@@ -186,9 +187,8 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     ) {
       if (count == previous) return;
       _deposit.clear();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Valor adicionado.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Valor adicionado.')));
     });
 
     final state = ref.watch(goalDetailControllerProvider);
@@ -483,10 +483,7 @@ class _SummaryCard extends StatelessWidget {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(
-                      text: saved,
-                      style: theme.textTheme.headlineSmall,
-                    ),
+                    TextSpan(text: saved, style: theme.textTheme.headlineSmall),
                     TextSpan(
                       text: ' / $target',
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -531,10 +528,7 @@ class _SummaryCard extends StatelessWidget {
                     : Money.format(remaining, dropZeroCents: true),
               ),
               if (monthly != null)
-                _Line(
-                  label: 'Guardar por mês',
-                  value: Money.format(monthly),
-                ),
+                _Line(label: 'Guardar por mês', value: Money.format(monthly)),
             ],
           ),
         ),

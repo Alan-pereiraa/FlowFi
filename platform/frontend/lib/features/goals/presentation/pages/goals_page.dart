@@ -23,9 +23,8 @@ class GoalsPage extends ConsumerWidget {
       message,
     ) {
       if (message != null && ref.read(goalsListControllerProvider).loaded) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     });
 
