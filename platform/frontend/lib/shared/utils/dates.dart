@@ -47,5 +47,16 @@ abstract final class Dates {
     return label;
   }
 
+  static String shortDay(DateTime date, {required DateTime today}) {
+    final day = dateOnly(date);
+    final now = dateOnly(today);
+    if (day == now) return 'Hoje';
+    if (day == DateTime(now.year, now.month, now.day - 1)) return 'Ontem';
+    final month = _months[day.month - 1];
+    final label =
+        '${day.day} ${month[0].toUpperCase()}${month.substring(1, 3)}';
+    return day.year == now.year ? label : '$label ${day.year}';
+  }
+
   static String _two(int value) => value.toString().padLeft(2, '0');
 }

@@ -35,106 +35,107 @@ class GoalCard extends StatelessWidget {
       button: onTap != null,
       excludeSemantics: true,
       onTap: onTap,
-      label: '${goal.name}. $saved de $target. ${goal.percent}% concluído. '
+      label:
+          '${goal.name}. $saved de $target. ${goal.percent}% concluído. '
           '$deadline',
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Stack(
-          children: [
-            // Soft glow in the corner, tinted by the goal's own color.
-            Positioned(
-              top: -56,
-              right: -56,
-              child: IgnorePointer(
-                child: Container(
-                  width: 176,
-                  height: 176,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        color.withValues(alpha: 0.14),
-                        color.withValues(alpha: 0),
-                      ],
+            children: [
+              // Soft glow in the corner, tinted by the goal's own color.
+              Positioned(
+                top: -56,
+                right: -56,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 176,
+                    height: 176,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          color.withValues(alpha: 0.14),
+                          color.withValues(alpha: 0),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppIconTile(
-                        icon: AppIcons.resolve(goal.icon),
-                        color: color,
-                      ),
-                      _DatePill(date: goal.expiresAt),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    goal.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text.rich(
-                    TextSpan(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextSpan(
-                          text: saved,
-                          style: theme.textTheme.titleLarge?.copyWith(
+                        AppIconTile(
+                          icon: AppIcons.resolve(goal.icon),
+                          color: color,
+                        ),
+                        _DatePill(date: goal.expiresAt),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      goal.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: saved,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' / $target',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Progresso',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          '${goal.percent}%',
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        TextSpan(
-                          text: ' / $target',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Progresso',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        '${goal.percent}%',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  AppProgressBar(value: goal.progress),
-                ],
+                    const SizedBox(height: 6),
+                    AppProgressBar(value: goal.progress),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,6 @@
 import '../../../../shared/money/money.dart';
 import '../../../../shared/utils/money.dart' as cents;
 import '../../domain/entities/category.dart';
-import '../../domain/entities/category_input.dart';
 
 /// Mirrors the backend `CategoryResource` (the inner object).
 /// Mirrors the backend `CategoryResource` (the inner object, without envelope).
@@ -38,11 +37,4 @@ class CategoryDto {
     limitAmount: limitAmount == null ? null : Money.parse(limitAmount!),
     limitCents: cents.Money.parseApi(limitAmount),
   );
-
-  static Map<String, dynamic> inputToJson(CategoryInput input) => {
-    'name': input.name,
-    'icon': input.icon,
-    'color': input.color,
-    'limit_amount': input.limitAmount?.toDecimal(),
-  };
 }

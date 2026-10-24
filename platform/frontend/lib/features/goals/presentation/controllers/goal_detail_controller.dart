@@ -69,9 +69,8 @@ class GoalDetailController extends Notifier<GoalDetailState> {
       state = state.copyWith(
         saving: false,
         fieldErrors: fieldErrors,
-        formError: () => fieldErrors.isEmpty
-            ? LedgerErrorMessages.general(failure)
-            : null,
+        formError: () =>
+            fieldErrors.isEmpty ? LedgerErrorMessages.general(failure) : null,
       );
     } on Failure catch (failure) {
       if (!ref.mounted) return;

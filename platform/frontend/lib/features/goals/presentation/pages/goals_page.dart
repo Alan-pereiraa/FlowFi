@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../shared/widgets/app_add_card.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
 import '../controllers/goals_list_controller.dart';
@@ -23,9 +23,8 @@ class GoalsPage extends ConsumerWidget {
       message,
     ) {
       if (message != null && ref.read(goalsListControllerProvider).loaded) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     });
 
@@ -44,6 +43,12 @@ class GoalsPage extends ConsumerWidget {
         message: state.errorMessage!,
         onRetry: controller.load,
       );
+    } else if (state.goals.isEmpty) {
+      body = const EmptyState(
+        icon: Icons.savings_outlined,
+        title: 'Nenhuma meta ainda',
+        message: 'Defina um novo objetivo para seu futuro financeiro.',
+      );
     } else {
       body = ResponsiveGrid(
         children: [
@@ -53,11 +58,6 @@ class GoalsPage extends ConsumerWidget {
               onTap: () =>
                   context.push(GoalRoutes.detail(goal.id), extra: goal),
             ),
-          AppAddCard(
-            title: 'Nova Meta',
-            message: 'Defina um novo objetivo para seu futuro financeiro.',
-            onTap: create,
-          ),
         ],
       );
     }
