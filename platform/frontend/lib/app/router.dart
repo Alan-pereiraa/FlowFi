@@ -11,6 +11,7 @@ import '../features/identity/presentation/pages/login_page.dart';
 import '../features/identity/presentation/pages/profile_form_page.dart';
 import '../features/identity/presentation/pages/profile_success_page.dart';
 import '../features/identity/presentation/pages/splash_page.dart';
+import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/transactions/presentation/pages/transaction_form_page.dart';
 import '../features/transactions/presentation/pages/transactions_page.dart';
 import 'routes.dart';
@@ -60,6 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.profileSuccess,
         builder: (_, _) => const ProfileSuccessPage(),
+      ),
+      GoRoute(
+        path: Routes.notifications,
+        builder: (_, _) => const NotificationsPage(),
       ),
       ...categoryFormRoutes(),
       StatefulShellRoute.indexedStack(

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../features/dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../features/identity/presentation/controllers/session_controller.dart';
+import '../../features/notifications/presentation/controllers/unread_count_controller.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../routes.dart';
 
@@ -18,6 +19,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(sessionControllerProvider).user;
+    final unread = ref.watch(unreadCountControllerProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -43,14 +45,22 @@ class AppShell extends ConsumerWidget {
           ),
         ),
         title: const AppLogo(size: 22),
-        actions: const [
-          // GAP: notifications feature not built yet; the bell is inert.
+        actions: [
           IconButton(
-            tooltip: 'Notificações',
-            onPressed: null,
-            icon: Icon(Icons.notifications_none),
+            tooltip: unread > 0
+                ? 'Notificações, $unread não lidas'
+                : 'Notificações',
+            onPressed: () async {
+              await context.push(Routes.notifications);
+              ref.read(unreadCountControllerProvider.notifier).refresh();
+            },
+            icon: Badge(
+              isLabelVisible: unread > 0,
+              label: Text(unread > 99 ? '99+' : '$unread'),
+              child: const Icon(Icons.notifications_none),
+            ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
         ],
       ),
       body: navigationShell,
