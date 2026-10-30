@@ -38,6 +38,9 @@ class NotificationsApi {
     );
   }
 
+  Future<void> markAllAsRead() =>
+      _send(() => _dio.patch<void>('/notifications/read'));
+
   Future<void> delete(int id) =>
       _send(() => _dio.delete<void>('/notifications/$id'));
 
