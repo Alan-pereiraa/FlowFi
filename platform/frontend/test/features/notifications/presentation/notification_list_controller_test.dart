@@ -4,6 +4,7 @@ import 'package:flowfi_app/core/network/paginated.dart';
 import 'package:flowfi_app/features/notifications/data/models/notification_dto.dart';
 import 'package:flowfi_app/features/notifications/data/repositories/notification_repository_impl.dart';
 import 'package:flowfi_app/features/notifications/domain/entities/app_notification.dart';
+import 'package:flowfi_app/features/notifications/domain/entities/notification_filter.dart';
 import 'package:flowfi_app/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:flowfi_app/features/notifications/presentation/controllers/notification_list_controller.dart';
 import 'package:flowfi_app/features/notifications/presentation/controllers/unread_count_controller.dart';
@@ -104,6 +105,69 @@ void main() {
     expect(
       container.read(notificationListControllerProvider).items.first.isRead,
       isFalse,
+    );
+  });
+
+  test('changing the filter reloads with that status', () async {
+    when(
+      () => repository.list(
+        filter: NotificationFilter.unread,
+        page: any(named: 'page'),
+        perPage: any(named: 'perPage'),
+      ),
+    ).thenAnswer(
+      (_) async => Paginated(
+        items: [_item(3), _item(2)],
+        currentPage: 1,
+        lastPage: 1,
+        total: 2,
+      ),
+    );
+    final container = await boot();
+
+    await container
+        .read(notificationListControllerProvider.notifier)
+        .setFilter(NotificationFilter.unread);
+
+    final state = container.read(notificationListControllerProvider);
+    expect(state.filter, NotificationFilter.unread);
+    expect(state.items.map((n) => n.id), [3, 2]);
+  });
+
+  test('marks all as read', () async {
+    when(() => repository.markAllAsRead()).thenAnswer((_) async {});
+    final container = await boot();
+
+    final error = await container
+        .read(notificationListControllerProvider.notifier)
+        .markAllAsRead();
+
+    expect(error, isNull);
+    expect(
+      container
+          .read(notificationListControllerProvider)
+          .items
+          .every((n) => n.isRead),
+      isTrue,
+    );
+    verify(() => repository.markAllAsRead()).called(1);
+  });
+
+  test('a failed mark all as read is rolled back', () async {
+    when(() => repository.markAllAsRead()).thenThrow(const NetworkFailure());
+    final container = await boot();
+
+    final error = await container
+        .read(notificationListControllerProvider.notifier)
+        .markAllAsRead();
+
+    expect(error, contains('Sem conexão'));
+    expect(
+      container
+          .read(notificationListControllerProvider)
+          .items
+          .map((n) => n.isRead),
+      [false, false, true],
     );
   });
 

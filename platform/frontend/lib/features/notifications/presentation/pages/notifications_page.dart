@@ -7,7 +7,9 @@ import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/notification_filter.dart';
 import '../controllers/notification_list_controller.dart';
+import '../controllers/unread_count_controller.dart';
 import '../widgets/notification_card.dart';
 
 class NotificationsPage extends ConsumerStatefulWidget {
@@ -49,6 +51,14 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       await ref
           .read(notificationListControllerProvider.notifier)
           .markAsRead(notification.id),
+    );
+  }
+
+  Future<void> _markAllAsRead() async {
+    _showError(
+      await ref
+          .read(notificationListControllerProvider.notifier)
+          .markAllAsRead(),
     );
   }
 
@@ -100,13 +110,24 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     } else if (state.items.isEmpty) {
       body = ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 48),
-          EmptyState(
-            icon: Icons.notifications_none,
-            title: 'Nenhuma notificação',
-            message: 'Avisos sobre limites, parcelas e metas aparecem aqui.',
-          ),
+        children: [
+          const SizedBox(height: 48),
+          switch (state.filter) {
+            NotificationFilter.all => const EmptyState(
+              icon: Icons.notifications_none,
+              title: 'Nenhuma notificação',
+              message: 'Avisos sobre limites, parcelas e metas aparecem aqui.',
+            ),
+            NotificationFilter.unread => const EmptyState(
+              icon: Icons.done_all,
+              title: 'Tudo em dia',
+              message: 'Você não tem notificações não lidas.',
+            ),
+            NotificationFilter.read => const EmptyState(
+              icon: Icons.notifications_none,
+              title: 'Nenhuma notificação lida',
+            ),
+          },
         ],
       );
     } else {
@@ -125,7 +146,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           return ResponsiveCenter(
             maxWidth: Breakpoints.formMax + 160,
             child: Padding(
-              padding: EdgeInsets.only(top: index == 0 ? 24 : 0, bottom: 16),
+              padding: EdgeInsets.only(top: index == 0 ? 8 : 0, bottom: 16),
               child: Dismissible(
                 key: ValueKey(item.id),
                 direction: DismissDirection.endToStart,
@@ -148,9 +169,75 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
         title: const Text('Notificações'),
         leadingWidth: 64,
         leading: const AppBackButton(fallbackRoute: Routes.dashboard),
+        actions: [
+          IconButton(
+            tooltip: 'Marcar todas como lidas',
+            icon: const Icon(Icons.done_all),
+            // The badge count covers unread items the current filter hides.
+            onPressed:
+                ref.watch(unreadCountControllerProvider) > 0 ||
+                    state.items.any((item) => !item.isRead)
+                ? _markAllAsRead
+                : null,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(onRefresh: controller.refresh, child: body),
+        child: Column(
+          children: [
+            _FilterChips(
+              selected: state.filter,
+              onSelected: controller.setFilter,
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: controller.refresh,
+                child: body,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Todas / Não lidas / Lidas", styled like the transactions filter chips.
+class _FilterChips extends StatelessWidget {
+  const _FilterChips({required this.selected, required this.onSelected});
+
+  final NotificationFilter selected;
+  final ValueChanged<NotificationFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 64,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        children: [
+          for (final filter in NotificationFilter.values) ...[
+            if (filter != NotificationFilter.values.first)
+              const SizedBox(width: 8),
+            FilterChip(
+              showCheckmark: false,
+              selected: filter == selected,
+              onSelected: (_) => onSelected(filter),
+              label: Text(filter.label),
+              shape: const StadiumBorder(),
+              side: BorderSide.none,
+              backgroundColor: scheme.surfaceContainerHigh,
+              selectedColor: scheme.primary,
+              labelStyle: TextStyle(
+                color: filter == selected ? scheme.onPrimary : scheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

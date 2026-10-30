@@ -5,6 +5,7 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/notification_filter.dart';
 import 'notification_list_state.dart';
 import 'unread_count_controller.dart';
 
@@ -25,15 +26,24 @@ class NotificationListController extends Notifier<NotificationListState> {
     return const NotificationListState(loading: true);
   }
 
+  /// Switches the filter and reloads from the first page.
+  Future<void> setFilter(NotificationFilter filter) async {
+    if (filter == state.filter) return;
+    state = NotificationListState(filter: filter, loading: true);
+    await refresh();
+  }
+
   Future<void> refresh() async {
     final generation = ++_generation;
+    final filter = state.filter;
     state = state.copyWith(loading: true, errorMessage: () => null);
     try {
       final page = await ref
           .read(notificationRepositoryProvider)
-          .list(perPage: perPage);
+          .list(filter: filter, perPage: perPage);
       if (!ref.mounted || generation != _generation) return;
       state = NotificationListState(
+        filter: filter,
         items: page.items,
         loaded: true,
         hasMore: page.hasMore,
@@ -56,7 +66,7 @@ class NotificationListController extends Notifier<NotificationListState> {
     try {
       final page = await ref
           .read(notificationRepositoryProvider)
-          .list(page: state.page + 1, perPage: perPage);
+          .list(filter: state.filter, page: state.page + 1, perPage: perPage);
       if (!ref.mounted || generation != _generation) return;
       final known = {for (final item in state.items) item.id};
       state = state.copyWith(
@@ -90,6 +100,33 @@ class NotificationListController extends Notifier<NotificationListState> {
     } on Failure catch (failure) {
       if (!ref.mounted) return null;
       _replace(id, original);
+      return ErrorMessages.general(failure);
+    }
+  }
+
+  /// Marks every notification read, including ones not loaded yet (the API
+  /// updates them all). The list updates right away and rolls back on error.
+  Future<String?> markAllAsRead() async {
+    final original = state.items;
+    final now = ref.read(clockProvider)();
+    state = state.copyWith(
+      items: [
+        for (final item in original) item.isRead ? item : item.markedRead(now),
+      ],
+    );
+    try {
+      await ref.read(notificationRepositoryProvider).markAllAsRead();
+      if (!ref.mounted) return null;
+      // "Não lidas" is now empty and "Lidas" gained items: reload those.
+      if (state.filter != NotificationFilter.all) {
+        await refresh();
+      } else {
+        _refreshBadge();
+      }
+      return null;
+    } on Failure catch (failure) {
+      if (!ref.mounted) return null;
+      state = state.copyWith(items: original);
       return ErrorMessages.general(failure);
     }
   }

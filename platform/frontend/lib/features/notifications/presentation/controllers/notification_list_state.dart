@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart' show immutable;
 
 import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/notification_filter.dart';
 
 @immutable
 class NotificationListState {
   const NotificationListState({
+    this.filter = NotificationFilter.all,
     this.items = const [],
     this.loading = false,
     this.loaded = false,
@@ -14,6 +16,7 @@ class NotificationListState {
     this.errorMessage,
   });
 
+  final NotificationFilter filter;
   final List<AppNotification> items;
   final bool loading;
   final bool loaded;
@@ -36,6 +39,7 @@ class NotificationListState {
     String? Function()? errorMessage,
   }) {
     return NotificationListState(
+      filter: filter,
       items: items ?? this.items,
       loading: loading ?? this.loading,
       loaded: loaded ?? this.loaded,
