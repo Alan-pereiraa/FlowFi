@@ -47,6 +47,11 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
         return $notification;
     }
 
+    public function markAllAsRead(User $user): void
+    {
+        $user->notifications()->whereNull('read_at')->update(['read_at' => now()]);
+    }
+
     public function delete(Notification $notification): void
     {
         $notification->delete();
