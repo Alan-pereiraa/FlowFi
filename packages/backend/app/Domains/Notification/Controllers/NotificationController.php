@@ -81,6 +81,13 @@ class NotificationController extends Controller
         ));
     }
 
+    public function markAllAsRead(Request $request): Response
+    {
+        $this->notifications->markAllAsRead($request->user());
+
+        return response()->noContent();
+    }
+
     #[OA\Delete(
         path: '/notifications/{id}',
         operationId: 'deleteNotification',

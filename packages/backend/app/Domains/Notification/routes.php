@@ -13,6 +13,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead'])
         ->whereNumber('id');
 
+    Route::patch('notifications/read', [NotificationController::class, 'markAllAsRead']);
+
     Route::post('notifications/devices', [DeviceTokenController::class, 'store']);
     Route::delete('notifications/devices', [DeviceTokenController::class, 'destroy']);
 });

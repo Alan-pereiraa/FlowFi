@@ -19,5 +19,7 @@ interface NotificationRepositoryInterface
 
     public function markAsRead(Notification $notification): Notification;
 
+    public function markAllAsRead(User $user): void;
+
     public function delete(Notification $notification): void;
 }

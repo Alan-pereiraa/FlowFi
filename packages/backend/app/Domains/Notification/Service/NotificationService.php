@@ -76,6 +76,11 @@ class NotificationService
         return $this->notifications->markAsRead($notification);
     }
 
+    public function markAllAsRead(User $user): void
+    {
+        $this->notifications->markAllAsRead($user);
+    }
+
     public function delete(Notification $notification): void
     {
         $this->notifications->delete($notification);
