@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../domain/entities/transaction_type.dart';
 
-/// `Saída` / `Entrada` segmented toggle. Disabled on edit: the type is
-/// immutable on the backend.
+/// `Saída` / `Transferência` / `Entrada` segmented toggle. Disabled on edit:
+/// the type is immutable on the backend.
 class TransactionTypeToggle extends StatelessWidget {
   const TransactionTypeToggle({
     super.key,
@@ -40,6 +40,17 @@ class TransactionTypeToggle extends StatelessWidget {
                 onTap: onChanged == null
                     ? null
                     : () => onChanged!(TransactionType.expense),
+              ),
+            ),
+            Expanded(
+              child: _Segment(
+                label: 'Transferência',
+                selected: value == TransactionType.transfer,
+                background: scheme.primaryContainer,
+                foreground: scheme.onPrimaryContainer,
+                onTap: onChanged == null
+                    ? null
+                    : () => onChanged!(TransactionType.transfer),
               ),
             ),
             Expanded(
@@ -96,6 +107,8 @@ class _Segment extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleSmall?.copyWith(
                 color: selected ? foreground : theme.colorScheme.onSurface,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,

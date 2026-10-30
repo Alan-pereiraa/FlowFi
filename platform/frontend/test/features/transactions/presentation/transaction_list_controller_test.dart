@@ -171,4 +171,63 @@ void main() {
     expect(state.loading, isFalse);
     expect(state.error, contains('Sem conexão'));
   });
+
+  test('category filter reloads with that category', () async {
+    when(
+      () => transactions.list(
+        filter: any(named: 'filter'),
+        page: any(named: 'page'),
+        perPage: any(named: 'perPage'),
+      ),
+    ).thenAnswer((_) async => _page([]));
+
+    final container = await boot();
+    container.read(transactionListControllerProvider.notifier).setCategory(3);
+    await pumpEventQueue();
+
+    final last =
+        verify(
+              () => transactions.list(
+                filter: captureAny(named: 'filter'),
+                page: any(named: 'page'),
+                perPage: any(named: 'perPage'),
+              ),
+            ).captured.last
+            as TransactionFilter;
+    expect(last.categoryId, 3);
+  });
+
+  test('search narrows the loaded rows, ignoring case and accents', () async {
+    final uber = TransactionDto.fromJson({
+      ...transactionJson(id: 2),
+      'description': 'Uber',
+    }).toEntity();
+    when(
+      () => transactions.list(
+        filter: any(named: 'filter'),
+        page: any(named: 'page'),
+        perPage: any(named: 'perPage'),
+      ),
+    ).thenAnswer((_) async => _page([_tx(1, '2026-10-24'), uber]));
+
+    final container = await boot();
+    final controller = container.read(
+      transactionListControllerProvider.notifier,
+    );
+
+    controller.setSearch('ALMOCO');
+    expect(
+      container
+          .read(transactionListControllerProvider)
+          .visibleItems
+          .map((t) => t.id),
+      [1],
+    );
+
+    controller.setSearch('');
+    expect(
+      container.read(transactionListControllerProvider).visibleItems,
+      hasLength(2),
+    );
+  });
 }
