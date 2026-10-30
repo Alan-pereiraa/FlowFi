@@ -6,15 +6,16 @@ import '../../../../app/routes.dart';
 import '../../../../core/clock.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../../../shared/widgets/empty_state.dart';
-import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 import '../controllers/transaction_list_controller.dart';
 import '../controllers/transaction_list_state.dart';
 import '../widgets/transaction_tile.dart';
 
-/// "Transações" tab: the statement grouped by day, with filter chips.
-// GAP: the design's search button and "Todas as Contas" filter have no
-// backend support (no text search, no accounts).
+/// "Transações" tab: the statement grouped by day, with search and filter
+/// chips.
+// GAP: the design's "Todas as Contas" chip has no backend support (there are
+// no accounts), so it filters by category instead. Search runs on the client
+// over the rows already loaded (the API has no text search).
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
 
@@ -24,6 +25,8 @@ class TransactionsPage extends ConsumerStatefulWidget {
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   final _scroll = ScrollController();
+  final _search = TextEditingController();
+  bool _searching = false;
 
   @override
   void initState() {
@@ -34,7 +37,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   @override
   void dispose() {
     _scroll.dispose();
+    _search.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() => _searching = !_searching);
+    if (!_searching) {
+      _search.clear();
+      ref.read(transactionListControllerProvider.notifier).setSearch('');
+    }
   }
 
   void _onScroll() {
@@ -69,16 +81,45 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 16, 16, 0),
               sliver: SliverToBoxAdapter(
-                child: Text(
-                  'Transações',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Transações',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      tooltip: _searching ? 'Fechar busca' : 'Buscar',
+                      onPressed: _toggleSearch,
+                      icon: Icon(_searching ? Icons.close : Icons.search),
+                    ),
+                  ],
                 ),
               ),
             ),
+            if (_searching)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                sliver: SliverToBoxAdapter(
+                  child: TextField(
+                    controller: _search,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    onChanged: ref
+                        .read(transactionListControllerProvider.notifier)
+                        .setSearch,
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar por descrição ou categoria',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(child: _FilterChips(state: state)),
             ..._body(context, state),
             const SliverToBoxAdapter(child: SizedBox(height: 88)),
@@ -132,6 +173,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       ];
     }
+    if (state.visibleItems.isEmpty) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyState(
+            icon: Icons.search_off,
+            title: 'Nada encontrado',
+            message: 'Nenhuma transação carregada combina com a busca.',
+          ),
+        ),
+      ];
+    }
 
     final today = ref.read(clockProvider)();
     return [
@@ -143,7 +196,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  Dates.dayHeader(day, today: today),
+                  _capitalizeMonth(Dates.dayHeader(day, today: today)),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -155,9 +208,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   child: TransactionTile(
                     transaction: item,
                     category: state.categories[item.categoryId],
-                    onTap: _canEdit(item)
-                        ? () => _openForm(Routes.editTransaction(item.id))
-                        : null,
+                    onTap: () => _openForm(Routes.editTransaction(item.id)),
                   ),
                 ),
             ],
@@ -173,9 +224,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     ];
   }
 
-  // GAP: transfers (goal contributions) have no form in the design, so they
-  // are listed but not editable here.
-  bool _canEdit(Transaction item) => item.type != TransactionType.transfer;
+  /// "24 de outubro" -> "24 de Outubro", as in the design.
+  static String _capitalizeMonth(String header) => header.replaceAllMapped(
+    RegExp(r'de ([a-zç])'),
+    (m) => 'de ${m[1]!.toUpperCase()}',
+  );
 }
 
 class _FilterChips extends ConsumerWidget {
@@ -267,6 +320,41 @@ class _FilterChips extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(width: 8),
+          Builder(
+            builder: (chipContext) => chip(
+              label:
+                  state.categories[state.categoryId]?.name ??
+                  'Todas as Categorias',
+              selected: state.categoryId != null,
+              trailing: Icons.arrow_drop_down,
+              onTap: () async {
+                final box = chipContext.findRenderObject()! as RenderBox;
+                final origin = box.localToGlobal(Offset(0, box.size.height));
+                final picked = await showMenu<_CategoryChoice>(
+                  context: chipContext,
+                  position: RelativeRect.fromLTRB(
+                    origin.dx,
+                    origin.dy,
+                    origin.dx,
+                    0,
+                  ),
+                  items: [
+                    const PopupMenuItem(
+                      value: _CategoryChoice(null),
+                      child: Text('Todas as Categorias'),
+                    ),
+                    for (final category in state.categories.values)
+                      PopupMenuItem(
+                        value: _CategoryChoice(category.id),
+                        child: Text(category.name),
+                      ),
+                  ],
+                );
+                if (picked != null) controller.setCategory(picked.id);
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -278,4 +366,12 @@ class _TypeChoice {
   const _TypeChoice(this.type);
 
   final TransactionType? type;
+}
+
+/// Wraps the nullable category id so "all categories" is distinguishable
+/// from dismissal.
+class _CategoryChoice {
+  const _CategoryChoice(this.id);
+
+  final int? id;
 }

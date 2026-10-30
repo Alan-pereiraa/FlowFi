@@ -2,6 +2,7 @@ import 'package:flowfi_app/core/network/paginated.dart';
 import 'package:flowfi_app/features/transactions/data/models/transaction_dto.dart';
 import 'package:flowfi_app/features/transactions/data/models/transaction_request_dto.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/installment.dart';
+import 'package:flowfi_app/features/transactions/domain/entities/recurring_input.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_filter.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_input.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_schedule.dart';
@@ -102,11 +103,78 @@ void main() {
       );
     });
 
+    test('transfer sends the goal and no category or split', () {
+      final body = TransactionRequestDto.store(
+        TransactionInput(
+          type: TransactionType.transfer,
+          goalId: 7,
+          date: DateTime(2026, 10, 24),
+          schedule: const TransactionSchedule(totalAmount: Money(10000)),
+        ),
+      );
+
+      expect(body, {
+        'type': 'transfer',
+        'goal_id': 7,
+        'description': null,
+        'date': '2026-10-24',
+        'total_amount': '100.00',
+      });
+    });
+
+    test('transfer update sends the goal instead of a category', () {
+      final body = TransactionRequestDto.update(
+        TransactionUpdate(goalId: 7, date: DateTime(2026, 10, 25)),
+      );
+
+      expect(body['goal_id'], 7);
+      expect(body.containsKey('category_id'), isFalse);
+    });
+
+    test('recurrence repeats the full amount monthly', () {
+      final body = TransactionRequestDto.recurring(
+        RecurringInput(
+          type: TransactionType.expense,
+          categoryId: 3,
+          amount: const Money(3990),
+          startDate: DateTime(2026, 10, 24),
+          description: 'Netflix',
+          occurrences: 12,
+        ),
+      );
+
+      expect(body, {
+        'type': 'expense',
+        'category_id': 3,
+        'description': 'Netflix',
+        'amount': '39.90',
+        'period_unit': 'month',
+        'period_interval': 1,
+        'start_date': '2026-10-24',
+        'occurrences': 12,
+      });
+
+      final untilDate = TransactionRequestDto.recurring(
+        RecurringInput(
+          type: TransactionType.transfer,
+          goalId: 7,
+          amount: const Money(5000),
+          startDate: DateTime(2026, 10, 24),
+          endDate: DateTime(2027, 3, 24),
+        ),
+      );
+      expect(untilDate['goal_id'], 7);
+      expect(untilDate['end_date'], '2027-03-24');
+      expect(untilDate.containsKey('occurrences'), isFalse);
+      expect(untilDate.containsKey('category_id'), isFalse);
+    });
+
     test('query sends only the filters that are set', () {
       expect(
         TransactionRequestDto.query(
           TransactionFilter(
             type: TransactionType.expense,
+            categoryId: 3,
             dateFrom: DateTime(2026, 10),
             dateTo: DateTime(2026, 10, 31),
           ),
@@ -117,6 +185,7 @@ void main() {
           'page': 2,
           'per_page': 20,
           'type': 'expense',
+          'category_id': 3,
           'date_from': '2026-10-01',
           'date_to': '2026-10-31',
         },

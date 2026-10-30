@@ -6,9 +6,11 @@ class RecurrenceCard extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.subtitle = 'Repetir mais vezes',
   });
 
   final bool value;
+  final String subtitle;
 
   /// Null disables the switch.
   final ValueChanged<bool>? onChanged;
@@ -39,7 +41,7 @@ class RecurrenceCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            'Repetir mensalmente',
+            subtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),

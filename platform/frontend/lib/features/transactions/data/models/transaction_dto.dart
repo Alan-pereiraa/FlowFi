@@ -18,6 +18,7 @@ class TransactionDto {
     this.scheduleType,
     this.periodUnit,
     this.periodInterval,
+    this.recurringTransactionId,
     this.installments = const [],
   });
 
@@ -33,6 +34,7 @@ class TransactionDto {
     scheduleType: json['schedule_type'] as String?,
     periodUnit: json['period_unit'] as String?,
     periodInterval: json['period_interval'] as int?,
+    recurringTransactionId: json['recurring_transaction_id'] as int?,
     installments: [
       for (final item in (json['installments'] as List<dynamic>? ?? const []))
         InstallmentDto.fromJson(item as Map<String, dynamic>),
@@ -52,6 +54,7 @@ class TransactionDto {
   final String? scheduleType;
   final String? periodUnit;
   final int? periodInterval;
+  final int? recurringTransactionId;
   final List<InstallmentDto> installments;
 
   Transaction toEntity() => Transaction(
@@ -65,6 +68,7 @@ class TransactionDto {
     installmentsCount: installmentsCount,
     periodUnit: periodUnit,
     periodInterval: periodInterval,
+    recurringTransactionId: recurringTransactionId,
     installments: installments.map((i) => i.toEntity()).toList(),
   );
 }
