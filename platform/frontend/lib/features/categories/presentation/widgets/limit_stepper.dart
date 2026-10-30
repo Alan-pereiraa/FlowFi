@@ -68,6 +68,27 @@ class _LimitStepperState extends State<LimitStepper> {
     );
   }
 
+  /// Slider range when the limit is small; it grows to fit a bigger typed value.
+  static const _sliderBaseMax = 500000; // R$ 5.000,00
+
+  Widget _limitSlider(BuildContext context) {
+    final step = widget.step;
+    final fitsValue = ((widget.cents + step - 1) ~/ step) * step;
+    final max = math.max(_sliderBaseMax, fitsValue);
+
+    return Slider(
+      value: widget.cents.toDouble(),
+      max: max.toDouble(),
+      divisions: max ~/ step,
+      label: 'R\$ ${CurrencyInputFormatter.textOf(widget.cents)}',
+      semanticFormatterCallback: (value) =>
+          'R\$ ${CurrencyInputFormatter.textOf(value.round())}',
+      onChanged: widget.enabled
+          ? (value) => widget.onChanged(value.round())
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -141,6 +162,8 @@ class _LimitStepperState extends State<LimitStepper> {
           ],
         ),
         if (widget.captionBelow) ...[const SizedBox(height: 4), caption],
+        const SizedBox(height: 8),
+        _limitSlider(context),
         if (widget.errorText != null) ...[
           const SizedBox(height: 8),
           Text(
