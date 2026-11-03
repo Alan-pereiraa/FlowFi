@@ -44,7 +44,7 @@ class StoreTransactionRequest extends FormRequest
                 'min:1',
                 'max:120',
                 'prohibits:installments_count,period_unit,period_interval',
-                'prohibited_if:type,transfer',
+                'prohibited_if:type,transfer,income',
             ],
             'installments.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required', 'date_format:Y-m-d'],
@@ -53,14 +53,14 @@ class StoreTransactionRequest extends FormRequest
             'period_unit' => [
                 'nullable',
                 'string', Rule::in(Transaction::PERIOD_UNITS),
-                'prohibited_if:type,transfer',
+                'prohibited_if:type,transfer,income',
             ],
             'period_interval' => [
                 'nullable',
                 'integer',
                 'min:1',
                 'max:365',
-                'prohibited_if:type,transfer',
+                'prohibited_if:type,transfer,income',
             ],
         ];
     }
@@ -69,10 +69,18 @@ class StoreTransactionRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $this->checkInstallmentsSumMatchesTotal($validator);
+            $isIcome = $this->input('type') === Transaction::TYPE_INCOME;
 
             $hasExplicitInstallments = is_array($this->input('installments'));
             $installmentsCount = (int) ($this->input('installments_count') ?? 1);
             $isTransfer = $this->input('type') === Transaction::TYPE_TRANSFER;
+
+            if ($isIcome && $installmentsCount > 1) {
+                $validator->errors()->add(
+                    'installments_count',
+                    'Não se pode dividir uma receita em parcelas.',
+                );
+            }
 
             if (! $isTransfer && ! $hasExplicitInstallments && $installmentsCount > 1 && ! $this->filled('period_unit')) {
                 $validator->errors()->add(

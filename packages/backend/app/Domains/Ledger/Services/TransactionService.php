@@ -38,12 +38,11 @@ class TransactionService
         - description: a short label for what was bought, paid or received, in Portuguese (e.g. "Celular", "Uber", "Salário"). Null only when the note names nothing.
         - category_id: the id of the best-matching category from the given list. Null for a transfer.
         - goal_id: the id of a goal from the given list. Required for a transfer; for an expense only when the money is taken out of that goal; null for income.
-        - installments_count, period_unit, period_interval: set them whenever the note says the amount is split ("em 12x", "parcelado em 3 vezes", "3 parcelas a cada 15 dias"); otherwise null. installments_count is the number of installments. period_unit is day, week, month or year, "month" unless the note says otherwise. period_interval is how many period_units between installments, 1 unless the note says otherwise.
+        - installments_count, period_unit, period_interval: for an expense, set them whenever the note says the amount is split ("em 12x", "parcelado em 3 vezes", "3 parcelas a cada 15 dias"); otherwise null. Always null for income and transfer. installments_count is the number of installments. period_unit is day, week, month or year, "month" unless the note says otherwise. period_interval is how many period_units between installments, 1 unless the note says otherwise.
 
         Only use ids that appear in the given lists. If nothing matches, use null.
         TEXT;
 
-    // Every key is required (nullable where it can be unknown): Gemini may skip optional properties.
     private const array DRAFT_SCHEMA = [
         'type' => 'object',
         'properties' => [
@@ -322,7 +321,7 @@ class TransactionService
 
         $description = is_string($draft['description'] ?? null) ? Str::limit(trim($draft['description']), 1000, '') : '';
 
-        $isSplit = $type !== Transaction::TYPE_TRANSFER && (int) ($draft['installments_count'] ?? 1) > 1;
+        $isSplit = $type === Transaction::TYPE_EXPENSE && (int) ($draft['installments_count'] ?? 1) > 1;
         $periodInterval = (int) ($draft['period_interval'] ?? 0);
 
         return [
