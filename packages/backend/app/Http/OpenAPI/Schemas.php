@@ -369,7 +369,7 @@ use OpenApi\Attributes as OA;
     schema: 'StoreTransactionRequest',
     type: 'object',
     required: ['type', 'date', 'total_amount'],
-    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório, `goal_id` proibido. transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; e não pode ser parcelada (`installments_count` deve ser 1). Envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422.',
+    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório; `goal_id`, `installments`, `period_unit` e `period_interval` proibidos; e não pode ser parcelada (`installments_count` deve ser 1). transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; e não pode ser parcelada (`installments_count` deve ser 1). Envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422.',
     properties: [
         new OA\Property(
             property: 'type',
@@ -417,7 +417,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minItems: 1,
             maxItems: 120,
-            description: 'Cronograma personalizado. A soma dos valores deve ser igual a total_amount (senão, 422). Não pode ser combinado com installments_count, period_unit e period_interval (422). Proibido em transfer.',
+            description: 'Cronograma personalizado. A soma dos valores deve ser igual a total_amount (senão, 422). Não pode ser combinado com installments_count, period_unit e period_interval (422). Proibido em income e transfer.',
             items: new OA\Items(
                 type: 'object',
                 required: ['amount', 'date'],
@@ -439,7 +439,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 1,
             maximum: 120,
-            description: 'Quantidade de parcelas iguais (padrão 1)',
+            description: 'Quantidade de parcelas iguais (padrão 1). Deve ser 1 em income e transfer.',
             example: 3,
         ),
         new OA\Property(
@@ -447,7 +447,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             enum: ['day', 'week', 'month', 'year'],
             nullable: true,
-            description: 'Obrigatório quando installments_count > 1. Proibido em transfer.',
+            description: 'Obrigatório quando installments_count > 1. Proibido em income e transfer.',
             example: 'month',
         ),
         new OA\Property(
@@ -456,7 +456,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             minimum: 1,
             maximum: 365,
-            description: 'Unidades de período entre as parcelas (padrão 1). Proibido em transfer.',
+            description: 'Unidades de período entre as parcelas (padrão 1). Proibido em income e transfer.',
             example: 1,
         ),
     ],
@@ -464,7 +464,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateTransactionRequest',
     type: 'object',
-    description: 'Todos os campos são opcionais. `type` não pode ser alterado (enviá-lo retorna 422). `category_id` é proibido em transferências e `goal_id` é proibido em receitas (obrigatório em transferências). Enviar qualquer campo do cronograma (total_amount, installments, installments_count, period_unit, period_interval) gera o cronograma inteiro de novo, o que retorna 422 se a transação já tiver alguma parcela paga.',
+    description: 'Todos os campos são opcionais. `type` não pode ser alterado (enviá-lo retorna 422). `category_id` é proibido em transferências e `goal_id` é proibido em receitas (obrigatório em transferências). Em receitas, `installments`, `period_unit` e `period_interval` são proibidos e `installments_count` deve ser 1. Enviar qualquer campo do cronograma (total_amount, installments, installments_count, period_unit, period_interval) gera o cronograma inteiro de novo, o que retorna 422 se a transação já tiver alguma parcela paga.',
     properties: [
         new OA\Property(property: 'category_id', type: 'integer', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
