@@ -62,6 +62,27 @@ class CategoriesApi {
   Future<void> deleteCategory(int id) =>
       _send(() => _dio.delete<void>('/categories/$id'));
 
+  /// Spending of [month] (`YYYY-MM`) per category id, as the API's decimal
+  /// `total` string (paid + pending, the same sum the limit check uses).
+  /// Categories with no expense that month are absent.
+  Future<Map<int, String>> spendingByCategory(String month) async {
+    final response = await _send(
+      () => _dio.get<Map<String, dynamic>>(
+        '/dashboard/spending-by-category',
+        queryParameters: {'month': month},
+      ),
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    final rows = (data['categories'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
+    final totals = <int, String>{};
+    for (final row in rows) {
+      final category = row['category'] as Map<String, dynamic>;
+      totals[category['id'] as int] = row['total'].toString();
+    }
+    return totals;
+  }
+
   /// Single-resource responses wrap the object in `{ "data": {...} }`.
   CategoryDto _unwrap(Map<String, dynamic> body) =>
       CategoryDto.fromJson(body['data'] as Map<String, dynamic>);
