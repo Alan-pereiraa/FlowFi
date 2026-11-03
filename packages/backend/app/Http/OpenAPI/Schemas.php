@@ -774,9 +774,19 @@ use OpenApi\Attributes as OA;
             example: 'gastei 50 reais no mercado hoje',
         ),
         new OA\Property(
-            property: 'transaction',
-            ref: '#/components/schemas/StoreTransactionRequest',
-            description: 'Corpo para POST /transactions. Todas as chaves estão presentes; null significa que a IA não conseguiu identificar. `installments` nunca é preenchido no rascunho.',
+            property: 'kind',
+            type: 'string',
+            enum: ['transaction', 'recurring'],
+            description: 'Para onde enviar `draft`: `transaction` vai para POST /transactions e `recurring` para POST /recurring-transactions',
+            example: 'transaction',
+        ),
+        new OA\Property(
+            property: 'draft',
+            description: 'Corpo da rota indicada em `kind`. Todas as chaves estão presentes; null significa que a IA não conseguiu identificar. `installments` nunca é preenchido no rascunho.',
+            oneOf: [
+                new OA\Schema(ref: '#/components/schemas/StoreTransactionRequest'),
+                new OA\Schema(ref: '#/components/schemas/StoreRecurringTransactionRequest'),
+            ],
         ),
     ],
 )]
