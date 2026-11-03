@@ -9,6 +9,7 @@ use App\Domains\Ledger\Requests\UpdateTransactionRequest;
 use App\Domains\Ledger\Resources\InstallmentResource;
 use App\Domains\Ledger\Resources\TransactionDraftResource;
 use App\Domains\Ledger\Resources\TransactionResource;
+use App\Domains\Ledger\Services\TransactionDraftService;
 use App\Domains\Ledger\Services\TransactionService;
 use App\Domains\Shared\Services\TranscriptionService;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class TransactionController extends Controller
 {
     public function __construct(
         private readonly TransactionService $transactions,
+        private readonly TransactionDraftService $drafts,
         private readonly TranscriptionService $transcriptions,
     ) {}
 
@@ -245,8 +247,8 @@ class TransactionController extends Controller
         path: '/transactions/draft',
         operationId: 'draftTransaction',
         tags: ['Transações'],
-        summary: 'Gerar rascunho de transação a partir de áudio ou texto',
-        description: 'Transcreve `audio` (ou usa `raw_context` como veio) e pede ao provedor de IA um rascunho no formato do corpo de POST /transactions. Nada é salvo: mostre o rascunho ao usuário, peça que preencha os campos obrigatórios que vieram null e então envie para POST /transactions.',
+        summary: 'Gerar rascunho de transação, parcelada ou recorrente, a partir de áudio ou texto',
+        description: 'Transcreve `audio` (ou usa `raw_context` como veio) e pede ao provedor de IA um rascunho. `kind` diz o que a nota descreve e para onde enviar `draft`: `transaction` vai para POST /transactions e `recurring` para POST /recurring-transactions. Nada é salvo: mostre o rascunho ao usuário, peça que preencha os campos obrigatórios que vieram null e então envie para a rota indicada.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -299,7 +301,7 @@ class TransactionController extends Controller
 
         return new TransactionDraftResource([
             'transcript' => $rawContext,
-            'transaction' => $this->transactions->draftFromRawContext($request->user(), $rawContext),
+            ...$this->drafts->fromRawContext($request->user(), $rawContext),
         ]);
     }
 }
