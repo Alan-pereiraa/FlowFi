@@ -77,10 +77,12 @@ class NotificationTest extends TestCase
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create(['limit_amount' => null]);
 
+        $this->travelTo('2026-08-01 12:00:00');
         $this->expense($token, $category, '10.00', '2026-09-16');           // due tomorrow
         $this->expense($token, $category, '20.00', '2026-09-10');           // overdue
         $this->expense($token, $category, '30.00', '2026-09-30');           // too far ahead
         $this->expense($token, $category, '40.00', '2026-09-10', 'income'); // income: never a bill
+        $this->travelTo('2026-09-15 12:00:00');
 
         $reminders = app(ReminderService::class);
 
@@ -99,6 +101,7 @@ class NotificationTest extends TestCase
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create(['name' => 'Food', 'limit_amount' => null]);
 
+        $this->travelTo('2026-08-01 12:00:00');
         $this->expense($token, $category, '45.00', '2026-09-10');
 
         $this->withToken($token)->postJson('/api/v1/transactions', [
@@ -111,6 +114,7 @@ class NotificationTest extends TestCase
             'period_unit' => 'month',
         ])->assertCreated();
 
+        $this->travelTo('2026-09-15 12:00:00');
         app(ReminderService::class)->sendAll();
 
         $messages = Notification::where('subject', 'installment_overdue')->orderBy('id')->pluck('message')->all();
@@ -138,7 +142,9 @@ class NotificationTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create(['limit_amount' => null]);
+        $this->travelTo('2026-08-01 12:00:00');
         $this->expense($token, $category, '20.00', '2026-09-10');
+        $this->travelTo('2026-09-15 12:00:00');
 
         app(ReminderService::class)->sendAll();
         $notification = Notification::firstOrFail();

@@ -12,7 +12,7 @@ import '../../domain/entities/category.dart';
 ///
 /// Without [spentCents] it shows the limit only. With it, it also shows the
 /// spent / limit amounts, a progress bar in the category's color, the
-/// percentage, and turns red with "Próximo do limite" from 80%.
+/// percentage, and adds a red "Próximo do limite" warning from 80%.
 class CategoryCard extends StatelessWidget {
   const CategoryCard({
     super.key,
@@ -35,19 +35,15 @@ class CategoryCard extends StatelessWidget {
 
     final spent = spentCents;
     final nearLimit = spent != null && category.isNearLimit(spent);
-    final accent = nearLimit ? scheme.error : color;
+    // The card always keeps the category's own color; only the
+    // "Próximo do limite" warning is red.
+    final accent = color;
     final limitText = category.limitCents == null
         ? 'Sem limite'
         : Money.format(category.limitCents!);
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      shape: nearLimit
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: scheme.error.withValues(alpha: 0.4)),
-            )
-          : null,
       child: InkWell(
         onTap: onEdit,
         child: Padding(

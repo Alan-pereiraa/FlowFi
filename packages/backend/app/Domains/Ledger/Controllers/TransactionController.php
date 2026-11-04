@@ -9,6 +9,7 @@ use App\Domains\Ledger\Requests\UpdateTransactionRequest;
 use App\Domains\Ledger\Resources\InstallmentResource;
 use App\Domains\Ledger\Resources\TransactionDraftResource;
 use App\Domains\Ledger\Resources\TransactionResource;
+use App\Domains\Ledger\Services\TransactionDraftService;
 use App\Domains\Ledger\Services\TransactionService;
 use App\Domains\Shared\Services\TranscriptionService;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class TransactionController extends Controller
 {
     public function __construct(
         private readonly TransactionService $transactions,
+        private readonly TransactionDraftService $drafts,
         private readonly TranscriptionService $transcriptions,
     ) {}
 
@@ -81,7 +83,7 @@ class TransactionController extends Controller
         operationId: 'createTransaction',
         tags: ['Transações'],
         summary: 'Criar transação',
-        description: 'Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
+        description: 'Parcelas com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes; transferências nascem sempre pagas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -158,6 +160,7 @@ class TransactionController extends Controller
         operationId: 'updateTransaction',
         tags: ['Transações'],
         summary: 'Atualizar transação',
+        description: 'Alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -241,12 +244,46 @@ class TransactionController extends Controller
         );
     }
 
+    #[OA\Patch(
+        path: '/transactions/{id}/installments/{installmentId}/unpay',
+        operationId: 'unpayInstallment',
+        tags: ['Transações'],
+        summary: 'Voltar parcela para pendente',
+        description: 'Retorna 422 quando a parcela já está pendente ou pertence a uma transferência, que é sempre paga.',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/IdPath'),
+            new OA\Parameter(
+                name: 'installmentId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', minimum: 1),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Parcela marcada como pendente',
+                content: new OA\JsonContent(ref: '#/components/schemas/InstallmentResponse'),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+        ],
+    )]
+    public function unpayInstallment(Request $request, int $id, int $installmentId): InstallmentResource
+    {
+        return new InstallmentResource(
+            $this->transactions->unpayInstallment($request->user(), $id, $installmentId),
+        );
+    }
+
     #[OA\Post(
         path: '/transactions/draft',
         operationId: 'draftTransaction',
         tags: ['Transações'],
-        summary: 'Gerar rascunho de transação a partir de áudio ou texto',
-        description: 'Transcreve `audio` (ou usa `raw_context` como veio) e pede ao provedor de IA um rascunho no formato do corpo de POST /transactions. Nada é salvo: mostre o rascunho ao usuário, peça que preencha os campos obrigatórios que vieram null e então envie para POST /transactions.',
+        summary: 'Gerar rascunho de transação, parcelada ou recorrente, a partir de áudio ou texto',
+        description: 'Transcreve `audio` (ou usa `raw_context` como veio) e pede ao provedor de IA um rascunho. `kind` diz o que a nota descreve e para onde enviar `draft`: `transaction` vai para POST /transactions e `recurring` para POST /recurring-transactions. Nada é salvo: mostre o rascunho ao usuário, peça que preencha os campos obrigatórios que vieram null e então envie para a rota indicada.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -299,7 +336,7 @@ class TransactionController extends Controller
 
         return new TransactionDraftResource([
             'transcript' => $rawContext,
-            'transaction' => $this->transactions->draftFromRawContext($request->user(), $rawContext),
+            ...$this->drafts->fromRawContext($request->user(), $rawContext),
         ]);
     }
 }

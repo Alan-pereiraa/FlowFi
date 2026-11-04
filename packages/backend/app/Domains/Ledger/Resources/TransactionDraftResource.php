@@ -11,7 +11,8 @@ class TransactionDraftResource extends JsonResource
     {
         return [
             'transcript' => $this->resource['transcript'],
-            'transaction' => $this->resource['transaction'],
+            'kind' => $this->resource['kind'],
+            'draft' => $this->resource['draft'],
         ];
     }
 }

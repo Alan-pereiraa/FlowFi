@@ -51,7 +51,14 @@ class UpdateTransactionRequest extends FormRequest
             'date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'total_amount' => ['sometimes', 'required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
 
-            'installments' => ['sometimes', 'array', 'min:1', 'max:120', 'prohibits:installments_count,period_unit,period_interval'],
+            'installments' => [
+                'sometimes',
+                Rule::prohibitedIf($type === Transaction::TYPE_INCOME),
+                'array', 
+                'min:1', 
+                'max:120', 
+                'prohibits:installments_count,period_unit,period_interval'
+            ],
             'installments.*.amount' => ['required_with:installments', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required_with:installments', 'date_format:Y-m-d'],
 
@@ -63,6 +70,16 @@ class UpdateTransactionRequest extends FormRequest
 
     public function withValidator(Validator $validator): void
     {
-        $validator->after(fn (Validator $validator) => $this->checkInstallmentsSumMatchesTotal($validator));
+        $validator->after(function (Validator $validator): void {
+            $this->checkInstallmentsSumMatchesTotal($validator);
+
+            if ($this->transaction->type === Transaction::TYPE_INCOME && (int) $this->input('installments_count', 1) > 1) {
+                $validator->errors()->add(
+                    'installments_count',
+                    'Não se pode dividir uma receita em parcelas.',
+                );
+            }
+        });
     }
+
 }

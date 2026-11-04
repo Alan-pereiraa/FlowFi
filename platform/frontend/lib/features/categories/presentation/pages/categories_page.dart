@@ -75,6 +75,7 @@ class CategoriesPage extends ConsumerWidget {
           for (final category in state.categories)
             CategoryCard(
               category: category,
+              spentCents: state.spentOf(category.id),
               onEdit: () => context.push(
                 CategoryRoutes.edit(category.id),
                 extra: category,

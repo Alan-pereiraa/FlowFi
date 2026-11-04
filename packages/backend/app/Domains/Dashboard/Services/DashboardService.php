@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class DashboardService
 {
+    public const string TIMEZONE = 'America/Sao_Paulo';
+
     public const int DEFAULT_UPCOMING_DAYS = 30;
 
     public const int DEFAULT_UPCOMING_LIMIT = 10;
@@ -58,7 +60,7 @@ class DashboardService
 
     public function upcomingInstallments(User $user, int $days, int $limit): Collection
     {
-        return $this->dashboard->upcomingInstallments($user, CarbonImmutable::today()->addDays($days), $limit);
+        return $this->dashboard->upcomingInstallments($user, CarbonImmutable::today(self::TIMEZONE)->addDays($days), $limit);
     }
 
     public function recentTransactions(User $user, int $limit): Collection
@@ -85,7 +87,7 @@ class DashboardService
      */
     private function period(?string $month): array
     {
-        $from = CarbonImmutable::createFromFormat('Y-m-d', ($month ?? CarbonImmutable::today()->format('Y-m')).'-01')->startOfDay();
+        $from = CarbonImmutable::createFromFormat('Y-m-d', ($month ?? CarbonImmutable::today(self::TIMEZONE)->format('Y-m')).'-01')->startOfDay();
 
         return [
             'month' => $from->format('Y-m'),
@@ -100,7 +102,7 @@ class DashboardService
         $allTime = $this->bucket($this->dashboard->installmentTotals($user, null, null));
 
         $overdue = ['expense' => ['count' => 0, 'total' => 0], 'income' => ['count' => 0, 'total' => 0]];
-        foreach ($this->dashboard->overdueTotals($user, CarbonImmutable::today()) as $row) {
+        foreach ($this->dashboard->overdueTotals($user, CarbonImmutable::today(self::TIMEZONE)) as $row) {
             if (isset($overdue[$row['type']])) {
                 $overdue[$row['type']] = ['count' => $row['count'], 'total' => $row['total']];
             }
