@@ -5,9 +5,6 @@ namespace App\Domains\Dashboard\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * The home screen in one payload: each key is exactly what the matching `/dashboard/*` route returns.
- */
 class DashboardResource extends JsonResource
 {
     public function toArray(Request $request): array

@@ -21,10 +21,6 @@ class NotificationServiceTest extends TestCase
 
     private const EMAIL = 'user@example.com';
 
-    // ------------------------------------------------------------------
-    // notify(): criação + disparo de push
-    // ------------------------------------------------------------------
-
     public function test_notify_cria_a_notificacao_e_despacha_um_push_por_dispositivo_registrado(): void
     {
         Bus::fake();
@@ -45,7 +41,6 @@ class NotificationServiceTest extends TestCase
         $this->assertSame('Meta atingida', $notification->title);
         $this->assertSame('goal', $notification->subject);
 
-        // Um push por dispositivo, nenhum a mais, nenhum a menos.
         Bus::assertDispatchedTimes(SendPushNotification::class, 2);
 
         foreach ([$tokenA, $tokenB] as $token) {
@@ -62,7 +57,6 @@ class NotificationServiceTest extends TestCase
         Bus::fake();
 
         $user = $this->createUser();
-        // Nenhum registerDevice() aqui de propósito.
 
         $notification = $this->service()->notify(
             $user,
@@ -76,10 +70,6 @@ class NotificationServiceTest extends TestCase
         $this->assertNotNull($notification->id);
         Bus::assertNothingDispatched();
     }
-
-    // ------------------------------------------------------------------
-    // notifyOnce(): idempotência
-    // ------------------------------------------------------------------
 
     public function test_notify_once_nao_duplica_notificacao_do_mesmo_assunto_dentro_da_janela(): void
     {
@@ -111,13 +101,8 @@ class NotificationServiceTest extends TestCase
         $this->assertNotNull($first);
         $this->assertNull($second);
 
-        // Só o primeiro chamado deve ter gerado push.
         Bus::assertDispatchedTimes(SendPushNotification::class, 0);
     }
-
-    // ------------------------------------------------------------------
-    // Dispositivos: registrar e remover
-    // ------------------------------------------------------------------
 
     public function test_registrar_e_remover_dispositivo_reflete_em_quem_recebe_push(): void
     {
@@ -130,14 +115,8 @@ class NotificationServiceTest extends TestCase
         $this->assertSame([], $this->deviceTokens()->tokensFor($user));
     }
 
-    // ------------------------------------------------------------------
-    // Job: reação a um token inválido
-    // ------------------------------------------------------------------
-
     public function test_job_remove_o_dispositivo_quando_o_push_sender_recusa_por_token_invalido(): void
     {
-        // QUEUE_CONNECTION=sync nos testes faz o job rodar na hora do dispatch.
-        // Sem isso, o notify() abaixo chamaria o FcmPushSender real (Firebase).
         Bus::fake();
 
         $user = $this->createUser();
@@ -160,16 +139,11 @@ class NotificationServiceTest extends TestCase
             }
         };
 
-        // Chama o job diretamente, sem fila: testa só a lógica de reação ao erro.
         $job = new SendPushNotification($notification, 'token-expirado');
         $job->handle($rejectingSender, $this->service());
 
         $this->assertSame([], $this->deviceTokens()->tokensFor($user));
     }
-
-    // ------------------------------------------------------------------
-    // Auxiliares
-    // ------------------------------------------------------------------
 
     private function service(): NotificationService
     {
@@ -181,10 +155,6 @@ class NotificationServiceTest extends TestCase
         return app(DeviceTokenRepositoryInterface::class);
     }
 
-    /**
-     * Cria um usuário pelo repositório (sem depender de factory).
-     * Se a tabela users exigir outras colunas, acrescente aqui.
-     */
     private function createUser(): User
     {
         return app(UserRepositoryInterface::class)->create([
@@ -193,7 +163,6 @@ class NotificationServiceTest extends TestCase
         ]);
     }
 
-    /** Registra um dispositivo e devolve o token (string) para comparação nos testes. */
     private function registerDevice(User $user, string $token): string
     {
         $this->service()->registerDevice($user, $token, DevicePlatform::Android);

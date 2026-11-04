@@ -10,10 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * Template that generates one ordinary Transaction per occurrence (salary, rent, a monthly
- * deposit into a goal). Unlike an installment plan, `amount` is repeated in full, not split.
- */
 #[Fillable([
     'user_id', 'category_id', 'goal_id', 'type', 'amount', 'description',
     'period_unit', 'period_interval', 'start_date', 'end_date', 'occurrences',

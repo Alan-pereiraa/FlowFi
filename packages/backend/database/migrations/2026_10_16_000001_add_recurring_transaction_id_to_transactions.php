@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::table('transactions', function (Blueprint $table) {
             $table->foreignId('recurring_transaction_id')->nullable()->index()->constrained()->nullOnDelete();
 
-            // Safety net for the daily generator: one occurrence per template per date, even if it runs twice.
             $table->unique(['recurring_transaction_id', 'date']);
         });
     }

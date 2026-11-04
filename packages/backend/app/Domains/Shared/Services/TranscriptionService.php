@@ -7,7 +7,6 @@ use Illuminate\Validation\ValidationException;
 
 class TranscriptionService
 {
-    /** Extension guessed from the upload's content => MIME type the Gemini API accepts for it. */
     public const array MIME_TYPES = [
         'm4a' => 'audio/m4a',
         'mp4' => 'audio/m4a',

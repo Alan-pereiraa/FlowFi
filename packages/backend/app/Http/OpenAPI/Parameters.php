@@ -4,10 +4,6 @@ namespace App\Http\OpenAPI;
 
 use OpenApi\Attributes as OA;
 
-/**
- * Reusable path/query parameters. Kept apart from Schemas.php because swagger-php attaches
- * sibling #[OA\Schema] attributes of the same class to a #[OA\Parameter] instead of to components.
- */
 #[OA\Parameter(
     parameter: 'IdPath',
     name: 'id',

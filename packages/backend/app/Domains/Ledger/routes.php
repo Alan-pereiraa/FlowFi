@@ -32,7 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('recurring-transactions/{id}/end', [RecurringTransactionController::class, 'end'])
         ->whereNumber('id');
 
-    // Read-only: returns a POST /transactions body for the client to confirm; nothing is saved.
     Route::post('transactions/draft', [TransactionController::class, 'draft'])
         ->middleware('throttle:transaction-draft');
 });

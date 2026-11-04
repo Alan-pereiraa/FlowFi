@@ -13,7 +13,6 @@ class TransactionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return array{0: User, 1: string} */
     private function authenticated(): array
     {
         $user = User::factory()->create();
@@ -67,7 +66,6 @@ class TransactionTest extends TestCase
 
         $installments = $response->json('data.installments');
 
-        // 100.01 split three ways: the leftover cent is front-loaded so the sum stays exact.
         $this->assertSame(['33.34', '33.34', '33.33'], array_column($installments, 'amount'));
         $this->assertSame(['2026-01-01', '2026-02-01', '2026-03-01'], array_column($installments, 'date'));
     }
@@ -92,7 +90,6 @@ class TransactionTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.schedule_type', 'custom')
             ->assertJsonCount(3, 'data.installments')
-            // Reordered chronologically regardless of the order they were sent in.
             ->assertJsonPath('data.installments.0.date', '2026-01-10')
             ->assertJsonPath('data.installments.0.amount', '100.00')
             ->assertJsonPath('data.installments.1.date', '2026-02-25')
@@ -131,7 +128,6 @@ class TransactionTest extends TestCase
             'period_interval' => 1,
         ])->json('data.id');
 
-        // "Trocar o período do installment de 1 mês para 15 dias."
         $response = $this->withToken($token)->patchJson("/api/v1/transactions/{$transactionId}", [
             'period_unit' => 'day',
             'period_interval' => 15,

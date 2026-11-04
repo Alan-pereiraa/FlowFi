@@ -4,10 +4,6 @@ namespace App\Http\OpenAPI;
 
 use OpenApi\Attributes as OA;
 
-/**
- * Schemas of the `/dashboard` endpoints (app/Domains/Dashboard). Kept apart from Schemas.php so the
- * home screen's contract can evolve on its own. Amounts are decimal strings, like everywhere else.
- */
 #[OA\Schema(
     schema: 'DashboardPeriod',
     type: 'object',

@@ -28,11 +28,9 @@ class DashboardTest extends TestCase
     {
         parent::setUp();
 
-        // "Today" is the 15th, so the 1st is overdue and the 25th is still ahead.
         $this->travelTo('2026-09-15 12:00:00');
     }
 
-    /** @return array{0: User, 1: string} */
     private function authenticated(): array
     {
         $user = User::factory()->create();
@@ -40,11 +38,6 @@ class DashboardTest extends TestCase
         return [$user, $user->createToken('api')->plainTextToken];
     }
 
-    /**
-     * Only expenses get installment rows: income and transfers just use the amount and date.
-     *
-     * @param  list<array{0: string, 1: string, 2?: string}>  $installments  [amount, date, status = pending]
-     */
     private function transaction(User $user, string $type, array $installments, Category|false|null $category = null, array $attributes = []): Transaction
     {
         $cents = array_sum(array_map(fn (array $row) => (int) round($row[0] * 100), $installments));
@@ -90,7 +83,6 @@ class DashboardTest extends TestCase
         $this->transaction($user, 'income', [['1000.00', '2026-09-15']]);
         $this->transaction($user, 'income', [['500.00', '2026-09-20']]);
         $this->transaction($user, 'expense', [['200.00', '2026-09-02', 'paid']]);
-        // 300.00 in three monthly installments: only September's two belong to this month.
         $this->transaction($user, 'expense', [
             ['100.00', '2026-09-10', 'paid'],
             ['100.00', '2026-09-25'],
@@ -125,7 +117,7 @@ class DashboardTest extends TestCase
 
         $this->transaction($user, 'income', [['1000.00', '2026-06-05']]);
         $this->transaction($user, 'expense', [['250.50', '2026-08-10', 'paid']]);
-        $this->transaction($user, 'expense', [['999.00', '2026-09-28']]); // pending: not money yet
+        $this->transaction($user, 'expense', [['999.00', '2026-09-28']]);
 
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
             ->assertJsonPath('data.balance', '0.00')
@@ -147,9 +139,9 @@ class DashboardTest extends TestCase
         [$user, $token] = $this->authenticated();
 
         $this->transaction($user, 'expense', [['30.00', '2026-07-01'], ['20.00', '2026-09-01']]);
-        $this->transaction($user, 'expense', [['99.00', '2026-09-15']]);          // due today: not overdue
-        $this->transaction($user, 'expense', [['11.00', '2026-08-01', 'paid']]);  // paid: not overdue
-        $this->transaction($user, 'income', [['400.00', '2026-09-10']]);          // income is never overdue
+        $this->transaction($user, 'expense', [['99.00', '2026-09-15']]);
+        $this->transaction($user, 'expense', [['11.00', '2026-08-01', 'paid']]);
+        $this->transaction($user, 'income', [['400.00', '2026-09-10']]);
 
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
             ->assertJsonPath('data.overdue.expense', ['count' => 2, 'amount' => '50.00'])
@@ -220,7 +212,7 @@ class DashboardTest extends TestCase
         $this->transaction($user, 'expense', [['100.00', '2026-09-02', 'paid'], ['100.00', '2026-09-20']], $food);
         $this->transaction($user, 'expense', [['50.00', '2026-09-04', 'paid']], $food);
         $this->transaction($user, 'expense', [['300.00', '2026-09-12']], $fun);
-        $this->transaction($user, 'expense', [['70.00', '2026-10-02']], $fun);   // other month
+        $this->transaction($user, 'expense', [['70.00', '2026-10-02']], $fun);
         $this->transaction($user, 'income', [['3000.00', '2026-09-01']], $salary);
 
         $response = $this->withToken($token)->getJson('/api/v1/dashboard/spending-by-category?month=2026-09')
@@ -228,7 +220,6 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.period.month', '2026-09')
             ->assertJsonCount(2, 'data.categories');
 
-        // Biggest spender first.
         $this->assertSame(['Fun', 'Food'], array_column(array_column($response->json('data.categories'), 'category'), 'name'));
 
         $response->assertJsonPath('data.categories.0.total', '300.00')
@@ -262,11 +253,11 @@ class DashboardTest extends TestCase
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create(['name' => 'Rent']);
 
-        $this->transaction($user, 'expense', [['10.00', '2026-08-20']], $category, ['description' => 'Late one']); // overdue
-        $this->transaction($user, 'expense', [['20.00', '2026-09-15']], $category);                                // today
+        $this->transaction($user, 'expense', [['10.00', '2026-08-20']], $category, ['description' => 'Late one']);
+        $this->transaction($user, 'expense', [['20.00', '2026-09-15']], $category);
         $this->transaction($user, 'expense', [['30.00', '2026-09-25']], $category);
-        $this->transaction($user, 'expense', [['40.00', '2026-09-10', 'paid']], $category);                         // paid
-        $this->transaction($user, 'expense', [['50.00', '2026-11-30']], $category);                                // beyond 30 days
+        $this->transaction($user, 'expense', [['40.00', '2026-09-10', 'paid']], $category);
+        $this->transaction($user, 'expense', [['50.00', '2026-11-30']], $category);
 
         $response = $this->withToken($token)->getJson('/api/v1/dashboard/upcoming-installments')
             ->assertOk()
@@ -344,7 +335,6 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertJsonCount(3, 'data');
 
-        // Closest deadline first, open-ended goals last.
         $this->assertSame(['Trip', 'Car', 'Rainy day'], array_column($response->json('data'), 'name'));
 
         $response->assertJsonPath('data.0.id', $sooner->id)
@@ -368,7 +358,6 @@ class DashboardTest extends TestCase
 
         $this->transaction($user, 'income', [['1000.00', '2026-09-01']]);
         $this->transaction($user, 'expense', [['100.00', '2026-09-02', 'paid']]);
-        // A transfer has no installments and no category.
         $this->transaction($user, 'transfer', [['250.00', '2026-09-03']], false, ['goal_id' => $goal->id]);
         $this->transaction($user, 'transfer', [['40.00', '2026-08-30']], false, ['goal_id' => $goal->id]);
 

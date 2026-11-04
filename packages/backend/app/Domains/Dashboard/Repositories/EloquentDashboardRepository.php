@@ -154,12 +154,6 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
         return $user->notifications()->whereNull('read_at')->count();
     }
 
-    /**
-     * The caller's live transactions joined to their live installments. Scoping goes through
-     * `User::transactions()`, so another account's rows can never leak into an aggregate; the
-     * transactions' soft-delete scope is applied by Eloquent, the installments' by hand because
-     * the join bypasses their model.
-     */
     private function installmentsOf(User $user): HasMany
     {
         return $user->transactions()

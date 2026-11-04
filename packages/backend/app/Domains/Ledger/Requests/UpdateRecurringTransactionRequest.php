@@ -46,7 +46,6 @@ class UpdateRecurringTransactionRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'amount' => ['sometimes', 'required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
 
-            // The schedule is fixed once created: end it and create a new one instead.
             'type' => ['prohibited'],
             'period_unit' => ['prohibited'],
             'period_interval' => ['prohibited'],

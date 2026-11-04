@@ -4,10 +4,6 @@ namespace App\Http\OpenAPI;
 
 use OpenApi\Attributes as OA;
 
-/**
- * Global OpenAPI definitions: API info, server, security scheme, tags and reusable components.
- * Endpoint annotations live on the real controller methods (app/Domains/{Domain}/Controllers).
- */
 #[OA\Info(
     title: 'FlowFi API',
     version: '1.0.0',
