@@ -32,7 +32,6 @@ class TransactionFormState {
   final Transaction? original;
   final List<Category> categories;
 
-  /// "Meta de destino" options, loaded the first time a transfer is shown.
   final List<Goal> goals;
   final bool goalsLoading;
   final String? goalsError;
@@ -50,8 +49,6 @@ class TransactionFormState {
 
   bool get busy => loading || saving || deleting || endingRecurrence;
 
-  /// Amount, installments and duration are frozen once an installment is
-  /// paid.
   bool get scheduleLocked => original?.hasPaidInstallment ?? false;
 
   TransactionFormState copyWith({

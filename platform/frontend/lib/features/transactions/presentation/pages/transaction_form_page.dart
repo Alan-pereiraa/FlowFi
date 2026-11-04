@@ -27,12 +27,6 @@ import '../widgets/recurrence_card.dart';
 import '../widgets/transaction_type_toggle.dart';
 
 /// "Nova Transação" ([transactionId] null) and "Editar Transação".
-/// Pops with `true` after a save, delete or ended recurrence so the
-/// statement reloads.
-///
-/// "Transação Parcelada" splits the total over N monthly installments.
-/// "Transação Recorrente" repeats the full amount every month, N times,
-/// until a date or until cancelled (`/recurring-transactions`).
 class TransactionFormPage extends ConsumerStatefulWidget {
   const TransactionFormPage({super.key, this.transactionId});
 
@@ -44,7 +38,6 @@ class TransactionFormPage extends ConsumerStatefulWidget {
 }
 
 class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
-  /// Choices offered in the "Nx" menus.
   static const _maxListedCount = 24;
 
   final _description = TextEditingController();
@@ -55,7 +48,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   int? _categoryId;
   int? _goalId;
 
-  /// Installments of a "Transação Parcelada"; 1 means not split.
   int _installments = 1;
 
   bool _recurring = false;
@@ -71,6 +63,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
 
   bool get _isEdit => widget.transactionId != null;
   bool get _isTransfer => _type == TransactionType.transfer;
+  bool get _canSplit => _type == TransactionType.expense;
+  bool get _isSplit => _canSplit && _installments > 1;
 
   TransactionFormController get _controller => ref.read(
     transactionFormControllerProvider(widget.transactionId).notifier,
@@ -109,8 +103,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   void _setType(TransactionType type) {
     setState(() {
       _type = type;
-      // Transfers are never split.
-      if (type == TransactionType.transfer) _installments = 1;
+      if (type != TransactionType.expense) _installments = 1;
     });
     if (type == TransactionType.transfer &&
         ref
@@ -134,7 +127,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     if (picked == null) return;
     setState(() {
       _setDate(picked);
-      // "Repetir durante" can't end before it starts.
       if (_endDate != null && _endDate!.isBefore(picked)) _endDate = null;
     });
   }
@@ -163,7 +155,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   }
 
   void _submit() {
-    final creatingRecurrence = !_isEdit && _recurring;
+    final creatingRecurrence = !_isEdit && _recurring && !_isSplit;
     setState(() {
       _amountMissing = _amount.isZero ? 'Informe um valor.' : null;
       _categoryMissing = !_isTransfer && _categoryId == null
@@ -216,7 +208,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         description: description,
         schedule: TransactionSchedule(
           totalAmount: _amount,
-          installmentsCount: _isTransfer ? 1 : _installments,
+          installmentsCount: _canSplit ? _installments : 1,
         ),
       ),
     );
@@ -426,47 +418,48 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                     }),
                   ),
               ] else ...[
-                ChoiceRow(
-                  title: 'Transação Parcelada',
-                  selected: _installments > 1,
-                  // A split can't also repeat: choosing one turns the other
-                  // off.
-                  onTap: locked
-                      ? null
-                      : () => setState(() {
-                          if (_installments > 1) {
-                            _installments = 1;
-                          } else {
-                            _installments = 2;
-                            _recurring = false;
-                          }
-                        }),
-                  trailing: _installments > 1
-                      ? _CountMenu(
-                          value: _installments,
-                          tooltip: 'Número de parcelas',
-                          enabled: !locked,
-                          onSelected: (n) => setState(() => _installments = n),
-                          max: _maxListedCount,
-                        )
-                      : null,
-                ),
-                if (_installments > 1)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 4),
-                    child: Text(
-                      'O valor total é dividido em $_installments parcelas '
-                      'mensais.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                if (_canSplit) ...[
+                  ChoiceRow(
+                    title: 'Transação Parcelada',
+                    selected: _installments > 1,
+                    onTap: locked
+                        ? null
+                        : () => setState(() {
+                            if (_installments > 1) {
+                              _installments = 1;
+                            } else {
+                              _installments = 2;
+                              _recurring = false;
+                            }
+                          }),
+                    trailing: _installments > 1
+                        ? _CountMenu(
+                            value: _installments,
+                            tooltip: 'Número de parcelas',
+                            enabled: !locked,
+                            onSelected: (n) =>
+                                setState(() => _installments = n),
+                            max: _maxListedCount,
+                          )
+                        : null,
+                  ),
+                  if (_installments > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 4),
+                      child: Text(
+                        'O valor total é dividido em $_installments parcelas '
+                        'mensais.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                if (state.fieldErrors['installments_count'] ??
-                        state.fieldErrors['period_unit']
-                    case final message?)
-                  error(message),
-                const SizedBox(height: 16),
+                  if (state.fieldErrors['installments_count'] ??
+                          state.fieldErrors['period_unit']
+                      case final message?)
+                    error(message),
+                  const SizedBox(height: 16),
+                ],
                 Text(
                   'Categoria',
                   style: theme.textTheme.labelLarge?.copyWith(
@@ -487,21 +480,18 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                     case final message?)
                   error(message),
               ],
-              const SizedBox(height: 16),
-              RecurrenceCard(
-                value: _isEdit ? linkedToRecurrence : _recurring,
-                subtitle: _isTransfer
-                    ? 'Repetir mensalmente'
-                    : 'Repetir mais vezes',
-                // A recurrence's schedule can't change after it is created:
-                // on edit it can only be cancelled.
-                onChanged: _isEdit
-                    ? null
-                    : (on) => setState(() {
-                        _recurring = on;
-                        if (on) _installments = 1;
-                      }),
-              ),
+              if (!_isSplit) ...[
+                const SizedBox(height: 16),
+                RecurrenceCard(
+                  value: _isEdit ? linkedToRecurrence : _recurring,
+                  subtitle: _isTransfer
+                      ? 'Repetir mensalmente'
+                      : 'Repetir mais vezes',
+                  onChanged: _isEdit
+                      ? null
+                      : (on) => setState(() => _recurring = on),
+                ),
+              ],
               if (_isEdit && linkedToRecurrence) ...[
                 const SizedBox(height: 16),
                 AppDangerButton(
@@ -510,7 +500,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   onPressed: state.busy ? null : _confirmEndRecurrence,
                 ),
               ],
-              if (!_isEdit && _recurring) ...[
+              if (!_isEdit && _recurring && !_isSplit) ...[
                 const SizedBox(height: 16),
                 ChoiceRow(
                   title: 'Repetir',
@@ -598,7 +588,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   }
 }
 
-/// The "Nx" pill that opens a menu of counts.
 class _CountMenu extends StatelessWidget {
   const _CountMenu({
     required this.value,

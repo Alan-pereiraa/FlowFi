@@ -32,11 +32,8 @@ class TransactionListState {
   /// "Todos os Tipos" chip; null = all.
   final TransactionType? type;
 
-  /// "Todas as Categorias" chip; null = all.
   final int? categoryId;
 
-  /// Search box text. Matched on the client against what is loaded (the API
-  /// has no text search).
   final String search;
 
   /// First page (or a refresh after a filter change).
@@ -50,8 +47,6 @@ class TransactionListState {
   /// pt-BR message when the first page failed.
   final String? error;
 
-  /// [items] narrowed by [search] (description or category name, ignoring
-  /// case and accents).
   List<Transaction> get visibleItems {
     final query = _fold(search.trim());
     if (query.isEmpty) return items;
@@ -63,8 +58,6 @@ class TransactionListState {
     ];
   }
 
-  /// [visibleItems] grouped by transaction date, keeping the API's
-  /// newest-first order.
   List<(DateTime, List<Transaction>)> get byDay {
     final groups = <(DateTime, List<Transaction>)>[];
     for (final item in visibleItems) {

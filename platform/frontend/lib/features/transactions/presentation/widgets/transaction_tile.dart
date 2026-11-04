@@ -7,9 +7,6 @@ import '../../../categories/domain/entities/category.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 
-/// One statement row: category icon, description, category and signed
-/// amount (`-` for expenses, `+` in success for income), with a repeat icon
-/// when the transaction comes from a recurrence.
 // GAP: the design's account ("Conta Corrente • ...") and time of day have no
 // backend field.
 class TransactionTile extends StatelessWidget {

@@ -11,11 +11,6 @@ import '../controllers/transaction_list_controller.dart';
 import '../controllers/transaction_list_state.dart';
 import '../widgets/transaction_tile.dart';
 
-/// "Transações" tab: the statement grouped by day, with search and filter
-/// chips.
-// GAP: the design's "Todas as Contas" chip has no backend support (there are
-// no accounts), so it filters by category instead. Search runs on the client
-// over the rows already loaded (the API has no text search).
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
 
@@ -224,7 +219,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     ];
   }
 
-  /// "24 de outubro" -> "24 de Outubro", as in the design.
   static String _capitalizeMonth(String header) => header.replaceAllMapped(
     RegExp(r'de ([a-zç])'),
     (m) => 'de ${m[1]!.toUpperCase()}',
@@ -368,8 +362,6 @@ class _TypeChoice {
   final TransactionType? type;
 }
 
-/// Wraps the nullable category id so "all categories" is distinguishable
-/// from dismissal.
 class _CategoryChoice {
   const _CategoryChoice(this.id);
 

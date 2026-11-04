@@ -1,8 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// An outlined row with a radio dot, as in the design's "Transação
-/// Parcelada" and the "Repetir ..." options. Tapping it selects it; for a
-/// standalone option (parcelada) tapping again deselects.
 class ChoiceRow extends StatelessWidget {
   const ChoiceRow({
     super.key,
@@ -17,10 +14,8 @@ class ChoiceRow extends StatelessWidget {
   final String? subtitle;
   final bool selected;
 
-  /// Null disables the row.
   final VoidCallback? onTap;
 
-  /// A small control on the right (e.g. the "1x" pill or a calendar button).
   final Widget? trailing;
 
   @override
@@ -94,7 +89,6 @@ class ChoiceRow extends StatelessWidget {
   }
 }
 
-/// The small outlined pill on the right of a [ChoiceRow] ("1x", calendar).
 class ChoicePill extends StatelessWidget {
   const ChoicePill({
     super.key,

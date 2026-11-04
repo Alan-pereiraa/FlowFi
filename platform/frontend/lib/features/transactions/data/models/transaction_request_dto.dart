@@ -6,14 +6,11 @@ import '../../domain/entities/transaction_schedule.dart';
 import '../../domain/entities/transaction_type.dart';
 import '../../domain/entities/transaction_update.dart';
 
-/// Request bodies and query parameters for `/transactions` and
-/// `/recurring-transactions`.
 abstract final class TransactionRequestDto {
   static Map<String, dynamic> store(TransactionInput input) {
     final isTransfer = input.type == TransactionType.transfer;
     return {
       'type': input.type.apiValue,
-      // The API refuses a category on a transfer and requires a goal on it.
       if (isTransfer)
         'goal_id': input.goalId
       else
@@ -37,7 +34,6 @@ abstract final class TransactionRequestDto {
     if (update.schedule != null) ..._schedule(update.schedule!),
   };
 
-  /// A monthly recurrence of the full amount.
   static Map<String, dynamic> recurring(RecurringInput input) => {
     'type': input.type.apiValue,
     if (input.type == TransactionType.transfer)

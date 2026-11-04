@@ -14,7 +14,6 @@ class TransactionFilter {
 
   final TransactionType? type;
 
-  /// "Todas as Categorias" chip; null = all.
   final int? categoryId;
 
   /// The backend matches the range against the installments: a transaction

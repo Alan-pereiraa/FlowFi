@@ -4,8 +4,6 @@ import '../../../../shared/utils/money.dart';
 import '../../../../shared/widgets/app_progress_bar.dart';
 import '../../../goals/domain/entities/goal.dart';
 
-/// "Meta de destino": one radio card per goal with its progress, plus the
-/// note that transfers have no category and cannot be split.
 class GoalPicker extends StatelessWidget {
   const GoalPicker({
     super.key,

@@ -3,8 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../domain/entities/transaction_type.dart';
 
-/// `Saída` / `Transferência` / `Entrada` segmented toggle. Disabled on edit:
-/// the type is immutable on the backend.
 class TransactionTypeToggle extends StatelessWidget {
   const TransactionTypeToggle({
     super.key,

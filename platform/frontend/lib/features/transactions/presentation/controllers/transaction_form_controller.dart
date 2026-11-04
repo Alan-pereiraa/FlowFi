@@ -18,15 +18,11 @@ final transactionFormControllerProvider = NotifierProvider.autoDispose
       TransactionFormController.new,
     );
 
-/// "Nova Transação" and "Editar Transação" (plus delete and ending a
-/// recurrence, which have no screen of their own in the design).
 class TransactionFormController extends Notifier<TransactionFormState> {
   TransactionFormController(this.transactionId);
 
   final int? transactionId;
 
-  /// Backend fields that have a place on screen. `amount`/`start_date` come
-  /// from `/recurring-transactions` and are shown under the value and date.
   static const _fields = [
     'total_amount',
     'amount',
@@ -72,8 +68,6 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     }
   }
 
-  /// The goals a transfer can go to. Loaded on demand: only transfers need
-  /// them.
   Future<void> loadGoals() async {
     if (state.goalsLoading) return;
     state = state.copyWith(goalsLoading: true, goalsError: () => null);
@@ -118,13 +112,10 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     );
   });
 
-  /// "Transação Recorrente" on a new transaction.
   Future<void> saveRecurring(RecurringInput draft) => _run(
     () => ref.read(transactionRepositoryProvider).createRecurring(draft),
   );
 
-  /// "Cancelar Transação Recorrente": stops future occurrences; this and the
-  /// earlier transactions stay.
   Future<void> endRecurrence() async {
     final recurringId = state.original?.recurringTransactionId;
     if (recurringId == null || state.busy) return;
@@ -159,7 +150,6 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     }
   }
 
-  /// Runs a save, mapping the API's 422 onto the fields on screen.
   Future<void> _run(Future<void> Function() request) async {
     if (state.busy) return;
     state = state.copyWith(

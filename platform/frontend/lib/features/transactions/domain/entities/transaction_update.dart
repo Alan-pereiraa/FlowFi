@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'transaction_schedule.dart';
 
 /// Body of `PATCH /transactions/{id}`. `type` is immutable, so it isn't here.
-/// Income and expense send [categoryId]; a transfer sends [goalId].
 @immutable
 class TransactionUpdate {
   const TransactionUpdate({

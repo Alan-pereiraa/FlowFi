@@ -36,7 +36,6 @@ class Transaction {
   final String? periodUnit;
   final int? periodInterval;
 
-  /// The recurrence that generated this transaction; null for a one-off.
   final int? recurringTransactionId;
   final List<Installment> installments;
 
