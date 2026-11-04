@@ -27,8 +27,8 @@ class DashboardController extends Controller
         path: '/dashboard',
         operationId: 'getDashboard',
         tags: ['Dashboard'],
-        summary: 'Home screen in one call',
-        description: 'Every block of the dashboard in one payload, for app launch. Each key is exactly what the matching /dashboard/* route returns, plus unread_notifications. Money counts through installments: a transaction belongs to the month its installments are due, and only paid installments are real money.',
+        summary: 'Tela inicial em uma só chamada',
+        description: 'Todos os blocos do dashboard em uma só resposta, para a abertura do app. Cada chave é exatamente o que a rota /dashboard/* correspondente retorna, mais unread_notifications. Saídas contam pelas parcelas: pertencem ao mês de vencimento, e só parcelas pagas são dinheiro realizado. Entradas contam pela data: até hoje são realizadas, e futuras são previstas.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/DashboardMonth'),
@@ -36,7 +36,7 @@ class DashboardController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'The whole dashboard',
+                description: 'O dashboard completo',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardOverviewResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -52,8 +52,8 @@ class DashboardController extends Controller
         path: '/dashboard/summary',
         operationId: 'getDashboardSummary',
         tags: ['Dashboard'],
-        summary: 'Monthly income, expense and balance',
-        description: 'Income and expense of the month split into paid, pending and total, the balance (realized and projected), the all-time balance, how much went to goals and what is overdue. Transfers to goals are not income or expense.',
+        summary: 'Entradas, saídas e saldo do mês',
+        description: 'Entradas e saídas do mês divididas em pago, pendente e total, o saldo (realizado e previsto), o saldo de todo o período, o valor enviado para metas e as parcelas de saídas atrasadas. Transferências para metas não são entrada nem saída.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/DashboardMonth'),
@@ -61,7 +61,7 @@ class DashboardController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Summary of the month',
+                description: 'Resumo do mês',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardSummaryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -77,8 +77,8 @@ class DashboardController extends Controller
         path: '/dashboard/spending-by-category',
         operationId: 'getDashboardSpendingByCategory',
         tags: ['Dashboard'],
-        summary: 'Spending of the month by category',
-        description: 'Expenses due in the month grouped by category, biggest first, with how much of the category limit they use. The category limit is read as a monthly cap.',
+        summary: 'Gastos do mês por categoria',
+        description: 'Saídas com vencimento no mês agrupadas por categoria, da maior para a menor, com o quanto usam do limite da categoria. O limite é lido como um teto mensal.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/DashboardMonth'),
@@ -86,7 +86,7 @@ class DashboardController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Spending by category',
+                description: 'Gastos por categoria',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardSpendingByCategoryResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -102,14 +102,14 @@ class DashboardController extends Controller
         path: '/dashboard/upcoming-installments',
         operationId: 'listDashboardUpcomingInstallments',
         tags: ['Dashboard'],
-        summary: 'Pending installments to pay or receive',
-        description: 'Pending installments due within the next days, oldest due date first. Installments already past due come first, flagged with overdue.',
+        summary: 'Parcelas pendentes de saídas',
+        description: 'Parcelas pendentes de saídas que vencem nos próximos dias, da data mais antiga para a mais nova. As parcelas já vencidas vêm primeiro, marcadas com overdue.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'days',
                 in: 'query',
-                description: 'How many days ahead to look. Pending installments already past due are always included.',
+                description: 'Quantos dias à frente considerar. Parcelas pendentes já vencidas sempre são incluídas.',
                 schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 365, default: 30),
             ),
             new OA\Parameter(
@@ -121,7 +121,7 @@ class DashboardController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Pending installments, soonest first',
+                description: 'Parcelas pendentes, das mais próximas para as mais distantes',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardUpcomingInstallmentListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -141,8 +141,8 @@ class DashboardController extends Controller
         path: '/dashboard/recent-transactions',
         operationId: 'listDashboardRecentTransactions',
         tags: ['Dashboard'],
-        summary: 'Latest transactions',
-        description: 'The newest transactions with their category (null for transfers), linked goal and how many installments are paid.',
+        summary: 'Últimas transações',
+        description: 'As transações mais recentes com a categoria (null em transferências), a meta vinculada e quantas parcelas estão pagas. Entradas e transferências não têm parcelas: o status de uma entrada vem da data, e o de uma transferência é sempre paid.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(
@@ -154,7 +154,7 @@ class DashboardController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Newest transactions first',
+                description: 'Transações mais recentes primeiro',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardRecentTransactionListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -173,13 +173,13 @@ class DashboardController extends Controller
         path: '/dashboard/goals',
         operationId: 'listDashboardGoals',
         tags: ['Dashboard'],
-        summary: 'Goal progress',
-        description: 'Every goal with its saved balance (current_amount) and progress toward the target. Closest deadline first, goals without one last.',
+        summary: 'Progresso das metas',
+        description: 'Todas as metas com o valor guardado (current_amount) e o progresso até o objetivo. Prazo mais próximo primeiro; metas sem prazo por último.',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Goals with progress',
+                description: 'Metas com o progresso',
                 content: new OA\JsonContent(ref: '#/components/schemas/DashboardGoalProgressListResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),

@@ -49,13 +49,13 @@ class TransactionController extends Controller
             new OA\Parameter(
                 name: 'date_from',
                 in: 'query',
-                description: 'Só transações com todas as parcelas nesta data ou depois',
+                description: 'Saídas com todas as parcelas nesta data ou depois; entradas e transferências com a data da transação nesta data ou depois',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
             new OA\Parameter(
                 name: 'date_to',
                 in: 'query',
-                description: 'Só transações com todas as parcelas nesta data ou antes; deve ser >= date_from',
+                description: 'Saídas com todas as parcelas nesta data ou antes; entradas e transferências com a data da transação nesta data ou antes; deve ser >= date_from',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
         ],
@@ -83,7 +83,7 @@ class TransactionController extends Controller
         operationId: 'createTransaction',
         tags: ['Transações'],
         summary: 'Criar transação',
-        description: 'Parcelas com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes; transferências nascem sempre pagas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
+        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -92,7 +92,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Transação criada com suas parcelas',
+                description: 'Transação criada; saídas vêm com as parcelas',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -118,7 +118,7 @@ class TransactionController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Transação com as parcelas',
+                description: 'Transação; saídas vêm com as parcelas',
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
@@ -160,7 +160,7 @@ class TransactionController extends Controller
         operationId: 'updateTransaction',
         tags: ['Transações'],
         summary: 'Atualizar transação',
-        description: 'Alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas.',
+        description: 'Em saídas, alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas. Entradas e transferências não têm parcelas.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -192,7 +192,7 @@ class TransactionController extends Controller
         operationId: 'deleteTransaction',
         tags: ['Transações'],
         summary: 'Apagar transação',
-        description: 'Faz soft delete da transação e das parcelas e desfaz o efeito dela no saldo da meta.',
+        description: 'Faz soft delete da transação e das parcelas, quando houver, e desfaz o efeito dela no saldo da meta.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -249,7 +249,7 @@ class TransactionController extends Controller
         operationId: 'unpayInstallment',
         tags: ['Transações'],
         summary: 'Voltar parcela para pendente',
-        description: 'Retorna 422 quando a parcela já está pendente ou pertence a uma transferência, que é sempre paga.',
+        description: 'Retorna 422 quando a parcela já está pendente.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
