@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/paginated.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
+import '../../domain/entities/transaction_draft.dart';
 import '../../domain/entities/transaction_filter.dart';
 import '../../domain/entities/transaction_input.dart';
 import '../../domain/entities/transaction_update.dart';
@@ -68,4 +71,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<void> endRecurring(int recurringId) =>
       guardApi(() => _api.endRecurring(recurringId));
+
+  @override
+  Future<TransactionDraft> draftFromAudio(Uint8List wav) async {
+    final dto = await guardApi(() => _api.draftFromAudio(wav));
+    return dto.toEntity();
+  }
 }
