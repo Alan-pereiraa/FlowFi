@@ -4,6 +4,7 @@ namespace Tests\Feature\Ledger;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Category;
+use App\Domains\Ledger\Models\Goal;
 use App\Domains\Ledger\Models\Transaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -204,6 +205,95 @@ class TransactionTest extends TestCase
             ->assertJsonCount(6, 'data.installments')
             ->assertJsonPath('data.installments.0.status', 'paid')
             ->assertJsonPath('data.installments.1.status', 'pending');
+    }
+
+    public function test_only_expenses_can_be_split_when_updating(): void
+    {
+        [$user, $token] = $this->authenticated();
+        $goal = Goal::factory()->for($user)->create();
+        $category = Category::factory()->for($user)->create();
+
+        $transferId = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'goal_id' => $goal->id,
+            'type' => 'transfer',
+            'date' => '2026-01-01',
+            'total_amount' => '90.00',
+        ])->json('data.id');
+        $incomeId = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'income',
+            'date' => '2026-01-01',
+            'total_amount' => '90.00',
+        ])->json('data.id');
+
+        foreach ([$transferId, $incomeId] as $id) {
+            $this->withToken($token)
+                ->patchJson("/api/v1/transactions/{$id}", ['installments_count' => 3])
+                ->assertUnprocessable()
+                ->assertJsonPath('errors.installments_count.0', 'Somente saídas podem ser parceladas.');
+
+            $this->withToken($token)
+                ->patchJson("/api/v1/transactions/{$id}", ['period_unit' => 'month'])
+                ->assertUnprocessable()
+                ->assertJsonPath('errors.period_unit.0', 'Somente saídas podem ser parceladas.');
+
+            $this->withToken($token)
+                ->patchJson("/api/v1/transactions/{$id}", [
+                    'total_amount' => '50.00',
+                    'date' => '2026-02-01',
+                    'installments_count' => 1,
+                    'period_unit' => null,
+                    'period_interval' => null,
+                ])
+                ->assertOk()
+                ->assertJsonPath('data.total_amount', '50.00')
+                ->assertJsonPath('data.date', '2026-02-01')
+                ->assertJsonCount(0, 'data.installments');
+        }
+    }
+
+    public function test_date_filters_use_installments_for_expenses_and_the_date_for_other_types(): void
+    {
+        [$user, $token] = $this->authenticated();
+        $category = Category::factory()->for($user)->create();
+
+        $income = fn (string $date) => $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'income',
+            'date' => $date,
+            'total_amount' => '10.00',
+        ])->json('data.id');
+
+        $inside = $income('2026-03-31');
+        $income('2026-04-01');
+        $income('2026-02-28');
+
+        $splitInside = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'date' => '2026-03-01',
+            'total_amount' => '20.00',
+            'installments' => [
+                ['amount' => '10.00', 'date' => '2026-03-01'],
+                ['amount' => '10.00', 'date' => '2026-03-31'],
+            ],
+        ])->json('data.id');
+        $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'date' => '2026-03-01',
+            'total_amount' => '20.00',
+            'installments_count' => 2,
+            'period_unit' => 'month',
+        ])->assertCreated();
+
+        $ids = $this->withToken($token)
+            ->getJson('/api/v1/transactions?date_from=2026-03-01&date_to=2026-03-31')
+            ->assertOk()
+            ->json('data.*.id');
+
+        sort($ids);
+        $this->assertSame([$inside, $splitInside], $ids);
     }
 
     public function test_deleting_a_transaction_soft_deletes_its_installments(): void

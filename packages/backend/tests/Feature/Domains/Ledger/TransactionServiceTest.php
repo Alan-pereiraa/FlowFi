@@ -233,21 +233,30 @@ class TransactionServiceTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
     }
 
-    public function test_transferencia_marca_automaticamente_a_sua_parcela_como_paga(): void
+    public function test_transferencia_e_receita_nao_geram_parcelas(): void
     {
         $user = User::factory()->create();
         $goal = $this->goal($user, '0.00');
+        $category = $this->category($user);
 
-        $transaction = $this->service()->create($user, [
+        $transfer = $this->service()->create($user, [
             'type' => Transaction::TYPE_TRANSFER,
             'goal_id' => $goal->id,
             'date' => self::DATE,
             'total_amount' => '90.00',
         ]);
+        $income = $this->service()->create($user, [
+            'type' => Transaction::TYPE_INCOME,
+            'category_id' => $category->id,
+            'date' => self::DATE,
+            'total_amount' => '90.00',
+        ]);
 
-        $installment = $transaction->installments->first();
-        $this->assertSame(Installment::STATUS_PAID, $installment->status);
-        $this->assertNotNull($installment->paid_at);
+        $this->assertCount(0, $transfer->installments);
+        $this->assertCount(0, $income->installments);
+        $this->assertSame('90.00', $income->total_amount);
+        $this->assertSame(1, $income->installments_count);
+        $this->assertSame(Transaction::SCHEDULE_SINGLE, $income->schedule_type);
     }
 
     // ------------------------------------------------------------------
