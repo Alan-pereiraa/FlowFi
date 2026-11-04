@@ -3,6 +3,7 @@
 namespace App\Domains\Dashboard\Resources;
 
 use App\Domains\Dashboard\Resources\Concerns\FormatsCategory;
+use App\Domains\Dashboard\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,7 +24,7 @@ class UpcomingInstallmentResource extends JsonResource
             'description' => $transaction->description,
             'amount' => $this->amount,
             'date' => $this->date?->toDateString(),
-            'overdue' => $this->date->lt(today()),
+            'overdue' => $this->date->toDateString() < today(DashboardService::TIMEZONE)->toDateString(),
             'category' => $this->category($transaction->category),
         ];
     }

@@ -19,6 +19,13 @@ class TransactionServiceTest extends TestCase
 
     private const DATE = '2026-10-01';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->travelTo('2026-09-15 12:00:00');
+    }
+
     // ------------------------------------------------------------------
     // Criação: parcelamento
     // ------------------------------------------------------------------
@@ -289,7 +296,7 @@ class TransactionServiceTest extends TestCase
         $this->assertSame('100.00', $goalB->fresh()->current_amount, 'A meta nova deveria ser debitada');
     }
 
-    public function test_editar_o_cronograma_de_uma_transacao_com_parcela_paga_e_bloqueado(): void
+    public function test_editar_o_cronograma_com_parcela_paga_recria_as_parcelas_pela_regra_da_data(): void
     {
         $user = User::factory()->create();
         $category = $this->category($user);
@@ -302,14 +309,11 @@ class TransactionServiceTest extends TestCase
         ]);
         $this->service()->payInstallment($user, $transaction->id, $transaction->installments->first()->id);
 
-        try {
-            $this->service()->update($transaction, ['total_amount' => '999.00']);
-            $this->fail('Era esperada uma ValidationException.');
-        } catch (ValidationException $e) {
-            $this->assertArrayHasKey('installments', $e->errors());
-        }
+        $updated = $this->service()->update($transaction, ['total_amount' => '999.00']);
 
-        $this->assertSame('100.00', $transaction->fresh()->total_amount);
+        $this->assertSame('999.00', $updated->total_amount);
+        $this->assertSame(Installment::STATUS_PENDING, $updated->installments->first()->status);
+        $this->assertNull($updated->installments->first()->paid_at);
     }
 
     public function test_editar_campos_simples_nao_e_bloqueado_mesmo_com_parcela_paga(): void
@@ -428,7 +432,7 @@ class TransactionServiceTest extends TestCase
     // Isolamento entre usuários
     // ------------------------------------------------------------------
 
-    public function test_findOwned_nao_permite_acessar_transacao_de_outro_usuario(): void
+    public function test_find_owned_nao_permite_acessar_transacao_de_outro_usuario(): void
     {
         $owner = User::factory()->create();
         $stranger = User::factory()->create();

@@ -18,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
+    private const string TIMEZONE = 'America/Sao_Paulo';
+
     private const array SCHEDULE_KEYS = ['total_amount', 'installments', 'installments_count', 'period_unit', 'period_interval'];
 
     private const array SIMPLE_KEYS = ['category_id', 'goal_id', 'description', 'date'];
@@ -77,9 +79,7 @@ class TransactionService
 
             $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
 
-            if ($transaction->type === Transaction::TYPE_TRANSFER) {
-                $this->transactions->markInstallmentPaid($installments->first());
-            }
+            $this->settleInstallments($transaction, $installments);
 
             return $transaction->load('installments');
         });
@@ -90,6 +90,7 @@ class TransactionService
         return DB::transaction(function () use ($transaction, $data): Transaction {
             $oldGoalId = $transaction->goal_id;
             $oldEffect = $this->goalEffect($transaction);
+            $replan = $this->needsReplan($transaction, $data);
 
             $simple = Arr::only($data, self::SIMPLE_KEYS);
 
@@ -97,24 +98,23 @@ class TransactionService
                 $this->transactions->update($transaction, $simple);
             }
 
-            if (Arr::hasAny($data, self::SCHEDULE_KEYS)) {
-                $this->guardAgainstPaidInstallments($transaction);
-
+            if ($replan) {
                 $planInput = $this->mergeForReplan($transaction, $data);
                 $plan = $this->planner->planFromInput($planInput);
 
                 $this->transactions->update($transaction, $this->planner->transactionScheduleAttributes($plan, $planInput));
-                $this->transactions->replaceInstallments($transaction, $plan['rows']);
+                $installments = $this->transactions->replaceInstallments($transaction, $plan['rows']);
+                $this->settleInstallments($transaction, $installments);
             }
 
             $transaction->refresh();
 
-            if (Arr::hasAny($data, ['goal_id', ...self::SCHEDULE_KEYS])) {
+            if ($replan || array_key_exists('goal_id', $data)) {
                 $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
                 $this->adjustGoalCurrentAmount($transaction->goal_id, $this->goalEffect($transaction));
             }
 
-            if ($transaction->type === Transaction::TYPE_EXPENSE && Arr::hasAny($data, ['category_id', ...self::SCHEDULE_KEYS])) {
+            if ($transaction->type === Transaction::TYPE_EXPENSE && ($replan || array_key_exists('category_id', $data))) {
                 $rows = $transaction->installments->map(fn (Installment $installment) => [
                     'date' => CarbonImmutable::parse($installment->date),
                     'amount' => Money::toCents($installment->amount),
@@ -154,6 +154,26 @@ class TransactionService
         return $this->transactions->markInstallmentPaid($installment);
     }
 
+    public function unpayInstallment(User $user, int $transactionId, int $installmentId): Installment
+    {
+        $transaction = $this->findOwned($user, $transactionId);
+        $installment = $this->findOwnedInstallment($user, $transactionId, $installmentId);
+
+        if ($transaction->type === Transaction::TYPE_TRANSFER) {
+            throw ValidationException::withMessages([
+                'status' => 'A transfer installment cannot be marked as pending.',
+            ]);
+        }
+
+        if ($installment->status === Installment::STATUS_PENDING) {
+            throw ValidationException::withMessages([
+                'status' => 'This installment is already pending.',
+            ]);
+        }
+
+        return $this->transactions->markInstallmentPending($installment);
+    }
+
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
     {
         return $this->transactions->pendingExpenseInstallmentsDueBetween($from, $to);
@@ -164,16 +184,31 @@ class TransactionService
         return $this->transactions->overduePendingExpenseInstallments($today);
     }
 
-    private function guardAgainstPaidInstallments(Transaction $transaction): void
+    private function needsReplan(Transaction $transaction, array $data): bool
     {
-        $hasPaidInstallment = $transaction->installments()
-            ->where('status', Installment::STATUS_PAID)
-            ->exists();
+        if (Arr::hasAny($data, self::SCHEDULE_KEYS)) {
+            return true;
+        }
 
-        if ($hasPaidInstallment) {
-            throw ValidationException::withMessages([
-                'installments' => 'This transaction already has paid installments; its payment plan can no longer be changed.',
-            ]);
+        return isset($data['date'])
+            && $data['date'] !== $transaction->date->toDateString()
+            && $transaction->schedule_type !== Transaction::SCHEDULE_CUSTOM;
+    }
+
+    private function settleInstallments(Transaction $transaction, Collection $installments): void
+    {
+        if ($transaction->type === Transaction::TYPE_TRANSFER) {
+            $this->transactions->markInstallmentPaid($installments->first());
+
+            return;
+        }
+
+        $today = CarbonImmutable::today(self::TIMEZONE)->toDateString();
+
+        foreach ($installments as $installment) {
+            if ($installment->date->toDateString() <= $today) {
+                $this->transactions->markInstallmentPaid($installment);
+            }
         }
     }
 

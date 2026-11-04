@@ -22,6 +22,7 @@ class TransactionTest extends TestCase
 
     public function test_single_payment_creates_exactly_one_installment(): void
     {
+        $this->travelTo('2026-09-01 12:00:00');
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create();
 
@@ -171,8 +172,9 @@ class TransactionTest extends TestCase
             ->assertJsonPath('data.installments.1.date', '2026-02-01');
     }
 
-    public function test_schedule_cannot_change_once_an_installment_is_paid(): void
+    public function test_schedule_change_reapplies_the_date_rule_to_paid_installments(): void
     {
+        $this->travelTo('2026-01-15 12:00:00');
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create();
 
@@ -185,21 +187,23 @@ class TransactionTest extends TestCase
             'period_unit' => 'month',
         ])->json('data.id');
 
-        $firstInstallmentId = Transaction::findOrFail($transactionId)
+        $secondInstallmentId = Transaction::findOrFail($transactionId)
             ->installments()
-            ->orderBy('step')
+            ->where('step', 2)
             ->firstOrFail()
             ->id;
 
         $this->withToken($token)
-            ->patchJson("/api/v1/transactions/{$transactionId}/installments/{$firstInstallmentId}/pay")
+            ->patchJson("/api/v1/transactions/{$transactionId}/installments/{$secondInstallmentId}/pay")
             ->assertOk()
             ->assertJsonPath('data.status', 'paid');
 
         $this->withToken($token)
             ->patchJson("/api/v1/transactions/{$transactionId}", ['installments_count' => 6])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('installments');
+            ->assertOk()
+            ->assertJsonCount(6, 'data.installments')
+            ->assertJsonPath('data.installments.0.status', 'paid')
+            ->assertJsonPath('data.installments.1.status', 'pending');
     }
 
     public function test_deleting_a_transaction_soft_deletes_its_installments(): void
