@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 interface DashboardRepositoryInterface
 {
     /**
-     * Installment sums grouped by transaction type (income, expense or transfer) and installment status, for installments due
+     * Expense installment sums grouped by transaction type and installment status, for installments due
      * inside [$from, $to] (inclusive). Both bounds null means "all time".
      *
      * @return list<array{type: string, status: string, total: int, count: int}>
@@ -21,7 +21,16 @@ interface DashboardRepositoryInterface
     public function installmentTotals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to): array;
 
     /**
-     * Pending installments due before $today, grouped by transaction type.
+     * Income and transfer sums for transactions dated inside [$from, $to] (inclusive), in the same shape
+     * as installmentTotals(). They have no installments: income is paid once its date is on or before
+     * $today and a transfer is always paid. Both bounds null means "all time".
+     *
+     * @return list<array{type: string, status: string, total: int, count: int}>
+     */
+    public function oneOffTotals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to, CarbonImmutable $today): array;
+
+    /**
+     * Pending expense installments due before $today, grouped by transaction type.
      *
      * @return list<array{type: string, total: int, count: int}>
      */
@@ -36,7 +45,7 @@ interface DashboardRepositoryInterface
     public function expensesByCategory(User $user, CarbonImmutable $from, CarbonImmutable $to): array;
 
     /**
-     * Pending installments due on or before $until (overdue ones included), oldest due date first,
+     * Pending expense installments due on or before $until (overdue ones included), oldest due date first,
      * with `transaction.category` loaded.
      */
     public function upcomingInstallments(User $user, CarbonImmutable $until, int $limit): Collection;

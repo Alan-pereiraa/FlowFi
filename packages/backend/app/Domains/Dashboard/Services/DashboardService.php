@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
  * Read-only home-screen numbers. Amounts stay integer cents all the way through (the Resources turn
  * them into decimal strings); the only floats here are display percentages.
  *
- * Money "moves" through installments, not transactions: a transaction counts in the month its
- * installments are due, and an installment is real money only once it is `paid`. Transfers (money set
- * aside into a goal) are neither income nor expense and never touch the balances.
+ * Expenses "move" through installments: an expense counts in the month its installments are due, and
+ * an installment is real money only once it is `paid`. Income has no installments and counts by its
+ * date. Transfers (money set aside into a goal) are neither income nor expense and never touch the
+ * balances.
  */
 class DashboardService
 {
@@ -98,11 +99,12 @@ class DashboardService
 
     private function buildSummary(User $user, array $period): array
     {
-        $month = $this->bucket($this->dashboard->installmentTotals($user, $period['from'], $period['to']));
-        $allTime = $this->bucket($this->dashboard->installmentTotals($user, null, null));
+        $today = CarbonImmutable::today(self::TIMEZONE);
+        $month = $this->totals($user, $period['from'], $period['to'], $today);
+        $allTime = $this->totals($user, null, null, $today);
 
-        $overdue = ['expense' => ['count' => 0, 'total' => 0], 'income' => ['count' => 0, 'total' => 0]];
-        foreach ($this->dashboard->overdueTotals($user, CarbonImmutable::today(self::TIMEZONE)) as $row) {
+        $overdue = ['expense' => ['count' => 0, 'total' => 0]];
+        foreach ($this->dashboard->overdueTotals($user, $today) as $row) {
             if (isset($overdue[$row['type']])) {
                 $overdue[$row['type']] = ['count' => $row['count'], 'total' => $row['total']];
             }
@@ -122,6 +124,14 @@ class DashboardService
             'transferred_to_goals' => $month['transfer']['paid'],
             'overdue' => $overdue,
         ];
+    }
+
+    private function totals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to, CarbonImmutable $today): array
+    {
+        return $this->bucket([
+            ...$this->dashboard->installmentTotals($user, $from, $to),
+            ...$this->dashboard->oneOffTotals($user, $from, $to, $today),
+        ]);
     }
 
     private function buildSpendingByCategory(User $user, array $period): array

@@ -22,7 +22,6 @@ class SummaryResource extends JsonResource
             'transferred_to_goals' => Money::toDecimal($summary['transferred_to_goals']),
             'overdue' => [
                 'expense' => $this->overdue($summary['overdue']['expense']),
-                'income' => $this->overdue($summary['overdue']['income']),
             ],
         ];
     }

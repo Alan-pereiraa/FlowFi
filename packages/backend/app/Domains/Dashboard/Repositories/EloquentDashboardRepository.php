@@ -14,6 +14,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     public function installmentTotals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to): array
     {
         return $this->installmentsOf($user)
+            ->where('transactions.type', Transaction::TYPE_EXPENSE)
             ->when($from, fn ($query) => $query->whereDate('installments.date', '>=', $from->toDateString()))
             ->when($to, fn ($query) => $query->whereDate('installments.date', '<=', $to->toDateString()))
             ->selectRaw('transactions.type as type, installments.status as status, SUM(installments.amount) as total, COUNT(*) as count')
@@ -29,11 +30,33 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->all();
     }
 
+    public function oneOffTotals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to, CarbonImmutable $today): array
+    {
+        return $user->transactions()
+            ->where('type', '!=', Transaction::TYPE_EXPENSE)
+            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from->toDateString()))
+            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to->toDateString()))
+            ->selectRaw(
+                'type, CASE WHEN type = ? OR DATE(date) <= ? THEN ? ELSE ? END as status, SUM(total_amount) as total, COUNT(*) as count',
+                [Transaction::TYPE_TRANSFER, $today->toDateString(), Installment::STATUS_PAID, Installment::STATUS_PENDING],
+            )
+            ->groupBy('type', 'status')
+            ->toBase()
+            ->get()
+            ->map(fn ($row) => [
+                'type' => $row->type,
+                'status' => $row->status,
+                'total' => (int) $row->total,
+                'count' => (int) $row->count,
+            ])
+            ->all();
+    }
+
     public function overdueTotals(User $user, CarbonImmutable $today): array
     {
         return $this->installmentsOf($user)
             ->where('installments.status', Installment::STATUS_PENDING)
-            ->where('transactions.type', '!=', Transaction::TYPE_TRANSFER)
+            ->where('transactions.type', Transaction::TYPE_EXPENSE)
             ->whereDate('installments.date', '<', $today->toDateString())
             ->selectRaw('transactions.type as type, SUM(installments.amount) as total, COUNT(*) as count')
             ->groupBy('transactions.type')
@@ -92,7 +115,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     {
         return Installment::query()
             ->whereIn('transaction_id', $user->transactions()
-                ->where('type', '!=', Transaction::TYPE_TRANSFER)
+                ->where('type', Transaction::TYPE_EXPENSE)
                 ->select('transactions.id'))
             ->where('status', Installment::STATUS_PENDING)
             ->whereDate('date', '<=', $until->toDateString())
