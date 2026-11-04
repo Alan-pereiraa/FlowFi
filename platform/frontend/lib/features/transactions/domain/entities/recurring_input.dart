@@ -16,6 +16,8 @@ class RecurringInput {
     this.description,
     this.occurrences,
     this.endDate,
+    this.periodUnit = 'month',
+    this.periodInterval = 1,
   });
 
   final TransactionType type;
@@ -26,4 +28,6 @@ class RecurringInput {
   final String? description;
   final int? occurrences;
   final DateTime? endDate;
+  final String periodUnit;
+  final int periodInterval;
 }

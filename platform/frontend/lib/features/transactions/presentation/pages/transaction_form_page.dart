@@ -15,16 +15,19 @@ import '../../../../shared/widgets/money_amount_field.dart';
 import '../../../categories/domain/entities/category.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
+import '../../domain/entities/transaction_draft.dart';
 import '../../domain/entities/transaction_input.dart';
 import '../../domain/entities/transaction_schedule.dart';
 import '../../domain/entities/transaction_type.dart';
 import '../controllers/transaction_form_controller.dart';
 import '../controllers/transaction_form_state.dart';
+import '../controllers/voice_draft_controller.dart';
 import '../widgets/category_chips.dart';
 import '../widgets/choice_row.dart';
 import '../widgets/goal_picker.dart';
 import '../widgets/recurrence_card.dart';
 import '../widgets/transaction_type_toggle.dart';
+import '../widgets/voice_fill_card.dart';
 
 /// "Nova Transação" ([transactionId] null) and "Editar Transação".
 class TransactionFormPage extends ConsumerStatefulWidget {
@@ -54,6 +57,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   RecurrenceEnd _recurrenceEnd = RecurrenceEnd.occurrences;
   int _occurrences = 2;
   DateTime? _endDate;
+  String _periodUnit = 'month';
+  int _periodInterval = 1;
 
   /// Client-side "empty field" checks; the API's 422 is the real validation.
   String? _amountMissing;
@@ -194,6 +199,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
               ? _occurrences
               : null,
           endDate: _recurrenceEnd == RecurrenceEnd.date ? _endDate : null,
+          periodUnit: _periodUnit,
+          periodInterval: _periodInterval,
         ),
       );
       return;
@@ -212,6 +219,70 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         ),
       ),
     );
+  }
+
+  void _applyDraft(TransactionDraft draft) {
+    final today = Dates.dateOnly(ref.read(clockProvider)());
+    setState(() {
+      _type = draft.type;
+      _amount = draft.amount ?? Money.zero;
+      _description.text = draft.description ?? '';
+      _setDate(draft.date ?? today);
+      _categoryId = draft.isTransfer ? null : draft.categoryId;
+      _goalId = draft.isTransfer ? draft.goalId : null;
+      _installments =
+          !draft.recurring &&
+              draft.type == TransactionType.expense &&
+              (draft.installmentsCount ?? 1) > 1
+          ? draft.installmentsCount!
+          : 1;
+      _recurring = draft.recurring;
+      _periodUnit = draft.periodUnit ?? 'month';
+      _periodInterval = draft.periodInterval ?? 1;
+      _endDate = draft.endDate;
+      if (draft.occurrences != null) {
+        _occurrences = draft.occurrences!.clamp(2, 120);
+        _recurrenceEnd = RecurrenceEnd.occurrences;
+      } else if (draft.endDate != null) {
+        _recurrenceEnd = RecurrenceEnd.date;
+      } else {
+        _recurrenceEnd = draft.recurring
+            ? RecurrenceEnd.never
+            : RecurrenceEnd.occurrences;
+      }
+      _amountMissing = draft.missingAmount ? 'Informe um valor.' : null;
+      _categoryMissing = draft.missingCategory
+          ? 'Escolha uma categoria.'
+          : null;
+      _goalMissing = draft.missingGoal ? 'Escolha a meta de destino.' : null;
+      _endDateMissing = null;
+    });
+    if (draft.isTransfer &&
+        ref
+            .read(transactionFormControllerProvider(widget.transactionId))
+            .goals
+            .isEmpty) {
+      _controller.loadGoals();
+    }
+  }
+
+  String get _recurrenceSubtitle {
+    if (_periodUnit == 'month' && _periodInterval == 1) {
+      return _isTransfer ? 'Repetir mensalmente' : 'Repetir mais vezes';
+    }
+    final unit = switch ((_periodUnit, _periodInterval == 1)) {
+      ('day', true) => 'dia',
+      ('day', false) => 'dias',
+      ('week', true) => 'semana',
+      ('week', false) => 'semanas',
+      ('year', true) => 'ano',
+      ('year', false) => 'anos',
+      (_, true) => 'mês',
+      (_, false) => 'meses',
+    };
+    return _periodInterval == 1
+        ? 'Repetir a cada $unit'
+        : 'Repetir a cada $_periodInterval $unit';
   }
 
   Future<bool> _confirm({
@@ -278,6 +349,13 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       ).showSnackBar(const SnackBar(content: Text('Recorrência cancelada.')));
       context.pop(true);
     });
+    ref.listen(voiceDraftControllerProvider.select((s) => s.draftVersion), (
+      _,
+      _,
+    ) {
+      final draft = ref.read(voiceDraftControllerProvider).draft;
+      if (draft != null) _applyDraft(draft);
+    });
     final state = ref.watch(provider);
 
     return Scaffold(
@@ -302,6 +380,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   }
 
   Widget _body(BuildContext context, TransactionFormState state) {
+    final voice = ref.watch(voiceDraftControllerProvider);
     if (state.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -349,6 +428,19 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (!_isEdit) ...[
+                VoiceFillCard(
+                  state: voice,
+                  onStart: ref
+                      .read(voiceDraftControllerProvider.notifier)
+                      .start,
+                  onStop: ref.read(voiceDraftControllerProvider.notifier).stop,
+                  onCancel: ref
+                      .read(voiceDraftControllerProvider.notifier)
+                      .cancel,
+                ),
+                const SizedBox(height: 16),
+              ],
               TransactionTypeToggle(
                 value: _type,
                 // Immutable on the backend: changing it means delete + create.
@@ -484,12 +576,16 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 const SizedBox(height: 16),
                 RecurrenceCard(
                   value: _isEdit ? linkedToRecurrence : _recurring,
-                  subtitle: _isTransfer
-                      ? 'Repetir mensalmente'
-                      : 'Repetir mais vezes',
+                  subtitle: _recurrenceSubtitle,
                   onChanged: _isEdit
                       ? null
-                      : (on) => setState(() => _recurring = on),
+                      : (on) => setState(() {
+                          _recurring = on;
+                          if (!on) {
+                            _periodUnit = 'month';
+                            _periodInterval = 1;
+                          }
+                        }),
                 ),
               ],
               if (_isEdit && linkedToRecurrence) ...[
@@ -578,7 +674,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 label: 'Salvar Transação',
                 icon: Icons.check_circle,
                 loading: state.saving,
-                onPressed: state.busy ? null : _submit,
+                onPressed: state.busy || voice.busy ? null : _submit,
               ),
             ],
           ),

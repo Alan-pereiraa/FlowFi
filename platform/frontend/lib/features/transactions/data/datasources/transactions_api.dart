@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/paginated.dart';
+import '../models/transaction_draft_dto.dart';
 import '../models/transaction_dto.dart';
 
 final transactionsApiProvider = Provider<TransactionsApi>(
@@ -49,6 +52,24 @@ class TransactionsApi {
 
   Future<void> delete(int id) =>
       _send(() => _dio.delete<void>('/transactions/$id'));
+
+  Future<TransactionDraftDto> draftFromAudio(Uint8List wav) async {
+    final response = await _send(
+      () => _dio.post<Map<String, dynamic>>(
+        '/transactions/draft',
+        data: FormData.fromMap({
+          'audio': MultipartFile.fromBytes(
+            wav,
+            filename: 'nota.wav',
+            contentType: DioMediaType('audio', 'wav'),
+          ),
+        }),
+      ),
+    );
+    return TransactionDraftDto.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
 
   Future<void> storeRecurring(Map<String, dynamic> body) =>
       _send(() => _dio.post<void>('/recurring-transactions', data: body));
