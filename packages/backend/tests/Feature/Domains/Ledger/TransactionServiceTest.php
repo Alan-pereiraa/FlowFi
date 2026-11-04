@@ -305,6 +305,32 @@ class TransactionServiceTest extends TestCase
         $this->assertSame('100.00', $goalB->fresh()->current_amount, 'A meta nova deveria ser debitada');
     }
 
+    public function test_mudar_a_data_de_uma_transferencia_nao_exige_saldo_na_meta(): void
+    {
+        $user = User::factory()->create();
+        $goal = $this->goal($user, '0.00');
+        $category = $this->category($user);
+
+        $transfer = $this->service()->create($user, [
+            'type' => Transaction::TYPE_TRANSFER,
+            'goal_id' => $goal->id,
+            'date' => self::DATE,
+            'total_amount' => '100.00',
+        ]);
+        $this->service()->create($user, [
+            'type' => Transaction::TYPE_EXPENSE,
+            'category_id' => $category->id,
+            'goal_id' => $goal->id,
+            'date' => self::DATE,
+            'total_amount' => '60.00',
+        ]);
+
+        $updated = $this->service()->update($transfer, ['date' => '2026-10-05']);
+
+        $this->assertSame('2026-10-05', $updated->date->toDateString());
+        $this->assertSame('40.00', $goal->fresh()->current_amount);
+    }
+
     public function test_editar_o_cronograma_com_parcela_paga_recria_as_parcelas_pela_regra_da_data(): void
     {
         $user = User::factory()->create();

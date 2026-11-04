@@ -109,8 +109,7 @@ class TransactionService
             $transaction->refresh();
 
             if ($replan || array_key_exists('goal_id', $data)) {
-                $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
-                $this->adjustGoalCurrentAmount($transaction->goal_id, $this->goalEffect($transaction));
+                $this->moveGoalEffect($oldGoalId, $oldEffect, $transaction);
             }
 
             if ($transaction->type === Transaction::TYPE_EXPENSE && ($replan || array_key_exists('category_id', $data))) {
@@ -231,6 +230,20 @@ class TransactionService
             Transaction::TYPE_EXPENSE => -$cents,
             default => 0,
         };
+    }
+
+    private function moveGoalEffect(?int $oldGoalId, int $oldEffect, Transaction $transaction): void
+    {
+        $effect = $this->goalEffect($transaction);
+
+        if ($oldGoalId === $transaction->goal_id) {
+            $this->adjustGoalCurrentAmount($oldGoalId, $effect - $oldEffect);
+
+            return;
+        }
+
+        $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
+        $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
     }
 
     private function adjustGoalCurrentAmount(?int $goalId, int $cents): void
