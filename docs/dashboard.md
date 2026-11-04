@@ -33,24 +33,28 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 
 ## How the numbers are counted
 
-- **Money moves through installments, not transactions.** A transaction counts in the month its installments
-  are due: a 3x purchase adds one third to each of three months.
-- **`paid` vs `pending`.** Only `paid` installments are real money. `balance` is paid income minus paid
-  expense for the month; `projected_balance` is the same with pending ones included. An installment due
-  today or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can
-  change either through the `pay` and `unpay` routes.
+- **Expenses move through installments.** An expense counts in the month its installments are due: a 3x
+  purchase adds one third to each of three months. Income and transfers have no installments and count in
+  the month of their `date`.
+- **`paid` vs `pending`.** For expenses, only `paid` installments are real money. An installment due today
+  or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can change
+  either through the `pay` and `unpay` routes. Income has no status: dated today or earlier it counts as
+  `paid`, later as `pending`. `balance` is paid income minus paid expense for the month; `projected_balance`
+  is the same with pending ones included.
 - **`balance_to_date`** is paid income minus paid expense across all time and ignores `month`.
 - **Transfers are neither income nor expense.** A transfer moves money into a goal, so it never touches
   `income`, `expense`, `balance` or `spending_by_category`. The month's transfers are reported on their own
   as `transferred_to_goals`. They still appear in `recent_transactions` (with `category: null` and the
   `goal` they went to).
-- **`overdue`** is every pending income or expense installment due before today, from any month, split by
-  `income`/`expense`. An installment due today is not overdue.
-- **`upcoming-installments`** always includes overdue ones (`overdue: true`), then everything pending up to
-  `days` from today.
+- **`overdue`** is every pending expense installment due before today, from any month, under `expense`. An
+  installment due today is not overdue.
+- **`upcoming-installments`** only lists expenses. It always includes overdue ones (`overdue: true`), then
+  everything pending up to `days` from today.
+- **`recent-transactions`** reports `status` from the installments for expenses. Income uses its date, and
+  a transfer is always `paid`.
 - **Goals** report the `current_amount` Ledger already maintains (a transfer adds to it, an expense linked
   to the goal takes from it), and `progress_percent` is that over `target_amount`, not capped at 100.
-- **Month edges** are inclusive: an installment due on the 1st or on the last day belongs to that month.
+- **Month edges** are inclusive: anything dated on the 1st or on the last day belongs to that month.
 - Amounts are decimal strings (`"150.50"`) and can be negative (`"-75.25"`). Percentages are plain numbers.
 - Soft-deleted transactions, installments and goals are ignored. A category deleted later still shows up in
   past spending with its old name and color.
