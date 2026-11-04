@@ -21,7 +21,6 @@ class NotificationTest extends TestCase
         $this->travelTo('2026-09-15 12:00:00');
     }
 
-    /** @return array{0: User, 1: string} */
     private function authenticated(): array
     {
         $user = User::factory()->create();
@@ -78,10 +77,10 @@ class NotificationTest extends TestCase
         $category = Category::factory()->for($user)->create(['limit_amount' => null]);
 
         $this->travelTo('2026-08-01 12:00:00');
-        $this->expense($token, $category, '10.00', '2026-09-16');           // due tomorrow
-        $this->expense($token, $category, '20.00', '2026-09-10');           // overdue
-        $this->expense($token, $category, '30.00', '2026-09-30');           // too far ahead
-        $this->expense($token, $category, '40.00', '2026-09-10', 'income'); // income: never a bill
+        $this->expense($token, $category, '10.00', '2026-09-16');
+        $this->expense($token, $category, '20.00', '2026-09-10');
+        $this->expense($token, $category, '30.00', '2026-09-30');
+        $this->expense($token, $category, '40.00', '2026-09-10', 'income');
         $this->travelTo('2026-09-15 12:00:00');
 
         $reminders = app(ReminderService::class);

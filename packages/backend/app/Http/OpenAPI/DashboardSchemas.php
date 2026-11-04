@@ -4,14 +4,10 @@ namespace App\Http\OpenAPI;
 
 use OpenApi\Attributes as OA;
 
-/**
- * Schemas of the `/dashboard` endpoints (app/Domains/Dashboard). Kept apart from Schemas.php so the
- * home screen's contract can evolve on its own. Amounts are decimal strings, like everywhere else.
- */
 #[OA\Schema(
     schema: 'DashboardPeriod',
     type: 'object',
-    description: 'The calendar month a block refers to. Both ends are inclusive.',
+    description: 'O mês a que um bloco se refere. As duas pontas estão incluídas.',
     required: ['month', 'from', 'to'],
     properties: [
         new OA\Property(property: 'month', type: 'string', pattern: '^\d{4}-(0[1-9]|1[0-2])$', example: '2026-09'),
@@ -22,7 +18,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardFlow',
     type: 'object',
-    description: 'Installments due in the period: `paid` is money that really moved, `pending` is still scheduled.',
+    description: 'Valores do período. Em saídas, `paid` são parcelas pagas e `pending` são parcelas pendentes. Em entradas, `paid` tem data até hoje e `pending` tem data futura.',
     required: ['paid', 'pending', 'total'],
     properties: [
         new OA\Property(property: 'paid', type: 'string', format: 'decimal', example: '4500.00'),
@@ -33,7 +29,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardOverdue',
     type: 'object',
-    description: 'Pending installments already past their due date, from any month. One due today is not overdue.',
+    description: 'Parcelas de saídas pendentes e já vencidas, de qualquer mês. A que vence hoje não está atrasada.',
     required: ['count', 'amount'],
     properties: [
         new OA\Property(property: 'count', type: 'integer', example: 1),
@@ -43,7 +39,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardSummary',
     type: 'object',
-    description: 'Income and expense for one month. Transfers to goals are neither: they only show up in `transferred_to_goals`.',
+    description: 'Entradas e saídas de um mês. Transferências para metas não são nenhuma das duas: aparecem só em `transferred_to_goals`.',
     required: [
         'period', 'income', 'expense', 'balance', 'projected_balance',
         'balance_to_date', 'transferred_to_goals', 'overdue',
@@ -56,37 +52,36 @@ use OpenApi\Attributes as OA;
             property: 'balance',
             type: 'string',
             format: 'decimal',
-            description: 'Paid income minus paid expense in the period. Can be negative.',
+            description: 'Entradas realizadas menos saídas pagas no período. Pode ser negativo.',
             example: '4029.60',
         ),
         new OA\Property(
             property: 'projected_balance',
             type: 'string',
             format: 'decimal',
-            description: 'Same as `balance`, counting pending installments too.',
+            description: 'Igual a `balance`, contando também entradas previstas e parcelas pendentes.',
             example: '3729.70',
         ),
         new OA\Property(
             property: 'balance_to_date',
             type: 'string',
             format: 'decimal',
-            description: 'Paid income minus paid expense across all time. Ignores `month`.',
+            description: 'Entradas realizadas menos saídas pagas em todo o período. Ignora `month`.',
             example: '4029.60',
         ),
         new OA\Property(
             property: 'transferred_to_goals',
             type: 'string',
             format: 'decimal',
-            description: 'Transfers made to goals in the period.',
+            description: 'Transferências feitas para metas no período.',
             example: '250.00',
         ),
         new OA\Property(
             property: 'overdue',
             type: 'object',
-            required: ['expense', 'income'],
+            required: ['expense'],
             properties: [
                 new OA\Property(property: 'expense', ref: '#/components/schemas/DashboardOverdue'),
-                new OA\Property(property: 'income', ref: '#/components/schemas/DashboardOverdue'),
             ],
         ),
     ],
@@ -95,7 +90,7 @@ use OpenApi\Attributes as OA;
     schema: 'DashboardCategoryRef',
     type: 'object',
     nullable: true,
-    description: 'Just enough to draw a category chip, or null when there is no category (transfers have none). A category deleted later keeps its old name, icon and color.',
+    description: 'O necessário para desenhar a categoria, ou null quando não há categoria (transferências não têm). Uma categoria excluída depois mantém nome, ícone e cor.',
     required: ['id', 'name', 'icon', 'color'],
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -108,7 +103,7 @@ use OpenApi\Attributes as OA;
     schema: 'DashboardGoalRef',
     type: 'object',
     nullable: true,
-    description: 'Just enough to draw a goal chip, or null when the transaction is not linked to a goal.',
+    description: 'O necessário para desenhar a meta, ou null quando a transação não está vinculada a uma meta.',
     required: ['id', 'name', 'icon', 'color'],
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -131,7 +126,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             format: 'decimal',
             nullable: true,
-            description: 'The category\'s monthly cap. Null when it has none.',
+            description: 'O teto mensal da categoria. Null quando não há limite.',
             example: '800.00',
         ),
         new OA\Property(
@@ -139,7 +134,7 @@ use OpenApi\Attributes as OA;
             type: 'number',
             format: 'float',
             nullable: true,
-            description: '`total` as a percentage of `limit_amount`, one decimal place. It can pass 100. Null when there is no limit.',
+            description: '`total` como percentual de `limit_amount`, com uma casa decimal. Pode passar de 100. Null quando não há limite.',
             example: 96.3,
         ),
     ],
@@ -147,7 +142,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardSpendingByCategory',
     type: 'object',
-    description: 'Expenses due in the month, grouped by category, biggest first. Income and transfers are not included.',
+    description: 'Saídas com vencimento no mês, agrupadas por categoria, da maior para a menor. Entradas e transferências não entram.',
     required: ['period', 'categories'],
     properties: [
         new OA\Property(property: 'period', ref: '#/components/schemas/DashboardPeriod'),
@@ -161,7 +156,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardUpcomingInstallment',
     type: 'object',
-    description: 'A pending installment, with what it belongs to.',
+    description: 'Uma parcela pendente de uma saída, com a transação a que pertence.',
     required: [
         'id', 'transaction_id', 'step', 'installments_count', 'type',
         'description', 'amount', 'date', 'overdue', 'category',
@@ -169,18 +164,18 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 5),
         new OA\Property(property: 'transaction_id', type: 'integer', example: 4),
-        new OA\Property(property: 'step', type: 'integer', description: 'Position in the schedule (1, 2, 3...).', example: 1),
+        new OA\Property(property: 'step', type: 'integer', description: 'Posição no cronograma (1, 2, 3...).', example: 1),
         new OA\Property(
             property: 'installments_count',
             type: 'integer',
-            description: 'How many installments the transaction has in total.',
+            description: 'Quantas parcelas a transação tem no total.',
             example: 3,
         ),
-        new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
+        new OA\Property(property: 'type', type: 'string', enum: ['expense'], example: 'expense'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Internet bill'),
         new OA\Property(property: 'amount', type: 'string', format: 'decimal', example: '89.90'),
         new OA\Property(property: 'date', type: 'string', format: 'date', example: '2026-09-10'),
-        new OA\Property(property: 'overdue', type: 'boolean', description: 'True when `date` is before today.', example: true),
+        new OA\Property(property: 'overdue', type: 'boolean', description: 'Verdadeiro quando `date` é anterior a hoje.', example: true),
         new OA\Property(property: 'category', ref: '#/components/schemas/DashboardCategoryRef'),
     ],
 )]
@@ -203,7 +198,7 @@ use OpenApi\Attributes as OA;
             property: 'status',
             type: 'string',
             enum: ['pending', 'partial', 'paid'],
-            description: 'No installment paid yet, some paid, or all paid.',
+            description: 'Saída: nenhuma parcela paga, algumas pagas ou todas pagas. Entrada: paid com data até hoje e pending com data futura. Transferência: sempre paid.',
             example: 'pending',
         ),
         new OA\Property(property: 'category', ref: '#/components/schemas/DashboardCategoryRef'),
@@ -225,7 +220,7 @@ use OpenApi\Attributes as OA;
             property: 'progress_percent',
             type: 'number',
             format: 'float',
-            description: '`current_amount` as a percentage of `target_amount`, one decimal place.',
+            description: '`current_amount` como percentual de `target_amount`, com uma casa decimal.',
             example: 25.0,
         ),
         new OA\Property(property: 'expires_at', type: 'string', format: 'date', nullable: true, example: '2027-03-01'),
@@ -234,7 +229,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardOverview',
     type: 'object',
-    description: 'The home screen in one payload. Each block is exactly what its own `/dashboard/*` route returns under `data`.',
+    description: 'A tela inicial em uma só resposta. Cada bloco é exatamente o que a rota `/dashboard/*` correspondente retorna em `data`.',
     required: [
         'summary', 'spending_by_category', 'upcoming_installments',
         'recent_transactions', 'goals', 'unread_notifications',
@@ -245,13 +240,13 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'upcoming_installments',
             type: 'array',
-            description: 'The next 10 pending installments within 30 days, overdue ones first.',
+            description: 'As próximas 10 parcelas pendentes em até 30 dias, com as atrasadas primeiro.',
             items: new OA\Items(ref: '#/components/schemas/DashboardUpcomingInstallment'),
         ),
         new OA\Property(
             property: 'recent_transactions',
             type: 'array',
-            description: 'The 5 newest transactions.',
+            description: 'As 5 transações mais recentes.',
             items: new OA\Items(ref: '#/components/schemas/DashboardRecentTransaction'),
         ),
         new OA\Property(
@@ -262,7 +257,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'unread_notifications',
             type: 'integer',
-            description: 'How many notifications are still unread. The list itself is `GET /notifications?status=unread`.',
+            description: 'Quantas notificações ainda não foram lidas. A lista em si está em `GET /notifications?status=unread`.',
             example: 3,
         ),
     ],

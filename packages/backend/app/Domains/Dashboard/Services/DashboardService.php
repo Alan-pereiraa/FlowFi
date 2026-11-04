@@ -9,14 +9,6 @@ use App\Domains\Shared\Casts\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Read-only home-screen numbers. Amounts stay integer cents all the way through (the Resources turn
- * them into decimal strings); the only floats here are display percentages.
- *
- * Money "moves" through installments, not transactions: a transaction counts in the month its
- * installments are due, and an installment is real money only once it is `paid`. Transfers (money set
- * aside into a goal) are neither income nor expense and never touch the balances.
- */
 class DashboardService
 {
     public const string TIMEZONE = 'America/Sao_Paulo';
@@ -31,9 +23,6 @@ class DashboardService
         private readonly DashboardRepositoryInterface $dashboard,
     ) {}
 
-    /**
-     * Every block of the home screen, in one payload.
-     */
     public function overview(User $user, ?string $month): array
     {
         $period = $this->period($month);
@@ -68,9 +57,6 @@ class DashboardService
         return $this->dashboard->recentTransactions($user, $limit);
     }
 
-    /**
-     * @return list<array{goal: Goal, progress_percent: float}>
-     */
     public function goals(User $user): array
     {
         return $this->dashboard->goals($user)->map(fn (Goal $goal): array => [
@@ -82,9 +68,6 @@ class DashboardService
         ])->all();
     }
 
-    /**
-     * @return array{month: string, from: CarbonImmutable, to: CarbonImmutable}
-     */
     private function period(?string $month): array
     {
         $from = CarbonImmutable::createFromFormat('Y-m-d', ($month ?? CarbonImmutable::today(self::TIMEZONE)->format('Y-m')).'-01')->startOfDay();
@@ -98,11 +81,12 @@ class DashboardService
 
     private function buildSummary(User $user, array $period): array
     {
-        $month = $this->bucket($this->dashboard->installmentTotals($user, $period['from'], $period['to']));
-        $allTime = $this->bucket($this->dashboard->installmentTotals($user, null, null));
+        $today = CarbonImmutable::today(self::TIMEZONE);
+        $month = $this->totals($user, $period['from'], $period['to'], $today);
+        $allTime = $this->totals($user, null, null, $today);
 
-        $overdue = ['expense' => ['count' => 0, 'total' => 0], 'income' => ['count' => 0, 'total' => 0]];
-        foreach ($this->dashboard->overdueTotals($user, CarbonImmutable::today(self::TIMEZONE)) as $row) {
+        $overdue = ['expense' => ['count' => 0, 'total' => 0]];
+        foreach ($this->dashboard->overdueTotals($user, $today) as $row) {
             if (isset($overdue[$row['type']])) {
                 $overdue[$row['type']] = ['count' => $row['count'], 'total' => $row['total']];
             }
@@ -112,23 +96,25 @@ class DashboardService
             'period' => $this->describe($period),
             'income' => $month['income'],
             'expense' => $month['expense'],
-            // Realized: only what was actually received/paid.
             'balance' => $month['income']['paid'] - $month['expense']['paid'],
-            // Planned: everything due in the month, paid or not.
             'projected_balance' => $month['income']['total'] - $month['expense']['total'],
-            // Transfers are not part of any of the figures above: they move money into a goal, they do
-            // not earn or spend it. They get their own line.
             'balance_to_date' => $allTime['income']['paid'] - $allTime['expense']['paid'],
             'transferred_to_goals' => $month['transfer']['paid'],
             'overdue' => $overdue,
         ];
     }
 
+    private function totals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to, CarbonImmutable $today): array
+    {
+        return $this->bucket([
+            ...$this->dashboard->installmentTotals($user, $from, $to),
+            ...$this->dashboard->oneOffTotals($user, $from, $to, $today),
+        ]);
+    }
+
     private function buildSpendingByCategory(User $user, array $period): array
     {
         $categories = array_map(function (array $row): array {
-            // `categories.limit_amount` has no period in the ERD (open point); the dashboard reads it
-            // as a monthly cap, since the rows it is compared with are a single month.
             return [
                 ...$row,
                 'limit_used_percent' => $row['limit_amount'] === null ? null : $this->percent($row['total'], $row['limit_amount']),
@@ -141,10 +127,6 @@ class DashboardService
         ];
     }
 
-    /**
-     * @param  list<array{type: string, status: string, total: int, count: int}>  $rows
-     * @return array{income: array{paid: int, pending: int, total: int}, expense: array{paid: int, pending: int, total: int}, transfer: array{paid: int, pending: int, total: int}}
-     */
     private function bucket(array $rows): array
     {
         $sums = [

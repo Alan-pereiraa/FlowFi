@@ -22,7 +22,6 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->unsignedInteger('occurrences')->nullable();
             $table->unsignedInteger('generated_count')->default(0);
-            // Null once the template is finished (ended, or every occurrence generated).
             $table->date('next_occurrence_on')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();

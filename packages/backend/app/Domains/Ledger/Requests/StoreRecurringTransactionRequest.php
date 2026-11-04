@@ -11,7 +11,6 @@ class StoreRecurringTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Same type/category/goal rules as StoreTransactionRequest: every occurrence is posted through TransactionService.
             'category_id' => [
                 'nullable',
                 'required_unless:type,transfer',
@@ -36,7 +35,6 @@ class StoreRecurringTransactionRequest extends FormRequest
 
             'period_unit' => ['required', 'string', Rule::in(Transaction::PERIOD_UNITS)],
             'period_interval' => ['nullable', 'integer', 'min:1', 'max:365'],
-            // Past dates are back-filled on create; capped so one request can't generate years of rows.
             'start_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('America/Sao_Paulo')->subYear()->toDateString()],
             'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date', 'prohibits:occurrences'],
             'occurrences' => ['nullable', 'integer', 'min:2', 'max:120'],

@@ -33,7 +33,7 @@ trait ValidatesInstallmentPlan
 
         try {
             if ($sum !== Money::toCents($totalAmount, 'total_amount')) {
-                $validator->errors()->add('installments', 'The installment amounts must add up to the total amount.');
+                $validator->errors()->add('installments', 'A soma das parcelas deve ser igual ao valor total.');
             }
         } catch (InvalidArgumentException) {
         }

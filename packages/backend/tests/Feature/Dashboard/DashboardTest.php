@@ -28,11 +28,9 @@ class DashboardTest extends TestCase
     {
         parent::setUp();
 
-        // "Today" is the 15th, so the 1st is overdue and the 25th is still ahead.
         $this->travelTo('2026-09-15 12:00:00');
     }
 
-    /** @return array{0: User, 1: string} */
     private function authenticated(): array
     {
         $user = User::factory()->create();
@@ -40,9 +38,6 @@ class DashboardTest extends TestCase
         return [$user, $user->createToken('api')->plainTextToken];
     }
 
-    /**
-     * @param  list<array{0: string, 1: string, 2?: string}>  $installments  [amount, date, status = pending]
-     */
     private function transaction(User $user, string $type, array $installments, Category|false|null $category = null, array $attributes = []): Transaction
     {
         $cents = array_sum(array_map(fn (array $row) => (int) round($row[0] * 100), $installments));
@@ -56,6 +51,10 @@ class DashboardTest extends TestCase
             'installments_count' => count($installments),
             ...$attributes,
         ]);
+
+        if ($type !== 'expense') {
+            return $transaction;
+        }
 
         foreach ($installments as $step => $row) {
             Installment::factory()->for($transaction)->create([
@@ -81,10 +80,9 @@ class DashboardTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
 
-        $this->transaction($user, 'income', [['1000.00', '2026-09-05', 'paid']]);
+        $this->transaction($user, 'income', [['1000.00', '2026-09-15']]);
         $this->transaction($user, 'income', [['500.00', '2026-09-20']]);
         $this->transaction($user, 'expense', [['200.00', '2026-09-02', 'paid']]);
-        // 300.00 in three monthly installments: only September's two belong to this month.
         $this->transaction($user, 'expense', [
             ['100.00', '2026-09-10', 'paid'],
             ['100.00', '2026-09-25'],
@@ -117,9 +115,9 @@ class DashboardTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
 
-        $this->transaction($user, 'income', [['1000.00', '2026-06-05', 'paid']]);
+        $this->transaction($user, 'income', [['1000.00', '2026-06-05']]);
         $this->transaction($user, 'expense', [['250.50', '2026-08-10', 'paid']]);
-        $this->transaction($user, 'expense', [['999.00', '2026-09-28']]); // pending: not money yet
+        $this->transaction($user, 'expense', [['999.00', '2026-09-28']]);
 
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
             ->assertJsonPath('data.balance', '0.00')
@@ -141,13 +139,13 @@ class DashboardTest extends TestCase
         [$user, $token] = $this->authenticated();
 
         $this->transaction($user, 'expense', [['30.00', '2026-07-01'], ['20.00', '2026-09-01']]);
-        $this->transaction($user, 'expense', [['99.00', '2026-09-15']]);          // due today: not overdue
-        $this->transaction($user, 'expense', [['11.00', '2026-08-01', 'paid']]);  // paid: not overdue
+        $this->transaction($user, 'expense', [['99.00', '2026-09-15']]);
+        $this->transaction($user, 'expense', [['11.00', '2026-08-01', 'paid']]);
         $this->transaction($user, 'income', [['400.00', '2026-09-10']]);
 
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
             ->assertJsonPath('data.overdue.expense', ['count' => 2, 'amount' => '50.00'])
-            ->assertJsonPath('data.overdue.income', ['count' => 1, 'amount' => '400.00']);
+            ->assertJsonMissingPath('data.overdue.income');
     }
 
     public function test_summary_is_all_zeros_for_an_empty_account(): void
@@ -180,7 +178,11 @@ class DashboardTest extends TestCase
         $keptTransaction = $this->transaction($user, 'expense', [['3.00', '2026-09-07'], ['900.00', '2026-09-08']]);
         $keptTransaction->installments()->where('step', 2)->delete();
 
+        $this->transaction($user, 'income', [['900.00', '2026-09-06']])->delete();
+        $this->transaction($stranger, 'income', [['900.00', '2026-09-06']]);
+
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
+            ->assertJsonPath('data.income.total', '0.00')
             ->assertJsonPath('data.expense.total', '13.00')
             ->assertJsonPath('data.balance_to_date', '0.00');
 
@@ -210,15 +212,14 @@ class DashboardTest extends TestCase
         $this->transaction($user, 'expense', [['100.00', '2026-09-02', 'paid'], ['100.00', '2026-09-20']], $food);
         $this->transaction($user, 'expense', [['50.00', '2026-09-04', 'paid']], $food);
         $this->transaction($user, 'expense', [['300.00', '2026-09-12']], $fun);
-        $this->transaction($user, 'expense', [['70.00', '2026-10-02']], $fun);   // other month
-        $this->transaction($user, 'income', [['3000.00', '2026-09-01', 'paid']], $salary);
+        $this->transaction($user, 'expense', [['70.00', '2026-10-02']], $fun);
+        $this->transaction($user, 'income', [['3000.00', '2026-09-01']], $salary);
 
         $response = $this->withToken($token)->getJson('/api/v1/dashboard/spending-by-category?month=2026-09')
             ->assertOk()
             ->assertJsonPath('data.period.month', '2026-09')
             ->assertJsonCount(2, 'data.categories');
 
-        // Biggest spender first.
         $this->assertSame(['Fun', 'Food'], array_column(array_column($response->json('data.categories'), 'category'), 'name'));
 
         $response->assertJsonPath('data.categories.0.total', '300.00')
@@ -252,11 +253,11 @@ class DashboardTest extends TestCase
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create(['name' => 'Rent']);
 
-        $this->transaction($user, 'expense', [['10.00', '2026-08-20']], $category, ['description' => 'Late one']); // overdue
-        $this->transaction($user, 'expense', [['20.00', '2026-09-15']], $category);                                // today
+        $this->transaction($user, 'expense', [['10.00', '2026-08-20']], $category, ['description' => 'Late one']);
+        $this->transaction($user, 'expense', [['20.00', '2026-09-15']], $category);
         $this->transaction($user, 'expense', [['30.00', '2026-09-25']], $category);
-        $this->transaction($user, 'expense', [['40.00', '2026-09-10', 'paid']], $category);                         // paid
-        $this->transaction($user, 'expense', [['50.00', '2026-11-30']], $category);                                // beyond 30 days
+        $this->transaction($user, 'expense', [['40.00', '2026-09-10', 'paid']], $category);
+        $this->transaction($user, 'expense', [['50.00', '2026-11-30']], $category);
 
         $response = $this->withToken($token)->getJson('/api/v1/dashboard/upcoming-installments')
             ->assertOk()
@@ -299,7 +300,7 @@ class DashboardTest extends TestCase
 
         $this->transaction($user, 'expense', [['10.00', '2026-09-01', 'paid']], $category, ['description' => 'Paid']);
         $this->transaction($user, 'expense', [['10.00', '2026-09-05', 'paid'], ['10.00', '2026-10-05']], $category, ['description' => 'Partial']);
-        $this->transaction($user, 'income', [['10.00', '2026-09-09']], $category, ['description' => 'Pending']);
+        $this->transaction($user, 'income', [['10.00', '2026-09-20']], $category, ['description' => 'Pending']);
 
         $response = $this->withToken($token)->getJson('/api/v1/dashboard/recent-transactions')
             ->assertOk()
@@ -334,7 +335,6 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertJsonCount(3, 'data');
 
-        // Closest deadline first, open-ended goals last.
         $this->assertSame(['Trip', 'Car', 'Rainy day'], array_column($response->json('data'), 'name'));
 
         $response->assertJsonPath('data.0.id', $sooner->id)
@@ -356,11 +356,10 @@ class DashboardTest extends TestCase
         [$user, $token] = $this->authenticated();
         $goal = Goal::factory()->for($user)->create(['name' => 'Trip', 'icon' => 'flight', 'color' => '#FF9800']);
 
-        $this->transaction($user, 'income', [['1000.00', '2026-09-01', 'paid']]);
+        $this->transaction($user, 'income', [['1000.00', '2026-09-01']]);
         $this->transaction($user, 'expense', [['100.00', '2026-09-02', 'paid']]);
-        // A transfer is created already paid and has no category.
-        $this->transaction($user, 'transfer', [['250.00', '2026-09-03', 'paid']], false, ['goal_id' => $goal->id]);
-        $this->transaction($user, 'transfer', [['40.00', '2026-08-30', 'paid']], false, ['goal_id' => $goal->id]);
+        $this->transaction($user, 'transfer', [['250.00', '2026-09-03']], false, ['goal_id' => $goal->id]);
+        $this->transaction($user, 'transfer', [['40.00', '2026-08-30']], false, ['goal_id' => $goal->id]);
 
         $this->withToken($token)->getJson('/api/v1/dashboard/summary?month=2026-09')
             ->assertOk()
@@ -388,7 +387,7 @@ class DashboardTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
 
-        $this->transaction($user, 'income', [['100.00', '2026-09-02', 'paid']]);
+        $this->transaction($user, 'income', [['100.00', '2026-09-02']]);
         $this->transaction($user, 'expense', [['40.00', '2026-09-20']]);
         Goal::factory()->for($user)->create();
         Notification::factory()->for($user)->count(2)->create(['read_at' => null]);

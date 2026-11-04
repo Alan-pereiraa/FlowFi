@@ -36,10 +36,6 @@ class AuthServiceTest extends TestCase
         ]);
     }
 
-    // ------------------------------------------------------------------
-    // requestOtp()
-    // ------------------------------------------------------------------
-
     public function test_request_otp_envia_o_codigo_mesmo_para_email_sem_conta(): void
     {
         $this->auth()->requestOtp(self::EMAIL);
@@ -49,13 +45,8 @@ class AuthServiceTest extends TestCase
             fn (OtpCodeMail $mail) => $mail->hasTo(self::EMAIL)
         );
 
-        // Pedir o código não cria conta: ela só nasce na verificação.
         $this->assertNull($this->users()->findByEmailWithTrashed(self::EMAIL));
     }
-
-    // ------------------------------------------------------------------
-    // verifyOtp()
-    // ------------------------------------------------------------------
 
     public function test_verify_otp_cria_a_conta_quando_o_email_ainda_nao_existe(): void
     {
@@ -124,7 +115,6 @@ class AuthServiceTest extends TestCase
         $this->assertVerifyFails(self::EMAIL, $code, 'email', self::DEACTIVATED);
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
-        // A conta desativada continua sendo a única com esse e-mail.
         $this->assertSame(1, User::withTrashed()->where('email', self::EMAIL)->count());
     }
 
@@ -138,10 +128,6 @@ class AuthServiceTest extends TestCase
         $this->assertNull($this->users()->findByEmailWithTrashed(self::EMAIL));
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
-
-    // ------------------------------------------------------------------
-    // logout()
-    // ------------------------------------------------------------------
 
     public function test_logout_apaga_o_token_usado_na_requisicao(): void
     {
@@ -176,10 +162,6 @@ class AuthServiceTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
-    // ------------------------------------------------------------------
-    // Auxiliares
-    // ------------------------------------------------------------------
-
     private function auth(): AuthService
     {
         return app(AuthService::class);
@@ -190,16 +172,11 @@ class AuthServiceTest extends TestCase
         return app(UserRepositoryInterface::class);
     }
 
-    /**
-     * Cria um usuário pelo repositório (sem depender de factory).
-     * Se a tabela users exigir outras colunas (name, password...), acrescente aqui.
-     */
     private function createUser(array $attributes = []): User
     {
         return $this->users()->create(array_merge(['email' => self::EMAIL], $attributes));
     }
 
-    /** Pede um código e devolve o valor que foi enviado por e-mail. */
     private function issueCode(string $email): string
     {
         app(OtpService::class)->issue($email);

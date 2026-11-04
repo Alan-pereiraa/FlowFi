@@ -19,12 +19,8 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
             ->with('installments')
             ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
             ->when($filters['category_id'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
-            ->when($filters['date_from'] ?? null, fn ($query, $from) => $query->whereDoesntHave(
-                'installments', fn ($query) => $query->where('date', '<', $from)
-            ))
-            ->when($filters['date_to'] ?? null, fn ($query, $to) => $query->whereDoesntHave(
-                'installments', fn ($query) => $query->where('date', '>', $to)
-            ))
+            ->when($filters['date_from'] ?? null, fn ($query, $from) => $this->whereDatedInside($query, '>=', $from, '<'))
+            ->when($filters['date_to'] ?? null, fn ($query, $to) => $this->whereDatedInside($query, '<=', $to, '>'))
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate($perPage);
@@ -108,6 +104,17 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         return $this->pendingExpenseInstallments()
             ->whereDate('date', '<', $today->toDateString())
             ->get();
+    }
+
+    private function whereDatedInside(Builder $query, string $operator, string $date, string $outsideOperator): Builder
+    {
+        return $query->where(fn ($query) => $query
+            ->where(fn ($query) => $query
+                ->where('type', '!=', Transaction::TYPE_EXPENSE)
+                ->whereDate('date', $operator, $date))
+            ->orWhere(fn ($query) => $query
+                ->where('type', Transaction::TYPE_EXPENSE)
+                ->whereDoesntHave('installments', fn ($query) => $query->whereDate('date', $outsideOperator, $date))));
     }
 
     private function pendingExpenseInstallments(): Builder

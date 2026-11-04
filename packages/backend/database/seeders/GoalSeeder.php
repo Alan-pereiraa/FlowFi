@@ -8,11 +8,6 @@ use Illuminate\Database\Seeder;
 
 class GoalSeeder extends Seeder
 {
-    /**
-     * Icons come from App\Domains\Shared\Constants\IconCatalog, the same catalog
-     * StoreGoalRequest validates against. expires_in_months is resolved to a concrete
-     * date at seed time (null keeps expires_at open-ended, matching a goal with no deadline).
-     */
     private const array DEFAULTS = [
         ['name' => 'Reserva de emergência', 'icon' => 'savings', 'color' => '#2E7D32', 'target_amount' => '10000.00', 'expires_in_months' => null],
         ['name' => 'Viagem dos sonhos', 'icon' => 'flight_takeoff', 'color' => '#5C6BC0', 'target_amount' => '8000.00', 'expires_in_months' => 18],
@@ -22,10 +17,6 @@ class GoalSeeder extends Seeder
         ['name' => 'Curso ou capacitação', 'icon' => 'school', 'color' => '#7E57C2', 'target_amount' => '3000.00', 'expires_in_months' => 12],
     ];
 
-    /**
-     * Seeds the default goals for every existing user. Uses firstOrCreate keyed on
-     * (user_id, name) so it's safe to re-run — same reasoning as CategorySeeder.
-     */
     public function run(): void
     {
         User::all()->each(function (User $user): void {

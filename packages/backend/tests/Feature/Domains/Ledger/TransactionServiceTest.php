@@ -26,10 +26,6 @@ class TransactionServiceTest extends TestCase
         $this->travelTo('2026-09-15 12:00:00');
     }
 
-    // ------------------------------------------------------------------
-    // Criação: parcelamento
-    // ------------------------------------------------------------------
-
     public function test_transacao_unica_gera_uma_parcela_pendente_com_o_valor_total(): void
     {
         $user = User::factory()->create();
@@ -64,10 +60,8 @@ class TransactionServiceTest extends TestCase
 
         $amounts = $transaction->installments->pluck('amount')->all();
 
-        // 100.00 / 3 = 33.33 com 1 centavo sobrando, que vai para a 1ª parcela.
         $this->assertSame(['33.34', '33.33', '33.33'], $amounts);
 
-        // Soma em centavos (inteiros), sem depender da extensão bcmath.
         $totalCents = array_sum(array_map(
             fn (string $amount) => (int) str_replace('.', '', $amount),
             $amounts
@@ -103,10 +97,6 @@ class TransactionServiceTest extends TestCase
         ], $rows);
         $this->assertSame(Transaction::SCHEDULE_CUSTOM, $transaction->schedule_type);
     }
-
-    // ------------------------------------------------------------------
-    // Criação: limite mensal da categoria
-    // ------------------------------------------------------------------
 
     public function test_despesa_que_ultrapassa_o_limite_mensal_da_categoria_e_bloqueada_e_nada_e_salvo(): void
     {
@@ -147,7 +137,7 @@ class TransactionServiceTest extends TestCase
     public function test_categoria_sem_limite_nunca_bloqueia_a_despesa(): void
     {
         $user = User::factory()->create();
-        $category = $this->category($user); // limit_amount null
+        $category = $this->category($user);
 
         $transaction = $this->service()->create($user, [
             'type' => Transaction::TYPE_EXPENSE,
@@ -158,10 +148,6 @@ class TransactionServiceTest extends TestCase
 
         $this->assertNotNull($transaction->id);
     }
-
-    // ------------------------------------------------------------------
-    // Criação: efeito em metas
-    // ------------------------------------------------------------------
 
     public function test_transferencia_aumenta_o_saldo_da_meta(): void
     {
@@ -233,26 +219,31 @@ class TransactionServiceTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
     }
 
-    public function test_transferencia_marca_automaticamente_a_sua_parcela_como_paga(): void
+    public function test_transferencia_e_receita_nao_geram_parcelas(): void
     {
         $user = User::factory()->create();
         $goal = $this->goal($user, '0.00');
+        $category = $this->category($user);
 
-        $transaction = $this->service()->create($user, [
+        $transfer = $this->service()->create($user, [
             'type' => Transaction::TYPE_TRANSFER,
             'goal_id' => $goal->id,
             'date' => self::DATE,
             'total_amount' => '90.00',
         ]);
+        $income = $this->service()->create($user, [
+            'type' => Transaction::TYPE_INCOME,
+            'category_id' => $category->id,
+            'date' => self::DATE,
+            'total_amount' => '90.00',
+        ]);
 
-        $installment = $transaction->installments->first();
-        $this->assertSame(Installment::STATUS_PAID, $installment->status);
-        $this->assertNotNull($installment->paid_at);
+        $this->assertCount(0, $transfer->installments);
+        $this->assertCount(0, $income->installments);
+        $this->assertSame('90.00', $income->total_amount);
+        $this->assertSame(1, $income->installments_count);
+        $this->assertSame(Transaction::SCHEDULE_SINGLE, $income->schedule_type);
     }
-
-    // ------------------------------------------------------------------
-    // Edição
-    // ------------------------------------------------------------------
 
     public function test_editar_o_valor_de_despesa_vinculada_a_meta_ajusta_o_saldo_pela_diferenca(): void
     {
@@ -296,6 +287,32 @@ class TransactionServiceTest extends TestCase
         $this->assertSame('100.00', $goalB->fresh()->current_amount, 'A meta nova deveria ser debitada');
     }
 
+    public function test_mudar_a_data_de_uma_transferencia_nao_exige_saldo_na_meta(): void
+    {
+        $user = User::factory()->create();
+        $goal = $this->goal($user, '0.00');
+        $category = $this->category($user);
+
+        $transfer = $this->service()->create($user, [
+            'type' => Transaction::TYPE_TRANSFER,
+            'goal_id' => $goal->id,
+            'date' => self::DATE,
+            'total_amount' => '100.00',
+        ]);
+        $this->service()->create($user, [
+            'type' => Transaction::TYPE_EXPENSE,
+            'category_id' => $category->id,
+            'goal_id' => $goal->id,
+            'date' => self::DATE,
+            'total_amount' => '60.00',
+        ]);
+
+        $updated = $this->service()->update($transfer, ['date' => '2026-10-05']);
+
+        $this->assertSame('2026-10-05', $updated->date->toDateString());
+        $this->assertSame('40.00', $goal->fresh()->current_amount);
+    }
+
     public function test_editar_o_cronograma_com_parcela_paga_recria_as_parcelas_pela_regra_da_data(): void
     {
         $user = User::factory()->create();
@@ -334,10 +351,6 @@ class TransactionServiceTest extends TestCase
 
         $this->assertSame('Atualizada', $updated->description);
     }
-
-    // ------------------------------------------------------------------
-    // Exclusão
-    // ------------------------------------------------------------------
 
     public function test_apagar_uma_transferencia_devolve_o_valor_para_a_meta(): void
     {
@@ -378,10 +391,6 @@ class TransactionServiceTest extends TestCase
         $this->assertSame(0, Installment::where('transaction_id', $transactionId)->count());
         $this->assertSame(3, Installment::withTrashed()->where('transaction_id', $transactionId)->count());
     }
-
-    // ------------------------------------------------------------------
-    // Pagamento de parcela
-    // ------------------------------------------------------------------
 
     public function test_pagar_uma_parcela_pendente_marca_como_paga_e_registra_paid_at(): void
     {
@@ -428,10 +437,6 @@ class TransactionServiceTest extends TestCase
         ));
     }
 
-    // ------------------------------------------------------------------
-    // Isolamento entre usuários
-    // ------------------------------------------------------------------
-
     public function test_find_owned_nao_permite_acessar_transacao_de_outro_usuario(): void
     {
         $owner = User::factory()->create();
@@ -448,10 +453,6 @@ class TransactionServiceTest extends TestCase
         $this->expectException(ModelNotFoundException::class);
         $this->service()->findOwned($stranger, $transaction->id);
     }
-
-    // ------------------------------------------------------------------
-    // Auxiliares
-    // ------------------------------------------------------------------
 
     private function service(): TransactionService
     {

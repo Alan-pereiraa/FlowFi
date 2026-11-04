@@ -4,12 +4,8 @@ namespace Database\Factories;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Notification\Enums\NotificationType;
-use App\Domains\Notification\Models\Notification;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<Notification>
- */
 class NotificationFactory extends Factory
 {
     public function definition(): array

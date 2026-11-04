@@ -33,7 +33,6 @@ class Installment extends Model
         ];
     }
 
-    /** INSTALLMENT reaches the account only through TRANSACTION (docs/erd.md ownership notes). */
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);

@@ -13,7 +13,6 @@ class AuthEndpointsTest extends TestCase
 {
     use RefreshDatabase;
 
-    // Caminhos de app/Domains/Identity/routes.php, sob o prefixo /api/v1.
     private const REQUEST_OTP_URL = '/api/v1/auth/otp/request';
 
     private const VERIFY_OTP_URL = '/api/v1/auth/otp/verify';
@@ -36,10 +35,6 @@ class AuthEndpointsTest extends TestCase
             'auth.otp.length' => 6,
         ]);
     }
-
-    // ------------------------------------------------------------------
-    // Pedir o código
-    // ------------------------------------------------------------------
 
     public function test_pedir_codigo_com_email_valido_devolve_202_e_envia_o_email(): void
     {
@@ -83,10 +78,6 @@ class AuthEndpointsTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    // ------------------------------------------------------------------
-    // Verificar o código
-    // ------------------------------------------------------------------
-
     public function test_verificar_com_codigo_correto_devolve_usuario_e_token(): void
     {
         $code = $this->requestCode(self::EMAIL);
@@ -129,17 +120,12 @@ class AuthEndpointsTest extends TestCase
 
     public function test_o_token_recebido_da_acesso_a_uma_rota_protegida(): void
     {
-        // O logout é a rota protegida que já conhecemos; qualquer outra serviria.
         $token = $this->loginAndGetToken(self::EMAIL);
 
         $this->withToken($token)
             ->json(self::LOGOUT_METHOD, self::LOGOUT_URL)
             ->assertOk();
     }
-
-    // ------------------------------------------------------------------
-    // Logout
-    // ------------------------------------------------------------------
 
     public function test_logout_sem_token_devolve_401(): void
     {
@@ -157,21 +143,13 @@ class AuthEndpointsTest extends TestCase
             ->assertOk()
             ->assertExactJson(['message' => 'Logged out.']);
 
-        // Conferimos o banco em vez de repetir a requisição: dentro de um mesmo
-        // teste o Laravel guarda em cache o usuário já autenticado, e uma segunda
-        // chamada poderia passar mesmo com o token apagado.
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
-
-    // ------------------------------------------------------------------
-    // Validação do código (VerifyOtpRequest: digits:<tamanho configurado>)
-    // ------------------------------------------------------------------
 
     public function test_verificar_com_codigo_de_formato_invalido_devolve_422(): void
     {
         $this->requestCode(self::EMAIL);
 
-        // Tamanho errado (curto e longo), letras e espaço no meio.
         foreach (['12345', '1234567', 'abcdef', '12 456'] as $invalidCode) {
             $this->postJson(self::VERIFY_OTP_URL, ['email' => self::EMAIL, 'code' => $invalidCode])
                 ->assertStatus(422)
@@ -183,7 +161,6 @@ class AuthEndpointsTest extends TestCase
     {
         $code = $this->requestCode(self::EMAIL);
 
-        // Barrado na validação: nem chega a ser contado pelo OtpService.
         for ($i = 0; $i < 5; $i++) {
             $this->postJson(self::VERIFY_OTP_URL, ['email' => self::EMAIL, 'code' => '123'])
                 ->assertStatus(422);
@@ -192,10 +169,6 @@ class AuthEndpointsTest extends TestCase
         $this->postJson(self::VERIFY_OTP_URL, ['email' => self::EMAIL, 'code' => $code])
             ->assertOk();
     }
-
-    // ------------------------------------------------------------------
-    // Normalização do e-mail (trait NormalizesEmail)
-    // ------------------------------------------------------------------
 
     public function test_codigo_pedido_com_email_em_maiusculas_vale_para_o_email_em_minusculas(): void
     {
@@ -212,10 +185,6 @@ class AuthEndpointsTest extends TestCase
         $this->postJson(self::VERIFY_OTP_URL, ['email' => 'User@Example.COM', 'code' => $code])
             ->assertOk();
     }
-
-    // ------------------------------------------------------------------
-    // Limite de requisições (throttle:otp-request e throttle:otp-verify)
-    // ------------------------------------------------------------------
 
     public function test_pedir_codigo_muitas_vezes_seguidas_acaba_em_429(): void
     {
@@ -249,11 +218,6 @@ class AuthEndpointsTest extends TestCase
         $response->assertHeader('Retry-After');
     }
 
-    // ------------------------------------------------------------------
-    // Auxiliares
-    // ------------------------------------------------------------------
-
-    /** Pede o código pela API e devolve o valor enviado por e-mail. */
     private function requestCode(string $email): string
     {
         $this->postJson(self::REQUEST_OTP_URL, ['email' => $email])->assertStatus(202);
@@ -261,7 +225,6 @@ class AuthEndpointsTest extends TestCase
         return Mail::sent(OtpCodeMail::class)->last()->code;
     }
 
-    /** Faz o fluxo completo (pedir + verificar) e devolve o token. */
     private function loginAndGetToken(string $email): string
     {
         $code = $this->requestCode($email);
@@ -271,10 +234,6 @@ class AuthEndpointsTest extends TestCase
             ->json('token');
     }
 
-    /**
-     * Cria um usuário pelo repositório (sem depender de factory).
-     * Se a tabela users exigir outras colunas, acrescente aqui.
-     */
     private function createUser(string $email): User
     {
         return app(UserRepositoryInterface::class)->create([

@@ -69,17 +69,14 @@ class TransactionService
                 ...$this->planner->transactionScheduleAttributes($plan, $data),
             ]);
 
-            $installments = $this->transactions->replaceInstallments($transaction, $plan['rows']);
-
             if ($transaction->type === Transaction::TYPE_EXPENSE) {
+                $this->settleInstallments($this->transactions->replaceInstallments($transaction, $plan['rows']));
                 $this->categories->warnIfNearLimit($user, $transaction->category_id);
             }
 
             $effect = $this->goalEffect($transaction);
 
             $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
-
-            $this->settleInstallments($transaction, $installments);
 
             return $transaction->load('installments');
         });
@@ -103,15 +100,16 @@ class TransactionService
                 $plan = $this->planner->planFromInput($planInput);
 
                 $this->transactions->update($transaction, $this->planner->transactionScheduleAttributes($plan, $planInput));
-                $installments = $this->transactions->replaceInstallments($transaction, $plan['rows']);
-                $this->settleInstallments($transaction, $installments);
+
+                if ($transaction->type === Transaction::TYPE_EXPENSE) {
+                    $this->settleInstallments($this->transactions->replaceInstallments($transaction, $plan['rows']));
+                }
             }
 
             $transaction->refresh();
 
             if ($replan || array_key_exists('goal_id', $data)) {
-                $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
-                $this->adjustGoalCurrentAmount($transaction->goal_id, $this->goalEffect($transaction));
+                $this->moveGoalEffect($oldGoalId, $oldEffect, $transaction);
             }
 
             if ($transaction->type === Transaction::TYPE_EXPENSE && ($replan || array_key_exists('category_id', $data))) {
@@ -147,7 +145,7 @@ class TransactionService
 
         if ($installment->status === Installment::STATUS_PAID) {
             throw ValidationException::withMessages([
-                'status' => 'This installment is already paid.',
+                'status' => 'Esta parcela já está paga.',
             ]);
         }
 
@@ -156,18 +154,11 @@ class TransactionService
 
     public function unpayInstallment(User $user, int $transactionId, int $installmentId): Installment
     {
-        $transaction = $this->findOwned($user, $transactionId);
         $installment = $this->findOwnedInstallment($user, $transactionId, $installmentId);
-
-        if ($transaction->type === Transaction::TYPE_TRANSFER) {
-            throw ValidationException::withMessages([
-                'status' => 'A transfer installment cannot be marked as pending.',
-            ]);
-        }
 
         if ($installment->status === Installment::STATUS_PENDING) {
             throw ValidationException::withMessages([
-                'status' => 'This installment is already pending.',
+                'status' => 'Esta parcela já está pendente.',
             ]);
         }
 
@@ -195,14 +186,8 @@ class TransactionService
             && $transaction->schedule_type !== Transaction::SCHEDULE_CUSTOM;
     }
 
-    private function settleInstallments(Transaction $transaction, Collection $installments): void
+    private function settleInstallments(Collection $installments): void
     {
-        if ($transaction->type === Transaction::TYPE_TRANSFER) {
-            $this->transactions->markInstallmentPaid($installments->first());
-
-            return;
-        }
-
         $today = CarbonImmutable::today(self::TIMEZONE)->toDateString();
 
         foreach ($installments as $installment) {
@@ -245,6 +230,20 @@ class TransactionService
             Transaction::TYPE_EXPENSE => -$cents,
             default => 0,
         };
+    }
+
+    private function moveGoalEffect(?int $oldGoalId, int $oldEffect, Transaction $transaction): void
+    {
+        $effect = $this->goalEffect($transaction);
+
+        if ($oldGoalId === $transaction->goal_id) {
+            $this->adjustGoalCurrentAmount($oldGoalId, $effect - $oldEffect);
+
+            return;
+        }
+
+        $this->adjustGoalCurrentAmount($oldGoalId, -$oldEffect);
+        $this->adjustGoalCurrentAmount($transaction->goal_id, $effect);
     }
 
     private function adjustGoalCurrentAmount(?int $goalId, int $cents): void

@@ -18,9 +18,6 @@ class Money implements CastsAttributes
         return $value === null ? null : self::toCents($value, $key);
     }
 
-    /**
-     * Integer cents -> two-decimal string ("150050" -> "1500.50").
-     */
     public static function toDecimal(int $cents): string
     {
         $magnitude = abs($cents);
@@ -28,11 +25,6 @@ class Money implements CastsAttributes
         return sprintf('%s%d.%02d', $cents < 0 ? '-' : '', intdiv($magnitude, 100), $magnitude % 100);
     }
 
-    /**
-     * Decimal string/number -> integer cents, with string arithmetic so there is no rounding drift.
-     * Shared beyond the cast itself: Ledger's installment planner needs the same conversion to sum
-     * and split amounts without ever touching floats.
-     */
     public static function toCents(mixed $value, string $key = 'value'): int
     {
         if (is_float($value)) {

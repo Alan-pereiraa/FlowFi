@@ -55,7 +55,7 @@ gerado — pagamento único, divisão igual em `installments_count` espaçada po
 `period_unit`/`period_interval`, ou uma lista explícita de pares
 `{amount, date}` com intervalos independentes e não uniformes entre si. É
 isso que permite que `POST /transactions` e `PATCH /transactions/{id}`
-suportem as três formas de pagamento: à vista, N parcelas iguais em cadência
+suportem em saídas as três formas de pagamento: à vista, N parcelas iguais em cadência
 fixa, ou N parcelas em datas totalmente diferentes. `period_unit`/
 `period_interval` só são preenchidos quando `schedule_type` é `periodic`;
 são `null` para `single` e `custom`. Editar uma transação recalcula todo o
@@ -63,7 +63,9 @@ cronograma sempre que um campo que o afeta muda (valor, número de parcelas,
 período, uma lista explícita de parcelas ou a data, exceto em `custom`). As
 parcelas recriadas seguem a regra de status: data até hoje em
 `America/Sao_Paulo` fica `paid` e data futura fica `pending` — veja
-`TransactionService::settleInstallments()`.
+`TransactionService::settleInstallments()`. Só saídas têm parcelas: entradas e
+transferências não podem ser parceladas, não têm linhas em `installments` e
+ficam com `installments_count = 1` e `schedule_type = single`.
 
 Três tabelas existem nas migrations sem estar no desenho original:
 
@@ -131,7 +133,7 @@ O diagrama original usa pares mín-máx; o par fica do lado que ele conta.
 | ACCOUNT → TRANSACTION | 1 conta tem 0..n transações |
 | CATEGORY → TRANSACTION | 1 categoria classifica 0..n transações |
 | GOAL → TRANSACTION | 1 meta é financiada por 0..n transações |
-| TRANSACTION → INSTALLMENT | 1 transação se divide em 1..n parcelas |
+| TRANSACTION → INSTALLMENT | 1 saída se divide em 1..n parcelas; entradas e transferências não têm parcelas |
 | ACCOUNT → DEVICE_TOKEN | 1 conta tem 0..n tokens de dispositivo |
 | ACCOUNT → PERSONAL_ACCESS_TOKEN | 1 conta tem 0..n tokens de acesso (polimórfico, sem FK) |
 | ACCOUNT → OTP_CODE | 1 e-mail tem 0..n códigos OTP (vinculado pelo e-mail, sem FK) |
@@ -140,9 +142,8 @@ O diagrama original usa pares mín-máx; o par fica do lado que ele conta.
 | GOAL → RECURRENCE | 1 meta é financiada por 0..n recorrências (meta opcional) |
 | RECURRENCE → TRANSACTION | 1 recorrência gera 0..n transações; 1 transação vem de 0..1 recorrência |
 
-O par de `TRANSACTION → INSTALLMENT` é `(1,1) (1,n)`; a ferramenta usada no
-diagrama original não conseguia representar `(1,n)` e mostrava `(0,n)` no
-lugar.
+O par de `TRANSACTION → INSTALLMENT` é `(1,1) (0,n)`: toda saída tem ao menos
+uma parcela, e entradas e transferências não têm nenhuma.
 
 ## Diagrama
 
@@ -154,7 +155,7 @@ erDiagram
     ACCOUNT ||--o{ TRANSACTION  : "registra"
     CATEGORY ||--o{ TRANSACTION : "classifica"
     GOAL     ||--o{ TRANSACTION : "financiada por"
-    TRANSACTION ||--|{ INSTALLMENT : "dividida em"
+    TRANSACTION ||--o{ INSTALLMENT : "dividida em"
     ACCOUNT ||--o{ DEVICE_TOKEN          : "registra"
     ACCOUNT ||--o{ PERSONAL_ACCESS_TOKEN : "autentica com"
     ACCOUNT ||..o{ OTP_CODE              : "solicita (por e-mail)"

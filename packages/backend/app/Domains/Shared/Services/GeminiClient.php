@@ -9,10 +9,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class GeminiClient
 {
-    /**
-     * Runs one stateless call on the Gemini Interactions API and returns the model's text output.
-     * Config is read here, not in the constructor, so the container can build callers without a key.
-     */
     public function interact(array $body): string
     {
         try {

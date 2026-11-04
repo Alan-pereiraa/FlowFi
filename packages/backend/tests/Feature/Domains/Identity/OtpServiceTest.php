@@ -25,7 +25,6 @@ class OtpServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Impede o envio real de e-mails e guarda o que "seria" enviado.
         Mail::fake();
 
         config([
@@ -34,10 +33,6 @@ class OtpServiceTest extends TestCase
             'auth.otp.length' => 6,
         ]);
     }
-
-    // ------------------------------------------------------------------
-    // issue(): gerar e enviar o código
-    // ------------------------------------------------------------------
 
     public function test_issue_envia_o_email_para_o_destinatario(): void
     {
@@ -54,7 +49,6 @@ class OtpServiceTest extends TestCase
         foreach ([4, 6, 8] as $length) {
             config(['auth.otp.length' => $length]);
 
-            // Repete várias vezes: garante que zeros à esquerda não somem.
             for ($i = 0; $i < 20; $i++) {
                 $code = $this->issueCode(self::EMAIL);
 
@@ -118,10 +112,6 @@ class OtpServiceTest extends TestCase
         );
     }
 
-    // ------------------------------------------------------------------
-    // consume(): validar o código
-    // ------------------------------------------------------------------
-
     public function test_consume_aceita_o_codigo_correto_e_marca_como_usado(): void
     {
         $code = $this->issueCode(self::EMAIL);
@@ -152,7 +142,6 @@ class OtpServiceTest extends TestCase
 
         $this->assertConsumeFails(self::EMAIL, $this->wrongCodeFor($code), self::INVALID);
 
-        // Se a exceção desfizesse a transação, isso voltaria para 0.
         $this->assertSame(1, $this->latestRecord(self::EMAIL)->attempts);
     }
 
@@ -164,7 +153,6 @@ class OtpServiceTest extends TestCase
         $this->assertConsumeFails(self::EMAIL, $wrong, self::INVALID);
         $this->assertConsumeFails(self::EMAIL, $wrong, self::INVALID);
 
-        // Limite é 3: a terceira tentativa ainda é permitida.
         $this->service()->consume(self::EMAIL, $code);
 
         $this->assertTrue($this->latestRecord(self::EMAIL)->isConsumed());
@@ -179,7 +167,6 @@ class OtpServiceTest extends TestCase
             $this->assertConsumeFails(self::EMAIL, $wrong, self::INVALID);
         }
 
-        // Mesmo o código CORRETO é recusado depois de estourar o limite.
         $this->assertConsumeFails(self::EMAIL, $code, self::TOO_MANY_ATTEMPTS);
         $this->assertFalse($this->latestRecord(self::EMAIL)->isConsumed());
     }
@@ -213,7 +200,6 @@ class OtpServiceTest extends TestCase
     {
         $first = $this->issueCode(self::EMAIL);
 
-        // Garante created_at diferente entre os dois códigos.
         $this->travelTo(now()->addSecond());
 
         do {
@@ -232,7 +218,6 @@ class OtpServiceTest extends TestCase
         $codeA = $this->issueCode('a@example.com');
         $codeB = $this->issueCode('b@example.com');
 
-        // Evita o (raríssimo) caso de os dois códigos sorteados serem iguais.
         while ($codeA === $codeB) {
             $codeB = $this->issueCode('b@example.com');
         }
@@ -240,16 +225,11 @@ class OtpServiceTest extends TestCase
         $this->assertConsumeFails('b@example.com', $codeA, self::INVALID);
     }
 
-    // ------------------------------------------------------------------
-    // Auxiliares
-    // ------------------------------------------------------------------
-
     private function service(): OtpService
     {
         return app(OtpService::class);
     }
 
-    /** Pede um código e devolve o valor que foi enviado por e-mail. */
     private function issueCode(string $email): string
     {
         $this->service()->issue($email);
@@ -262,7 +242,6 @@ class OtpServiceTest extends TestCase
         return app(OtpCodeRepositoryInterface::class)->findLatestByEmail($email);
     }
 
-    /** Devolve um código com o mesmo formato, mas garantidamente diferente. */
     private function wrongCodeFor(string $code): string
     {
         $wrong = str_repeat('0', strlen($code));

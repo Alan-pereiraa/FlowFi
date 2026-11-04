@@ -65,34 +65,37 @@ class StoreTransactionRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        $onlyExpenses = 'Somente saídas podem ser parceladas.';
+
+        return [
+            'installments.prohibited_if' => $onlyExpenses,
+            'period_unit.prohibited_if' => $onlyExpenses,
+            'period_interval.prohibited_if' => $onlyExpenses,
+        ];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
             $this->checkInstallmentsSumMatchesTotal($validator);
-            $isIcome = $this->input('type') === Transaction::TYPE_INCOME;
 
+            $isExpense = $this->input('type') === Transaction::TYPE_EXPENSE;
             $hasExplicitInstallments = is_array($this->input('installments'));
             $installmentsCount = (int) ($this->input('installments_count') ?? 1);
-            $isTransfer = $this->input('type') === Transaction::TYPE_TRANSFER;
 
-            if ($isIcome && $installmentsCount > 1) {
+            if (! $isExpense && $installmentsCount > 1) {
                 $validator->errors()->add(
                     'installments_count',
-                    'Não se pode dividir uma receita em parcelas.',
+                    'Somente saídas podem ser parceladas.',
                 );
             }
 
-            if (! $isTransfer && ! $hasExplicitInstallments && $installmentsCount > 1 && ! $this->filled('period_unit')) {
+            if ($isExpense && ! $hasExplicitInstallments && $installmentsCount > 1 && ! $this->filled('period_unit')) {
                 $validator->errors()->add(
                     'period_unit',
-                    'A period is required when splitting a transaction into more than one installment.',
-                );
-            }
-
-            if ($isTransfer && $installmentsCount > 1) {
-                $validator->errors()->add(
-                    'installments_count',
-                    'Transfers cannot be split into multiple installments.',
+                    'Informe o período para dividir a transação em parcelas.',
                 );
             }
         });
