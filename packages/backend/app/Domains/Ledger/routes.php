@@ -19,9 +19,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['transactions' => 'id'])
         ->where(['id' => '[0-9]+']);
 
-    // Installment is an auxiliary table of Transaction, not a resource of its own — no
-    // dedicated controller, just this one action on TransactionController.
     Route::patch('transactions/{id}/installments/{installmentId}/pay', [TransactionController::class, 'payInstallment'])
+        ->whereNumber(['id', 'installmentId']);
+
+    Route::patch('transactions/{id}/installments/{installmentId}/unpay', [TransactionController::class, 'unpayInstallment'])
         ->whereNumber(['id', 'installmentId']);
 
     Route::apiResource('recurring-transactions', RecurringTransactionController::class)

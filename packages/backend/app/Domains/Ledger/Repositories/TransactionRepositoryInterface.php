@@ -27,6 +27,8 @@ interface TransactionRepositoryInterface
 
     public function markInstallmentPaid(Installment $installment): Installment;
 
+    public function markInstallmentPending(Installment $installment): Installment;
+
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection;
 
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection;

@@ -60,9 +60,10 @@ fixa, ou N parcelas em datas totalmente diferentes. `period_unit`/
 `period_interval` só são preenchidos quando `schedule_type` é `periodic`;
 são `null` para `single` e `custom`. Editar uma transação recalcula todo o
 cronograma sempre que um campo que o afeta muda (valor, número de parcelas,
-período ou uma lista explícita de parcelas), mas é recusado (422) assim que
-qualquer parcela já tiver sido paga — veja
-`TransactionService::guardAgainstPaidInstallments()`.
+período, uma lista explícita de parcelas ou a data, exceto em `custom`). As
+parcelas recriadas seguem a regra de status: data até hoje em
+`America/Sao_Paulo` fica `paid` e data futura fica `pending` — veja
+`TransactionService::settleInstallments()`.
 
 Três tabelas existem nas migrations sem estar no desenho original:
 

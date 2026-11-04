@@ -85,6 +85,16 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         return $installment;
     }
 
+    public function markInstallmentPending(Installment $installment): Installment
+    {
+        $installment->forceFill([
+            'status' => Installment::STATUS_PENDING,
+            'paid_at' => null,
+        ])->save();
+
+        return $installment;
+    }
+
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection
     {
         return $this->pendingExpenseInstallments()

@@ -36,7 +36,9 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 - **Money moves through installments, not transactions.** A transaction counts in the month its installments
   are due: a 3x purchase adds one third to each of three months.
 - **`paid` vs `pending`.** Only `paid` installments are real money. `balance` is paid income minus paid
-  expense for the month; `projected_balance` is the same with pending ones included.
+  expense for the month; `projected_balance` is the same with pending ones included. An installment due
+  today or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can
+  change either through the `pay` and `unpay` routes.
 - **`balance_to_date`** is paid income minus paid expense across all time and ignores `month`.
 - **Transfers are neither income nor expense.** A transfer moves money into a goal, so it never touches
   `income`, `expense`, `balance` or `spending_by_category`. The month's transfers are reported on their own
