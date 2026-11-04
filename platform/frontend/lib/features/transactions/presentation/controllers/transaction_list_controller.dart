@@ -29,12 +29,15 @@ class TransactionListController extends Notifier<TransactionListState> {
   }
 
   TransactionFilter get _filter {
-    if (!state.thisMonth) return TransactionFilter(type: state.type);
+    if (!state.thisMonth) {
+      return TransactionFilter(type: state.type, categoryId: state.categoryId);
+    }
     final now = ref.read(clockProvider)();
     // GAP: the backend lists a transaction only when all its installments
     // fall in the range, so splits spanning other months are left out.
     return TransactionFilter(
       type: state.type,
+      categoryId: state.categoryId,
       dateFrom: DateTime(now.year, now.month),
       dateTo: DateTime(now.year, now.month + 1, 0),
     );
@@ -98,6 +101,16 @@ class TransactionListController extends Notifier<TransactionListState> {
     if (type == state.type) return;
     state = state.copyWith(type: () => type);
     refresh();
+  }
+
+  void setCategory(int? categoryId) {
+    if (categoryId == state.categoryId) return;
+    state = state.copyWith(categoryId: () => categoryId);
+    refresh();
+  }
+
+  void setSearch(String text) {
+    state = state.copyWith(search: text);
   }
 
   void _failed(int generation, Failure failure) {

@@ -3,6 +3,7 @@ import 'package:flowfi_app/features/categories/data/repositories/category_reposi
 import 'package:flowfi_app/features/categories/domain/repositories/category_repository.dart';
 import 'package:flowfi_app/features/transactions/data/models/transaction_dto.dart';
 import 'package:flowfi_app/features/transactions/data/repositories/transaction_repository_impl.dart';
+import 'package:flowfi_app/features/transactions/domain/entities/recurring_input.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_input.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_schedule.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_type.dart';
@@ -41,6 +42,13 @@ void main() {
   setUpAll(() {
     registerFallbackValue(draft());
     registerFallbackValue(TransactionUpdate(categoryId: 1, date: DateTime(0)));
+    registerFallbackValue(
+      RecurringInput(
+        type: TransactionType.expense,
+        amount: Money.zero,
+        startDate: DateTime(0),
+      ),
+    );
   });
 
   setUp(() {
@@ -185,5 +193,46 @@ void main() {
 
     expect(state.loadError, 'Não encontrado.');
     expect(state.original, isNull);
+  });
+
+  test('a new recurrence goes to /recurring-transactions', () async {
+    when(() => transactions.createRecurring(any())).thenAnswer((_) async {});
+    final input = RecurringInput(
+      type: TransactionType.expense,
+      categoryId: 3,
+      amount: const Money(3990),
+      startDate: DateTime(2026, 10, 24),
+      occurrences: 12,
+    );
+
+    final container = await boot(null);
+    await container
+        .read(transactionFormControllerProvider(null).notifier)
+        .saveRecurring(input);
+
+    verify(() => transactions.createRecurring(input)).called(1);
+    verifyNever(() => transactions.create(any()));
+    expect(container.read(transactionFormControllerProvider(null)).saved, true);
+  });
+
+  test('cancelling the recurrence ends it', () async {
+    when(() => transactions.show(13)).thenAnswer(
+      (_) async => TransactionDto.fromJson({
+        ...transactionJson(id: 13),
+        'recurring_transaction_id': 5,
+      }).toEntity(),
+    );
+    when(() => transactions.endRecurring(5)).thenAnswer((_) async {});
+
+    final container = await boot(13);
+    await container
+        .read(transactionFormControllerProvider(13).notifier)
+        .endRecurrence();
+
+    verify(() => transactions.endRecurring(5)).called(1);
+    expect(
+      container.read(transactionFormControllerProvider(13)).recurrenceEnded,
+      isTrue,
+    );
   });
 }

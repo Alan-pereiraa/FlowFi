@@ -50,6 +50,12 @@ class TransactionsApi {
   Future<void> delete(int id) =>
       _send(() => _dio.delete<void>('/transactions/$id'));
 
+  Future<void> storeRecurring(Map<String, dynamic> body) =>
+      _send(() => _dio.post<void>('/recurring-transactions', data: body));
+
+  Future<void> endRecurring(int id) =>
+      _send(() => _dio.patch<void>('/recurring-transactions/$id/end'));
+
   TransactionDto _unwrap(Map<String, dynamic> body) =>
       TransactionDto.fromJson(body['data'] as Map<String, dynamic>);
 

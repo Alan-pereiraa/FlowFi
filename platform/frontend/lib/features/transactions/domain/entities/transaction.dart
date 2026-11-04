@@ -17,6 +17,7 @@ class Transaction {
     this.description,
     this.periodUnit,
     this.periodInterval,
+    this.recurringTransactionId,
     this.installments = const [],
   });
 
@@ -34,7 +35,11 @@ class Transaction {
   /// `day` | `week` | `month` | `year`; null for a single installment.
   final String? periodUnit;
   final int? periodInterval;
+
+  final int? recurringTransactionId;
   final List<Installment> installments;
+
+  bool get isRecurring => recurringTransactionId != null;
 
   /// The backend freezes the schedule (amount, recurrence, duration) once
   /// any installment is paid.
@@ -53,6 +58,7 @@ class Transaction {
       other.installmentsCount == installmentsCount &&
       other.periodUnit == periodUnit &&
       other.periodInterval == periodInterval &&
+      other.recurringTransactionId == recurringTransactionId &&
       listEquals(other.installments, installments);
 
   @override
@@ -67,6 +73,7 @@ class Transaction {
     installmentsCount,
     periodUnit,
     periodInterval,
+    recurringTransactionId,
     Object.hashAll(installments),
   );
 }

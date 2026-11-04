@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/paginated.dart';
+import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_filter.dart';
 import '../../domain/entities/transaction_input.dart';
@@ -58,4 +59,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<void> delete(int id) => guardApi(() => _api.delete(id));
+
+  @override
+  Future<void> createRecurring(RecurringInput input) => guardApi(
+    () => _api.storeRecurring(TransactionRequestDto.recurring(input)),
+  );
+
+  @override
+  Future<void> endRecurring(int recurringId) =>
+      guardApi(() => _api.endRecurring(recurringId));
 }

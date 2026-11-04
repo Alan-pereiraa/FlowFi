@@ -6,13 +6,15 @@ import 'transaction_schedule.dart';
 @immutable
 class TransactionUpdate {
   const TransactionUpdate({
-    required this.categoryId,
     required this.date,
+    this.categoryId,
+    this.goalId,
     this.description,
     this.schedule,
   });
 
-  final int categoryId;
+  final int? categoryId;
+  final int? goalId;
   final DateTime date;
 
   /// Null clears it.

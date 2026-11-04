@@ -7,8 +7,6 @@ import '../../../categories/domain/entities/category.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 
-/// One statement row: category icon, description, category and signed
-/// amount (`-` in error for expenses, `+` in success for income).
 // GAP: the design's account ("Conta Corrente • ...") and time of day have no
 // backend field.
 class TransactionTile extends StatelessWidget {
@@ -46,7 +44,7 @@ class TransactionTile extends StatelessWidget {
 
     final amount = transaction.totalAmount.format();
     final (signed, amountColor) = switch (type) {
-      TransactionType.expense => ('- $amount', scheme.error),
+      TransactionType.expense => ('- $amount', scheme.onSurface),
       TransactionType.income => ('+ $amount', success),
       TransactionType.transfer => (amount, scheme.onSurfaceVariant),
     };
@@ -73,7 +71,9 @@ class TransactionTile extends StatelessWidget {
                     Text(
                       transaction.description?.trim().isNotEmpty == true
                           ? transaction.description!
-                          : (category?.name ?? 'Transação'),
+                          : (type == TransactionType.transfer
+                                ? 'Transferência'
+                                : category?.name ?? 'Transação'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -93,6 +93,13 @@ class TransactionTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+              if (transaction.isRecurring) ...[
+                Tooltip(
+                  message: 'Transação recorrente',
+                  child: Icon(Icons.autorenew, size: 20, color: scheme.primary),
+                ),
+                const SizedBox(width: 8),
+              ],
               Text(
                 signed,
                 style: theme.textTheme.titleSmall?.copyWith(
