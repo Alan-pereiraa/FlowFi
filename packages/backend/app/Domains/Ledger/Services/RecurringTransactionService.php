@@ -3,11 +3,13 @@
 namespace App\Domains\Ledger\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Ledger\Exceptions\InsufficientBalanceException;
 use App\Domains\Ledger\Models\RecurringTransaction;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Ledger\Repositories\RecurringTransactionRepositoryInterface;
 use App\Domains\Notification\Enums\NotificationType;
 use App\Domains\Notification\Service\NotificationService;
+use App\Domains\Shared\Casts\Money;
 use App\Domains\Shared\Services\PeriodCalculator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
@@ -101,7 +103,10 @@ class RecurringTransactionService
         $today = $this->today();
         $counts = ['generated' => 0, 'skipped' => 0, 'ended' => 0, 'failed' => 0];
 
-        foreach ($this->recurring->dueOn($today) as $recurring) {
+        $due = $this->recurring->dueOn($today)
+            ->sortBy(fn (RecurringTransaction $recurring) => $recurring->type === Transaction::TYPE_INCOME ? 0 : 1);
+
+        foreach ($due as $recurring) {
             try {
                 $this->generateDueFor($recurring, $today, $counts);
             } catch (Throwable $e) {
@@ -130,6 +135,10 @@ class RecurringTransactionService
                 $counts['generated']++;
             } catch (UniqueConstraintViolationException) {
                 $this->advance($recurring);
+            } catch (InsufficientBalanceException) {
+                $this->advance($recurring);
+                $this->notifyInsufficientBalance($recurring, $date, $today);
+                $counts['skipped']++;
             } catch (ValidationException $e) {
                 $this->advance($recurring);
                 $this->notifySkipped($recurring, $date, $e, $today);
@@ -224,6 +233,24 @@ class RecurringTransactionService
             $recurring->user,
             'Transação recorrente não criada',
             "A transação de {$date->format('d/m/Y')} da {$this->describe($recurring)} não foi criada: {$reason}",
+            NotificationType::Warning,
+            'recurring_transaction_skipped',
+            $recurring->id,
+            $today->startOfDay(),
+        );
+    }
+
+    private function notifyInsufficientBalance(
+        RecurringTransaction $recurring,
+        CarbonImmutable $date,
+        CarbonImmutable $today,
+    ): void {
+        $amount = number_format(Money::toCents($recurring->amount) / 100, 2, ',', '.');
+
+        $this->notifications->notifyOnce(
+            $recurring->user,
+            'Transferência recorrente não realizada',
+            "Tentamos fazer a transferência de R$ {$amount} de {$date->format('d/m/Y')} da {$this->describe($recurring)}, mas você não tinha saldo suficiente.",
             NotificationType::Warning,
             'recurring_transaction_skipped',
             $recurring->id,
