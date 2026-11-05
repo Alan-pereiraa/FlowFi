@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../../core/network/paginated.dart';
+import '../entities/installment.dart';
 import '../entities/recurring_input.dart';
 import '../entities/transaction.dart';
 import '../entities/transaction_draft.dart';
@@ -23,6 +24,10 @@ abstract interface class TransactionRepository {
   Future<Transaction> update(int id, TransactionUpdate update);
 
   Future<void> delete(int id);
+
+  Future<Installment> payInstallment(int transactionId, int installmentId);
+
+  Future<Installment> unpayInstallment(int transactionId, int installmentId);
 
   Future<void> createRecurring(RecurringInput input);
 

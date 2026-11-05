@@ -83,12 +83,11 @@ void main() {
     expect(container.read(transactionFormControllerProvider(null)).saved, true);
   });
 
-  test('edit loads the transaction and flags the paid lock', () async {
+  test('edit loads the transaction', () async {
     final container = await boot(12);
     final state = container.read(transactionFormControllerProvider(12));
 
     expect(state.original, original);
-    expect(state.scheduleLocked, isTrue);
   });
 
   test('edit without schedule changes omits the schedule', () async {
@@ -126,28 +125,6 @@ void main() {
         installmentsCount: 2,
       ),
     );
-  });
-
-  test('paid-installment 422 becomes a form error', () async {
-    when(() => transactions.update(12, any())).thenThrow(
-      const ValidationFailure(
-        fieldErrors: {
-          'installments': [
-            'This transaction already has paid installments; its payment '
-                'plan can no longer be changed.',
-          ],
-        },
-      ),
-    );
-
-    final container = await boot(12);
-    await container
-        .read(transactionFormControllerProvider(12).notifier)
-        .save(draft(amount: const Money(1)));
-    final state = container.read(transactionFormControllerProvider(12));
-
-    expect(state.saved, isFalse);
-    expect(state.formError, contains('paid installments'));
   });
 
   test('over-limit 422 is shown under the amount', () async {

@@ -41,9 +41,23 @@ class Transaction {
 
   bool get isRecurring => recurringTransactionId != null;
 
-  /// The backend freezes the schedule (amount, recurrence, duration) once
-  /// any installment is paid.
-  bool get hasPaidInstallment => installments.any((i) => i.isPaid);
+  Transaction withInstallment(Installment updated) => Transaction(
+    id: id,
+    type: type,
+    date: date,
+    totalAmount: totalAmount,
+    installmentsCount: installmentsCount,
+    categoryId: categoryId,
+    goalId: goalId,
+    description: description,
+    periodUnit: periodUnit,
+    periodInterval: periodInterval,
+    recurringTransactionId: recurringTransactionId,
+    installments: [
+      for (final installment in installments)
+        installment.id == updated.id ? updated : installment,
+    ],
+  );
 
   @override
   bool operator ==(Object other) =>

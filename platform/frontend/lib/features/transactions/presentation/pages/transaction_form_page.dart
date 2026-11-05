@@ -25,6 +25,7 @@ import '../controllers/voice_draft_controller.dart';
 import '../widgets/category_chips.dart';
 import '../widgets/choice_row.dart';
 import '../widgets/goal_picker.dart';
+import '../widgets/installments_section.dart';
 import '../widgets/recurrence_card.dart';
 import '../widgets/transaction_type_toggle.dart';
 import '../widgets/voice_fill_card.dart';
@@ -403,7 +404,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final locked = state.scheduleLocked;
     final amountColor = switch (_type) {
       TransactionType.expense => scheme.error,
       TransactionType.income => theme.extension<AppColors>()!.success,
@@ -451,7 +451,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 label: _isEdit ? 'NOVO VALOR' : 'VALOR',
                 value: _amount,
                 color: amountColor,
-                enabled: !locked,
                 errorText:
                     _amountMissing ??
                     state.fieldErrors['total_amount'] ??
@@ -514,21 +513,18 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   ChoiceRow(
                     title: 'Transação Parcelada',
                     selected: _installments > 1,
-                    onTap: locked
-                        ? null
-                        : () => setState(() {
-                            if (_installments > 1) {
-                              _installments = 1;
-                            } else {
-                              _installments = 2;
-                              _recurring = false;
-                            }
-                          }),
+                    onTap: () => setState(() {
+                      if (_installments > 1) {
+                        _installments = 1;
+                      } else {
+                        _installments = 2;
+                        _recurring = false;
+                      }
+                    }),
                     trailing: _installments > 1
                         ? _CountMenu(
                             value: _installments,
                             tooltip: 'Número de parcelas',
-                            enabled: !locked,
                             onSelected: (n) =>
                                 setState(() => _installments = n),
                             max: _maxListedCount,
@@ -650,14 +646,13 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                     case final message?)
                   error(message),
               ],
-              if (locked) ...[
+              if (original != null && original.installments.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text(
-                  'Esta transação já tem parcelas pagas, então valor e '
-                  'parcelamento não podem mais ser alterados.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                InstallmentsSection(
+                  installments: original.installments,
+                  busy: state.busy,
+                  updatingId: state.updatingInstallmentId,
+                  onToggle: _controller.toggleInstallment,
                 ),
               ],
               if (state.formError != null) ...[
@@ -691,14 +686,12 @@ class _CountMenu extends StatelessWidget {
     required this.tooltip,
     this.min = 2,
     this.max = 24,
-    this.enabled = true,
   });
 
   final int value;
   final int min;
   final int max;
   final String tooltip;
-  final bool enabled;
   final ValueChanged<int> onSelected;
 
   @override
@@ -708,7 +701,6 @@ class _CountMenu extends StatelessWidget {
       ..sort();
     return PopupMenuButton<int>(
       tooltip: tooltip,
-      enabled: enabled,
       initialValue: value,
       onSelected: onSelected,
       itemBuilder: (_) => [

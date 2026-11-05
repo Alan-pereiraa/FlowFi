@@ -4,8 +4,10 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../categories/data/repositories/category_repository_impl.dart';
 import '../../../categories/domain/entities/category.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../goals/data/repositories/goal_repository_impl.dart';
 import '../../data/repositories/transaction_repository_impl.dart';
+import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction_input.dart';
 import '../../domain/entities/transaction_type.dart';
@@ -133,6 +135,33 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     }
   }
 
+  Future<void> toggleInstallment(Installment installment) async {
+    final original = state.original;
+    if (original == null || state.busy) return;
+    state = state.copyWith(
+      updatingInstallmentId: () => installment.id,
+      formError: () => null,
+    );
+    final repository = ref.read(transactionRepositoryProvider);
+    try {
+      final updated = installment.isPaid
+          ? await repository.unpayInstallment(original.id, installment.id)
+          : await repository.payInstallment(original.id, installment.id);
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        updatingInstallmentId: () => null,
+        original: original.withInstallment(updated),
+      );
+      ref.invalidate(dashboardControllerProvider);
+    } on Failure catch (failure) {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        updatingInstallmentId: () => null,
+        formError: () => ErrorMessages.general(failure),
+      );
+    }
+  }
+
   Future<void> delete() async {
     final original = state.original;
     if (original == null || state.busy) return;
@@ -167,11 +196,9 @@ class TransactionFormController extends Notifier<TransactionFormState> {
         for (final field in _fields)
           field: ?ErrorMessages.forField(failure, field),
       };
-      // The paid-installment lock comes on `installments`, which has no
-      // field on screen.
-      final formError =
-          ErrorMessages.forField(failure, 'installments') ??
-          (fieldErrors.isEmpty ? ErrorMessages.general(failure) : null);
+      final formError = fieldErrors.isEmpty
+          ? ErrorMessages.general(failure)
+          : null;
       state = state.copyWith(
         saving: false,
         fieldErrors: fieldErrors,

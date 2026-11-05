@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/paginated.dart';
+import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_draft.dart';
@@ -62,6 +63,28 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<void> delete(int id) => guardApi(() => _api.delete(id));
+
+  @override
+  Future<Installment> payInstallment(
+    int transactionId,
+    int installmentId,
+  ) async {
+    final dto = await guardApi(
+      () => _api.payInstallment(transactionId, installmentId),
+    );
+    return dto.toEntity();
+  }
+
+  @override
+  Future<Installment> unpayInstallment(
+    int transactionId,
+    int installmentId,
+  ) async {
+    final dto = await guardApi(
+      () => _api.unpayInstallment(transactionId, installmentId),
+    );
+    return dto.toEntity();
+  }
 
   @override
   Future<void> createRecurring(RecurringInput input) => guardApi(

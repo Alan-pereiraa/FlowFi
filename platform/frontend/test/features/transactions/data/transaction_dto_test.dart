@@ -24,7 +24,6 @@ void main() {
     expect(transaction.installments, hasLength(2));
     expect(transaction.installments.first.status, InstallmentStatus.paid);
     expect(transaction.installments.last.amount, const Money(5000));
-    expect(transaction.hasPaidInstallment, isTrue);
   });
 
   test('parses a transfer with no category', () {
@@ -35,7 +34,6 @@ void main() {
 
     expect(transaction.type, TransactionType.transfer);
     expect(transaction.categoryId, isNull);
-    expect(transaction.hasPaidInstallment, isFalse);
   });
 
   test('parses a Laravel paginator page', () {

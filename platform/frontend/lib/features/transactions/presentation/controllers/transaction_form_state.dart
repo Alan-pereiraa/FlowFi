@@ -17,6 +17,7 @@ class TransactionFormState {
     this.saving = false,
     this.deleting = false,
     this.endingRecurrence = false,
+    this.updatingInstallmentId,
     this.saved = false,
     this.deleted = false,
     this.recurrenceEnded = false,
@@ -39,6 +40,7 @@ class TransactionFormState {
   final bool saving;
   final bool deleting;
   final bool endingRecurrence;
+  final int? updatingInstallmentId;
   final bool saved;
   final bool deleted;
   final bool recurrenceEnded;
@@ -47,9 +49,12 @@ class TransactionFormState {
   final Map<String, String> fieldErrors;
   final String? formError;
 
-  bool get busy => loading || saving || deleting || endingRecurrence;
-
-  bool get scheduleLocked => original?.hasPaidInstallment ?? false;
+  bool get busy =>
+      loading ||
+      saving ||
+      deleting ||
+      endingRecurrence ||
+      updatingInstallmentId != null;
 
   TransactionFormState copyWith({
     bool? loading,
@@ -62,6 +67,7 @@ class TransactionFormState {
     bool? saving,
     bool? deleting,
     bool? endingRecurrence,
+    int? Function()? updatingInstallmentId,
     bool? saved,
     bool? deleted,
     bool? recurrenceEnded,
@@ -79,6 +85,9 @@ class TransactionFormState {
       saving: saving ?? this.saving,
       deleting: deleting ?? this.deleting,
       endingRecurrence: endingRecurrence ?? this.endingRecurrence,
+      updatingInstallmentId: updatingInstallmentId == null
+          ? this.updatingInstallmentId
+          : updatingInstallmentId(),
       saved: saved ?? this.saved,
       deleted: deleted ?? this.deleted,
       recurrenceEnded: recurrenceEnded ?? this.recurrenceEnded,

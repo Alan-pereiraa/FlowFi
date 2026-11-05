@@ -7,6 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/paginated.dart';
 import '../models/transaction_draft_dto.dart';
+import '../models/installment_dto.dart';
 import '../models/transaction_dto.dart';
 
 final transactionsApiProvider = Provider<TransactionsApi>(
@@ -52,6 +53,29 @@ class TransactionsApi {
 
   Future<void> delete(int id) =>
       _send(() => _dio.delete<void>('/transactions/$id'));
+
+  Future<InstallmentDto> payInstallment(int transactionId, int installmentId) =>
+      _changeInstallment(transactionId, installmentId, 'pay');
+
+  Future<InstallmentDto> unpayInstallment(
+    int transactionId,
+    int installmentId,
+  ) => _changeInstallment(transactionId, installmentId, 'unpay');
+
+  Future<InstallmentDto> _changeInstallment(
+    int transactionId,
+    int installmentId,
+    String action,
+  ) async {
+    final response = await _send(
+      () => _dio.patch<Map<String, dynamic>>(
+        '/transactions/$transactionId/installments/$installmentId/$action',
+      ),
+    );
+    return InstallmentDto.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
 
   Future<TransactionDraftDto> draftFromAudio(Uint8List wav) async {
     final response = await _send(

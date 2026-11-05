@@ -21,7 +21,6 @@ class TransactionUpdate {
   final String? description;
 
   /// Sent only when the amount or duration changed: any schedule field makes
-  /// the backend re-plan every installment, which is refused (422) once one
-  /// is paid.
+  /// the backend re-plan every installment.
   final TransactionSchedule? schedule;
 }
