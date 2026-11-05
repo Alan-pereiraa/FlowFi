@@ -19,6 +19,7 @@ class TransactionTile extends StatelessWidget {
     this.onTap,
     this.onPay,
     this.paying = false,
+    this.today,
   });
 
   final Transaction transaction;
@@ -27,6 +28,7 @@ class TransactionTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onPay;
   final bool paying;
+  final DateTime? today;
 
   @override
   Widget build(BuildContext context) {
@@ -41,26 +43,39 @@ class TransactionTile extends StatelessWidget {
     final icon = type == TransactionType.transfer
         ? Icons.savings
         : AppIcons.resolve(category?.icon);
+    final overdue =
+        today != null && (installment?.isOverdueOn(today!) ?? false);
     final subtitle = [
       type == TransactionType.transfer
           ? 'Transferência para meta'
           : category?.name,
       if (installment != null && transaction.installmentsCount > 1)
         '${installment!.step}/${transaction.installmentsCount}',
-      if (installment != null) installment!.isPaid ? 'Paga' : 'Pendente',
+      if (installment != null && !overdue)
+        installment!.isPaid ? 'Paga' : 'Pendente',
     ].whereType<String>().join(' • ');
 
     final pending = onPay != null && installment?.isPaid == false;
 
     final amount = (installment?.amount ?? transaction.totalAmount).format();
     final (signed, amountColor) = switch (type) {
-      TransactionType.expense => ('- $amount', scheme.onSurface),
+      TransactionType.expense => (
+        '- $amount',
+        overdue ? scheme.error : scheme.onSurface,
+      ),
       TransactionType.income => ('+ $amount', success),
       TransactionType.transfer => (amount, scheme.onSurfaceVariant),
     };
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      color: overdue ? scheme.errorContainer.withValues(alpha: 0.35) : null,
+      shape: overdue
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: scheme.error),
+            )
+          : null,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -100,6 +115,29 @@ class TransactionTile extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
+                          ),
+                        ],
+                        if (overdue) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 16,
+                                color: scheme.error,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  'Vencida',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: scheme.error,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],

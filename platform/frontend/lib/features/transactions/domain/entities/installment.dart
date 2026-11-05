@@ -28,6 +28,9 @@ class Installment {
 
   bool get isPaid => status == InstallmentStatus.paid;
 
+  bool isOverdueOn(DateTime today) =>
+      !isPaid && date.isBefore(DateTime(today.year, today.month, today.day));
+
   @override
   bool operator ==(Object other) =>
       other is Installment &&

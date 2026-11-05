@@ -29,6 +29,9 @@ abstract final class Dates {
     return DateTime(parts[0], parts[1], parts[2]);
   }
 
+  static String monthYear(DateTime date) =>
+      '${_months[date.month - 1]} de ${date.year}';
+
   /// `24/10/2026`.
   static String input(DateTime date) =>
       '${_two(date.day)}/${_two(date.month)}/${date.year}';

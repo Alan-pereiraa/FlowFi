@@ -13,6 +13,7 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/money_amount_field.dart';
 import '../../../categories/domain/entities/category.dart';
+import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_draft.dart';
@@ -24,6 +25,7 @@ import '../controllers/transaction_form_state.dart';
 import '../controllers/voice_draft_controller.dart';
 import '../widgets/category_chips.dart';
 import '../widgets/choice_row.dart';
+import '../widgets/first_installment_notice.dart';
 import '../widgets/goal_picker.dart';
 import '../widgets/installments_section.dart';
 import '../widgets/recurrence_card.dart';
@@ -265,6 +267,18 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
             .isEmpty) {
       _controller.loadGoals();
     }
+  }
+
+  String _firstInstallmentMessage(Transaction? original) {
+    final installments = original?.installments ?? const <Installment>[];
+    final first = original?.date == _date && installments.isNotEmpty
+        ? installments.first.date
+        : _date;
+    final month = Dates.monthYear(first);
+    final today = Dates.dateOnly(ref.read(clockProvider)());
+    return !_isEdit && !first.isAfter(today)
+        ? 'A primeira parcela conta em $month e já entra como paga.'
+        : 'A primeira parcela conta em $month.';
   }
 
   String get _recurrenceSubtitle {
@@ -542,6 +556,12 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                         ),
                       ),
                     ),
+                  if (_installments > 1) ...[
+                    const SizedBox(height: 12),
+                    FirstInstallmentNotice(
+                      message: _firstInstallmentMessage(original),
+                    ),
+                  ],
                   if (state.fieldErrors['installments_count'] ??
                           state.fieldErrors['period_unit']
                       case final message?)
@@ -652,6 +672,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   installments: original.installments,
                   busy: state.busy,
                   updatingId: state.updatingInstallmentId,
+                  today: ref.read(clockProvider)(),
                   onToggle: _controller.toggleInstallment,
                 ),
               ],

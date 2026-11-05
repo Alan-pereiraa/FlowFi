@@ -222,6 +222,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     paying:
                         entry.installment != null &&
                         state.payingId == entry.installment!.id,
+                    today: today,
                   ),
                 ),
             ],

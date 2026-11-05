@@ -9,17 +9,19 @@ class InstallmentsSection extends StatelessWidget {
     required this.installments,
     required this.busy,
     required this.updatingId,
+    required this.today,
     required this.onToggle,
   });
 
   final List<Installment> installments;
   final bool busy;
   final int? updatingId;
+  final DateTime today;
   final ValueChanged<Installment> onToggle;
 
   String _status(Installment installment) {
     if (installment.isPaid) return 'Paga';
-    return 'Pendente';
+    return installment.isOverdueOn(today) ? 'Vencida' : 'Pendente';
   }
 
   @override
@@ -54,7 +56,12 @@ class InstallmentsSection extends StatelessWidget {
                         '${Dates.input(installment.date)} • '
                         '${_status(installment)}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                          color: installment.isOverdueOn(today)
+                              ? scheme.error
+                              : scheme.onSurfaceVariant,
+                          fontWeight: installment.isOverdueOn(today)
+                              ? FontWeight.w700
+                              : null,
                         ),
                       ),
                     ],
