@@ -52,7 +52,7 @@ use OpenApi\Attributes as OA;
             property: 'balance',
             type: 'string',
             format: 'decimal',
-            description: 'Entradas realizadas menos saídas pagas no período. Pode ser negativo.',
+            description: 'Entradas realizadas menos saídas pagas e transferências para metas no período. Pode ser negativo.',
             example: '4029.60',
         ),
         new OA\Property(
@@ -66,7 +66,7 @@ use OpenApi\Attributes as OA;
             property: 'balance_to_date',
             type: 'string',
             format: 'decimal',
-            description: 'Entradas realizadas menos saídas pagas em todo o período. Ignora `month`.',
+            description: 'Entradas realizadas menos saídas pagas e transferências para metas em todo o período. Ignora `month`.',
             example: '4029.60',
         ),
         new OA\Property(

@@ -39,11 +39,12 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 - **`paid` vs `pending`.** For expenses, only `paid` installments are real money. An installment due today
   or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can change
   either through the `pay` and `unpay` routes. Income has no status: dated today or earlier it counts as
-  `paid`, later as `pending`. `balance` is paid income minus paid expense for the month; `projected_balance`
-  is the same with pending ones included.
-- **`balance_to_date`** is paid income minus paid expense across all time and ignores `month`.
-- **Transfers are neither income nor expense.** A transfer moves money into a goal, so it never touches
-  `income`, `expense`, `balance` or `spending_by_category`. The month's transfers are reported on their own
+  `paid`, later as `pending`. `balance` is paid income minus paid expense and transfers for the month;
+  `projected_balance` is the same with pending ones included.
+- **`balance_to_date`** is paid income minus paid expense and transfers across all time and ignores `month`.
+- **Transfers are neither income nor expense, but they leave the balance.** A transfer moves money into a
+  goal, so it never touches `income`, `expense` or `spending_by_category`, and it is subtracted from
+  `balance`, `projected_balance` and `balance_to_date`. The month's transfers are also reported on their own
   as `transferred_to_goals`. They still appear in `recent_transactions` (with `category: null` and the
   `goal` they went to).
 - **`overdue`** is every pending expense installment due before today, from any month, under `expense`. An
@@ -88,9 +89,9 @@ over `limit_amount`. It can go past 100.
         "pending": "149.90",
         "total": "630.30"
       },
-      "balance": "4019.60",
-      "projected_balance": "4169.70",
-      "balance_to_date": "4019.60",
+      "balance": "3769.60",
+      "projected_balance": "3919.70",
+      "balance_to_date": "3769.60",
       "transferred_to_goals": "250.00",
       "overdue": {
         "expense": {

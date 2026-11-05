@@ -351,7 +351,7 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.2.expires_at', null);
     }
 
-    public function test_transfers_to_goals_never_count_as_income_expense_or_balance(): void
+    public function test_transfers_to_goals_leave_the_balance_without_counting_as_income_or_expense(): void
     {
         [$user, $token] = $this->authenticated();
         $goal = Goal::factory()->for($user)->create(['name' => 'Trip', 'icon' => 'flight', 'color' => '#FF9800']);
@@ -365,9 +365,9 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.income.total', '1000.00')
             ->assertJsonPath('data.expense.total', '100.00')
-            ->assertJsonPath('data.balance', '900.00')
-            ->assertJsonPath('data.projected_balance', '900.00')
-            ->assertJsonPath('data.balance_to_date', '900.00')
+            ->assertJsonPath('data.balance', '650.00')
+            ->assertJsonPath('data.projected_balance', '650.00')
+            ->assertJsonPath('data.balance_to_date', '610.00')
             ->assertJsonPath('data.transferred_to_goals', '250.00');
 
         $this->withToken($token)->getJson('/api/v1/dashboard/spending-by-category?month=2026-09')

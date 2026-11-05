@@ -96,9 +96,9 @@ class DashboardService
             'period' => $this->describe($period),
             'income' => $month['income'],
             'expense' => $month['expense'],
-            'balance' => $month['income']['paid'] - $month['expense']['paid'],
-            'projected_balance' => $month['income']['total'] - $month['expense']['total'],
-            'balance_to_date' => $allTime['income']['paid'] - $allTime['expense']['paid'],
+            'balance' => $month['income']['paid'] - $month['expense']['paid'] - $month['transfer']['paid'],
+            'projected_balance' => $month['income']['total'] - $month['expense']['total'] - $month['transfer']['total'],
+            'balance_to_date' => $allTime['income']['paid'] - $allTime['expense']['paid'] - $allTime['transfer']['paid'],
             'transferred_to_goals' => $month['transfer']['paid'],
             'overdue' => $overdue,
         ];
