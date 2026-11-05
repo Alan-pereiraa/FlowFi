@@ -27,7 +27,7 @@ class SuccessView extends StatelessWidget {
         child: Column(
           children: [
             const Spacer(),
-            const AppLogo(size: 32),
+            const AppLogo(height: 44),
             const SizedBox(height: 24),
             Text(
               title,

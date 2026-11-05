@@ -44,7 +44,7 @@ class AppShell extends ConsumerWidget {
             ),
           ),
         ),
-        title: const AppLogo(size: 22),
+        title: const AppLogo(height: 24),
         actions: [
           IconButton(
             tooltip: unread > 0
