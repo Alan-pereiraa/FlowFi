@@ -84,6 +84,8 @@ class TransactionService
 
     public function update(Transaction $transaction, array $data): Transaction
     {
+        $this->ensureRecurringIsNotSplit($transaction, $data);
+
         return DB::transaction(function () use ($transaction, $data): Transaction {
             $oldGoalId = $transaction->goal_id;
             $oldEffect = $this->goalEffect($transaction);
@@ -173,6 +175,24 @@ class TransactionService
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection
     {
         return $this->transactions->overduePendingExpenseInstallments($today);
+    }
+
+    private function ensureRecurringIsNotSplit(Transaction $transaction, array $data): void
+    {
+        if ($transaction->recurring_transaction_id === null) {
+            return;
+        }
+
+        $message = 'Transações geradas por recorrência não podem ser parceladas.';
+        $count = (int) ($data['installments_count'] ?? 1);
+
+        if ($count > 1 && $count !== $transaction->installments_count) {
+            throw ValidationException::withMessages(['installments_count' => $message]);
+        }
+
+        if (count($data['installments'] ?? []) > 1) {
+            throw ValidationException::withMessages(['installments' => $message]);
+        }
     }
 
     private function needsReplan(Transaction $transaction, array $data): bool
