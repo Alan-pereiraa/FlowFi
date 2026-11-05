@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import '../../../../shared/utils/dates.dart';
 import '../../../categories/domain/entities/category.dart';
+import '../../domain/entities/statement_entry.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 
@@ -19,6 +20,8 @@ class TransactionListState {
     this.hasMore = false,
     this.page = 0,
     this.error,
+    this.payingId,
+    this.month,
   });
 
   final List<Transaction> items;
@@ -47,6 +50,10 @@ class TransactionListState {
   /// pt-BR message when the first page failed.
   final String? error;
 
+  final int? payingId;
+
+  final DateTime? month;
+
   List<Transaction> get visibleItems {
     final query = _fold(search.trim());
     if (query.isEmpty) return items;
@@ -58,15 +65,38 @@ class TransactionListState {
     ];
   }
 
-  List<(DateTime, List<Transaction>)> get byDay {
-    final groups = <(DateTime, List<Transaction>)>[];
-    for (final item in visibleItems) {
-      final day = Dates.dateOnly(item.date);
+  List<StatementEntry> get entries {
+    final entries = <StatementEntry>[
+      for (final item in visibleItems)
+        if (item.installments.isEmpty)
+          StatementEntry(transaction: item)
+        else
+          for (final installment in item.installments)
+            if (_inMonth(installment.date))
+              StatementEntry(transaction: item, installment: installment),
+    ];
+    entries.sort((a, b) {
+      final byDate = b.date.compareTo(a.date);
+      if (byDate != 0) return byDate;
+      final byId = b.transaction.id.compareTo(a.transaction.id);
+      if (byId != 0) return byId;
+      return (b.installment?.step ?? 0).compareTo(a.installment?.step ?? 0);
+    });
+    return entries;
+  }
+
+  List<(DateTime, List<StatementEntry>)> get byDay {
+    final groups = <(DateTime, List<StatementEntry>)>[];
+    for (final entry in entries) {
+      final day = Dates.dateOnly(entry.date);
       if (groups.isEmpty || groups.last.$1 != day) groups.add((day, []));
-      groups.last.$2.add(item);
+      groups.last.$2.add(entry);
     }
     return groups;
   }
+
+  bool _inMonth(DateTime date) =>
+      month == null || (date.year == month!.year && date.month == month!.month);
 
   TransactionListState copyWith({
     List<Transaction>? items,
@@ -80,6 +110,8 @@ class TransactionListState {
     bool? hasMore,
     int? page,
     String? Function()? error,
+    int? Function()? payingId,
+    DateTime? Function()? month,
   }) {
     return TransactionListState(
       items: items ?? this.items,
@@ -93,6 +125,8 @@ class TransactionListState {
       hasMore: hasMore ?? this.hasMore,
       page: page ?? this.page,
       error: error == null ? this.error : error(),
+      payingId: payingId == null ? this.payingId : payingId(),
+      month: month == null ? this.month : month(),
     );
   }
 

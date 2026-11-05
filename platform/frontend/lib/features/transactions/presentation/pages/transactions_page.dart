@@ -6,6 +6,8 @@ import '../../../../app/routes.dart';
 import '../../../../core/clock.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../domain/entities/installment.dart';
+import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 import '../controllers/transaction_list_controller.dart';
 import '../controllers/transaction_list_state.dart';
@@ -50,11 +52,19 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
-  /// Forms pop with `true` when something changed.
   Future<void> _openForm(String location) async {
-    final changed = await context.push<bool>(location);
-    if (changed == true) {
-      await ref.read(transactionListControllerProvider.notifier).refresh();
+    await context.push<bool>(location);
+    if (!mounted) return;
+    await ref.read(transactionListControllerProvider.notifier).refresh();
+  }
+
+  Future<void> _pay(Transaction item, Installment installment) async {
+    final error = await ref
+        .read(transactionListControllerProvider.notifier)
+        .payInstallment(item, installment);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -197,13 +207,21 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   ),
                 ),
               ),
-              for (final item in items)
+              for (final entry in items)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: TransactionTile(
-                    transaction: item,
-                    category: state.categories[item.categoryId],
-                    onTap: () => _openForm(Routes.editTransaction(item.id)),
+                    transaction: entry.transaction,
+                    installment: entry.installment,
+                    category: state.categories[entry.transaction.categoryId],
+                    onTap: () =>
+                        _openForm(Routes.editTransaction(entry.transaction.id)),
+                    onPay: entry.installment == null
+                        ? null
+                        : () => _pay(entry.transaction, entry.installment!),
+                    paying:
+                        entry.installment != null &&
+                        state.payingId == entry.installment!.id,
                   ),
                 ),
             ],

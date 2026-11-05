@@ -5,6 +5,9 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../categories/data/repositories/category_repository_impl.dart';
 import '../../data/repositories/transaction_repository_impl.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../domain/entities/installment.dart';
+import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_filter.dart';
 import '../../domain/entities/transaction_type.dart';
 import 'transaction_list_state.dart';
@@ -33,8 +36,6 @@ class TransactionListController extends Notifier<TransactionListState> {
       return TransactionFilter(type: state.type, categoryId: state.categoryId);
     }
     final now = ref.read(clockProvider)();
-    // GAP: the backend lists a transaction only when all its installments
-    // fall in the range, so splits spanning other months are left out.
     return TransactionFilter(
       type: state.type,
       categoryId: state.categoryId,
@@ -46,7 +47,12 @@ class TransactionListController extends Notifier<TransactionListState> {
   /// Reloads the first page (and the categories used by the rows).
   Future<void> refresh() async {
     final generation = ++_generation;
-    state = state.copyWith(loading: true, error: () => null);
+    final now = ref.read(clockProvider)();
+    state = state.copyWith(
+      loading: true,
+      error: () => null,
+      month: () => state.thisMonth ? DateTime(now.year, now.month) : null,
+    );
     try {
       final (page, categories) = await (
         ref
@@ -89,6 +95,33 @@ class TransactionListController extends Notifier<TransactionListState> {
       // Keep what is on screen; scrolling again retries.
       if (!ref.mounted || generation != _generation) return;
       state = state.copyWith(loadingMore: false);
+    }
+  }
+
+  Future<String?> payInstallment(
+    Transaction transaction,
+    Installment installment,
+  ) async {
+    if (state.payingId != null) return null;
+    state = state.copyWith(payingId: () => installment.id);
+    try {
+      final updated = await ref
+          .read(transactionRepositoryProvider)
+          .payInstallment(transaction.id, installment.id);
+      if (!ref.mounted) return null;
+      state = state.copyWith(
+        payingId: () => null,
+        items: [
+          for (final item in state.items)
+            item.id == transaction.id ? item.withInstallment(updated) : item,
+        ],
+      );
+      ref.invalidate(dashboardControllerProvider);
+      return null;
+    } on Failure catch (failure) {
+      if (!ref.mounted) return null;
+      state = state.copyWith(payingId: () => null);
+      return ErrorMessages.general(failure);
     }
   }
 

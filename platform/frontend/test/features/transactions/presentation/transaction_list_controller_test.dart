@@ -21,8 +21,22 @@ class _MockTransactions extends Mock implements TransactionRepository {}
 
 class _MockCategories extends Mock implements CategoryRepository {}
 
-Transaction _tx(int id, String date) =>
-    TransactionDto.fromJson(transactionJson(id: id, date: date)).toEntity();
+Transaction _tx(int id, String date) => TransactionDto.fromJson(
+  transactionJson(
+    id: id,
+    date: date,
+    installments: [
+      {
+        'id': id * 10,
+        'step': 1,
+        'amount': '100.01',
+        'status': 'paid',
+        'date': date,
+        'paid_at': null,
+      },
+    ],
+  ),
+).toEntity();
 
 Paginated<Transaction> _page(
   List<Transaction> items, {
