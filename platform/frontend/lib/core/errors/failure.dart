@@ -12,6 +12,7 @@ sealed class Failure implements Exception {
     404 => const NotFoundFailure(),
     422 => ValidationFailure(message: e.message, fieldErrors: e.fieldErrors),
     429 => RateLimitedFailure(retryAfter: e.retryAfter),
+    502 || 503 => UnexpectedFailure(message: e.message),
     _ => const UnexpectedFailure(),
   };
 }
@@ -25,8 +26,6 @@ final class NotFoundFailure extends Failure {
   const NotFoundFailure();
 }
 
-/// Laravel's 422. Messages are the raw backend (English) text; map them with
-/// `error_messages.dart` before showing.
 final class ValidationFailure extends Failure {
   const ValidationFailure({this.message, this.fieldErrors = const {}});
 
@@ -48,7 +47,9 @@ final class NetworkFailure extends Failure {
 }
 
 final class UnexpectedFailure extends Failure {
-  const UnexpectedFailure();
+  const UnexpectedFailure({this.message});
+
+  final String? message;
 }
 
 /// Runs a datasource call and rethrows any API error as a [Failure].

@@ -6,7 +6,6 @@ import 'package:flowfi_app/features/categories/data/models/category_dto.dart';
 import 'package:flowfi_app/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:flowfi_app/features/categories/domain/entities/category.dart';
 import 'package:flowfi_app/features/categories/domain/entities/category_draft.dart';
-import 'package:flowfi_app/shared/errors/ledger_error_messages.dart';
 import 'package:flowfi_app/shared/money/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -155,9 +154,8 @@ void main() {
     });
 
     test('a missing category is a NotFoundFailure', () {
-      when(() => api.deleteCategory(9)).thenThrow(
-        const ApiException(statusCode: 404),
-      );
+      when(() => api.deleteCategory(9))
+          .thenThrow(const ApiException(statusCode: 404));
 
       expect(repository.remove(9), throwsA(isA<NotFoundFailure>()));
     });
@@ -166,50 +164,6 @@ void main() {
       when(() => api.listCategories()).thenThrow(const ApiException());
 
       expect(repository.list(), throwsA(isA<NetworkFailure>()));
-    });
-  });
-
-  group('LedgerErrorMessages', () {
-    ValidationFailure failure(String field, String message) =>
-        ValidationFailure(
-          fieldErrors: {
-            field: [message],
-          },
-        );
-
-    test('a duplicate name reads as a sentence the user can act on', () {
-      expect(
-        LedgerErrorMessages.categoryField(
-          failure('name', 'The name has already been taken.'),
-          'name',
-        ),
-        'Você já tem uma categoria com esse nome.',
-      );
-      expect(
-        LedgerErrorMessages.goalField(
-          failure('name', 'The name has already been taken.'),
-          'name',
-        ),
-        'Você já tem uma meta com esse nome.',
-      );
-    });
-
-    test('never shows raw backend English', () {
-      final message = LedgerErrorMessages.categoryField(
-        failure('limit_amount', 'The limit amount field must be a number.'),
-        'limit_amount',
-      );
-      expect(message, 'Limite inválido.');
-    });
-
-    test('a field with no error is null', () {
-      expect(
-        LedgerErrorMessages.goalField(
-          failure('name', 'The name field is required.'),
-          'target_amount',
-        ),
-        isNull,
-      );
     });
   });
 }

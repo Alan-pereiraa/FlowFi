@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../../../../shared/errors/ledger_error_messages.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../data/repositories/goal_repository_impl.dart';
 import '../../domain/entities/new_goal.dart';
 import 'goal_form_state.dart';
@@ -38,17 +38,15 @@ class GoalFormController extends Notifier<GoalFormState> {
       if (!ref.mounted) return;
       final fieldErrors = {
         for (final field in _fields)
-          field: ?LedgerErrorMessages.goalField(failure, field),
+          field: ?ErrorMessages.forField(failure, field),
       };
       state = GoalFormState(
         fieldErrors: fieldErrors,
-        formError: fieldErrors.isEmpty
-            ? LedgerErrorMessages.general(failure)
-            : null,
+        formError: fieldErrors.isEmpty ? ErrorMessages.general(failure) : null,
       );
     } on Failure catch (failure) {
       if (!ref.mounted) return;
-      state = GoalFormState(formError: LedgerErrorMessages.general(failure));
+      state = GoalFormState(formError: ErrorMessages.general(failure));
     }
   }
 }

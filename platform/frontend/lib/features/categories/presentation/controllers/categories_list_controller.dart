@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/clock.dart';
 import '../../../../core/errors/failure.dart';
-import '../../../../shared/errors/ledger_error_messages.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import 'categories_list_state.dart';
 
@@ -45,7 +45,7 @@ class CategoriesListController extends Notifier<CategoriesListState> {
         loaded: state.loaded,
         categories: state.categories,
         spentCents: state.spentCents,
-        errorMessage: LedgerErrorMessages.general(failure),
+        errorMessage: ErrorMessages.general(failure),
       );
     }
   }

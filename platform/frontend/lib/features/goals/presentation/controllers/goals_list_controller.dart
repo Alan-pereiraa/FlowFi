@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../../../../shared/errors/ledger_error_messages.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../data/repositories/goal_repository_impl.dart';
 import 'goals_list_state.dart';
 
@@ -34,7 +34,7 @@ class GoalsListController extends Notifier<GoalsListState> {
       state = GoalsListState(
         loaded: state.loaded,
         goals: state.goals,
-        errorMessage: LedgerErrorMessages.general(failure),
+        errorMessage: ErrorMessages.general(failure),
       );
     }
   }

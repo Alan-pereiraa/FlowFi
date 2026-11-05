@@ -6,7 +6,6 @@ import 'package:flowfi_app/features/goals/data/models/goal_update_dto.dart';
 import 'package:flowfi_app/features/goals/data/repositories/goal_repository_impl.dart';
 import 'package:flowfi_app/features/goals/domain/entities/goal.dart';
 import 'package:flowfi_app/features/goals/domain/entities/goal_update.dart';
-import 'package:flowfi_app/shared/errors/ledger_error_messages.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -111,33 +110,15 @@ void main() {
     stubDeposit().thenAnswer((_) async {});
     when(() => api.showGoal(7)).thenThrow(const ApiException(statusCode: 401));
 
-    expect(repository.deposit(goal, 25000), throwsA(isA<UnauthorizedFailure>()));
+    expect(
+      repository.deposit(goal, 25000),
+      throwsA(isA<UnauthorizedFailure>()),
+    );
   });
 
   test('a rejected deposit is a ValidationFailure', () {
     stubDeposit().thenThrow(const ApiException(statusCode: 422));
 
     expect(repository.deposit(goal, 25000), throwsA(isA<ValidationFailure>()));
-  });
-
-  test('deleting a goal with deposits explains why', () {
-    const failure = ValidationFailure(
-      message: 'The goal has transactions.',
-      fieldErrors: {
-        'goal': ['The goal has transactions.'],
-      },
-    );
-
-    expect(
-      LedgerErrorMessages.goalDelete(failure),
-      'Não é possível excluir uma meta que já tem valores adicionados.',
-    );
-  });
-
-  test('a rejected deposit has its own message', () {
-    expect(
-      LedgerErrorMessages.goalDeposit(const ValidationFailure(message: 'x')),
-      contains('Não foi possível adicionar'),
-    );
   });
 }

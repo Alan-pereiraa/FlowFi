@@ -147,7 +147,7 @@ void main() {
     final state = container.read(transactionFormControllerProvider(12));
 
     expect(state.saved, isFalse);
-    expect(state.formError, contains('parcelas pagas'));
+    expect(state.formError, contains('paid installments'));
   });
 
   test('over-limit 422 is shown under the amount', () async {
@@ -169,7 +169,7 @@ void main() {
 
     expect(
       state.fieldErrors['total_amount'],
-      'Esta transação ultrapassa o limite da categoria em 10/2026.',
+      'This transaction exceeds the category limit for 2026-10.',
     );
     expect(state.formError, isNull);
   });

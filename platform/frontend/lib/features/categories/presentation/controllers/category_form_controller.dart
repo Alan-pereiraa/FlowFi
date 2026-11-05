@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../../../../shared/errors/ledger_error_messages.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/category_draft.dart';
@@ -33,7 +33,7 @@ class CategoryFormController extends Notifier<CategoryFormState> {
       if (!ref.mounted) return;
       state = state.copyWith(
         loadingInitial: false,
-        loadError: () => LedgerErrorMessages.general(failure),
+        loadError: () => ErrorMessages.general(failure),
       );
     }
   }
@@ -63,7 +63,7 @@ class CategoryFormController extends Notifier<CategoryFormState> {
       if (!ref.mounted) return;
       state = state.copyWith(
         removing: false,
-        formError: () => LedgerErrorMessages.general(failure),
+        formError: () => ErrorMessages.general(failure),
       );
     }
   }
@@ -92,19 +92,19 @@ class CategoryFormController extends Notifier<CategoryFormState> {
       if (!ref.mounted) return;
       final fieldErrors = {
         for (final field in _fields)
-          field: ?LedgerErrorMessages.categoryField(failure, field),
+          field: ?ErrorMessages.forField(failure, field),
       };
       state = state.copyWith(
         saving: false,
         fieldErrors: fieldErrors,
         formError: () =>
-            fieldErrors.isEmpty ? LedgerErrorMessages.general(failure) : null,
+            fieldErrors.isEmpty ? ErrorMessages.general(failure) : null,
       );
     } on Failure catch (failure) {
       if (!ref.mounted) return;
       state = state.copyWith(
         saving: false,
-        formError: () => LedgerErrorMessages.general(failure),
+        formError: () => ErrorMessages.general(failure),
       );
     }
   }

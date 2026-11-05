@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../../../../shared/errors/ledger_error_messages.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../data/repositories/goal_repository_impl.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_update.dart';
@@ -38,7 +38,7 @@ class GoalDetailController extends Notifier<GoalDetailState> {
       if (!ref.mounted) return;
       state = state.copyWith(
         loadingInitial: false,
-        loadError: () => LedgerErrorMessages.general(failure),
+        loadError: () => ErrorMessages.general(failure),
       );
     }
   }
@@ -64,19 +64,19 @@ class GoalDetailController extends Notifier<GoalDetailState> {
       if (!ref.mounted) return;
       final fieldErrors = {
         for (final field in _fields)
-          field: ?LedgerErrorMessages.goalField(failure, field),
+          field: ?ErrorMessages.forField(failure, field),
       };
       state = state.copyWith(
         saving: false,
         fieldErrors: fieldErrors,
         formError: () =>
-            fieldErrors.isEmpty ? LedgerErrorMessages.general(failure) : null,
+            fieldErrors.isEmpty ? ErrorMessages.general(failure) : null,
       );
     } on Failure catch (failure) {
       if (!ref.mounted) return;
       state = state.copyWith(
         saving: false,
-        formError: () => LedgerErrorMessages.general(failure),
+        formError: () => ErrorMessages.general(failure),
       );
     }
   }
@@ -100,7 +100,7 @@ class GoalDetailController extends Notifier<GoalDetailState> {
       if (!ref.mounted) return;
       state = state.copyWith(
         depositing: false,
-        depositError: () => LedgerErrorMessages.goalDeposit(failure),
+        depositError: () => ErrorMessages.general(failure),
       );
     }
   }
@@ -120,7 +120,7 @@ class GoalDetailController extends Notifier<GoalDetailState> {
       if (!ref.mounted) return;
       state = state.copyWith(
         removing: false,
-        formError: () => LedgerErrorMessages.goalDelete(failure),
+        formError: () => ErrorMessages.general(failure),
       );
     }
   }

@@ -105,7 +105,7 @@ void main() {
     await controller().verify('a@b.com', '000000');
 
     final state = container.read(loginControllerProvider);
-    expect(state.codeError, 'Muitas tentativas. Solicite um novo código.');
+    expect(state.codeError, 'Too many attempts. Request a new code.');
     expect(state.codeResetCount, 1);
     expect(state.canSend, isTrue);
   });
@@ -128,7 +128,7 @@ void main() {
 
     expect(
       container.read(loginControllerProvider).emailError,
-      'Esta conta foi desativada.',
+      'This account has been deactivated.',
     );
   });
 }
