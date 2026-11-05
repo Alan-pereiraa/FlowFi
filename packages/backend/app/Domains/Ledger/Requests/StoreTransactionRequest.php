@@ -17,8 +17,8 @@ class StoreTransactionRequest extends FormRequest
         return [
             'category_id' => [
                 'nullable',
-                'required_unless:type,transfer',
-                'prohibited_if:type,transfer',
+                'required_unless:type,transfer,withdrawal',
+                'prohibited_if:type,transfer,withdrawal',
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
@@ -26,7 +26,7 @@ class StoreTransactionRequest extends FormRequest
             ],
             'goal_id' => [
                 'nullable',
-                'required_if:type,transfer',
+                'required_if:type,transfer,withdrawal',
                 'prohibited_if:type,income',
                 'integer',
                 Rule::exists('goals', 'id')
@@ -44,7 +44,7 @@ class StoreTransactionRequest extends FormRequest
                 'min:1',
                 'max:120',
                 'prohibits:installments_count,period_unit,period_interval',
-                'prohibited_if:type,transfer,income',
+                'prohibited_if:type,transfer,income,withdrawal',
             ],
             'installments.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required', 'date_format:Y-m-d'],
@@ -53,14 +53,14 @@ class StoreTransactionRequest extends FormRequest
             'period_unit' => [
                 'nullable',
                 'string', Rule::in(Transaction::PERIOD_UNITS),
-                'prohibited_if:type,transfer,income',
+                'prohibited_if:type,transfer,income,withdrawal',
             ],
             'period_interval' => [
                 'nullable',
                 'integer',
                 'min:1',
                 'max:365',
-                'prohibited_if:type,transfer,income',
+                'prohibited_if:type,transfer,income,withdrawal',
             ],
         ];
     }
@@ -73,6 +73,10 @@ class StoreTransactionRequest extends FormRequest
             'installments.prohibited_if' => $onlyExpenses,
             'period_unit.prohibited_if' => $onlyExpenses,
             'period_interval.prohibited_if' => $onlyExpenses,
+            'category_id.required_unless' => 'Informe a categoria.',
+            'category_id.prohibited_if' => 'Transferências e resgates não usam categoria.',
+            'goal_id.required_if' => 'Informe a meta.',
+            'goal_id.prohibited_if' => 'Entradas não podem ter meta.',
         ];
     }
 

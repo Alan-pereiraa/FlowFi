@@ -39,10 +39,10 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'DashboardSummary',
     type: 'object',
-    description: 'Entradas e saídas de um mês. Transferências para metas não são nenhuma das duas: aparecem só em `transferred_to_goals`.',
+    description: 'Entradas e saídas de um mês. Transferências e resgates de metas não são nenhuma das duas: aparecem em `transferred_to_goals` e `withdrawn_from_goals` e entram no saldo.',
     required: [
         'period', 'income', 'expense', 'balance', 'projected_balance',
-        'balance_to_date', 'transferred_to_goals', 'overdue',
+        'balance_to_date', 'transferred_to_goals', 'withdrawn_from_goals', 'overdue',
     ],
     properties: [
         new OA\Property(property: 'period', ref: '#/components/schemas/DashboardPeriod'),
@@ -52,7 +52,7 @@ use OpenApi\Attributes as OA;
             property: 'balance',
             type: 'string',
             format: 'decimal',
-            description: 'Entradas realizadas menos saídas pagas e transferências para metas no período. Pode ser negativo.',
+            description: 'Entradas realizadas menos saídas pagas e transferências para metas, mais resgates de metas, no período. Pode ser negativo.',
             example: '4029.60',
         ),
         new OA\Property(
@@ -66,7 +66,7 @@ use OpenApi\Attributes as OA;
             property: 'balance_to_date',
             type: 'string',
             format: 'decimal',
-            description: 'Entradas realizadas menos saídas pagas e transferências para metas em todo o período. Ignora `month`.',
+            description: 'Entradas realizadas menos saídas pagas e transferências para metas, mais resgates de metas, em todo o período. Ignora `month`.',
             example: '4029.60',
         ),
         new OA\Property(
@@ -75,6 +75,13 @@ use OpenApi\Attributes as OA;
             format: 'decimal',
             description: 'Transferências feitas para metas no período.',
             example: '250.00',
+        ),
+        new OA\Property(
+            property: 'withdrawn_from_goals',
+            type: 'string',
+            format: 'decimal',
+            description: 'Resgates feitos de metas no período.',
+            example: '50.00',
         ),
         new OA\Property(
             property: 'overdue',
@@ -188,7 +195,7 @@ use OpenApi\Attributes as OA;
     ],
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 5),
-        new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense', 'transfer'], example: 'expense'),
+        new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense', 'transfer', 'withdrawal'], example: 'expense'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Dinner party'),
         new OA\Property(property: 'date', type: 'string', format: 'date', example: '2026-09-22'),
         new OA\Property(property: 'total_amount', type: 'string', format: 'decimal', example: '210.00'),

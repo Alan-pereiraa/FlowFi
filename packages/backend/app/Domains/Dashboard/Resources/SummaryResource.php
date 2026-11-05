@@ -20,6 +20,7 @@ class SummaryResource extends JsonResource
             'projected_balance' => Money::toDecimal($summary['projected_balance']),
             'balance_to_date' => Money::toDecimal($summary['balance_to_date']),
             'transferred_to_goals' => Money::toDecimal($summary['transferred_to_goals']),
+            'withdrawn_from_goals' => Money::toDecimal($summary['withdrawn_from_goals']),
             'overdue' => [
                 'expense' => $this->overdue($summary['overdue']['expense']),
             ],

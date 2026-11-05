@@ -132,6 +132,10 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
             ->where('type', Transaction::TYPE_TRANSFER)
             ->sum('total_amount');
 
+        $withdrawals = (int) $user->transactions()
+            ->where('type', Transaction::TYPE_WITHDRAWAL)
+            ->sum('total_amount');
+
         $paidExpenses = (int) Installment::query()
             ->where('status', Installment::STATUS_PAID)
             ->whereHas('transaction', fn ($query) => $query
@@ -139,7 +143,7 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
                 ->where('type', Transaction::TYPE_EXPENSE))
             ->sum('amount');
 
-        return $income - $paidExpenses - $transfers;
+        return $income - $paidExpenses - $transfers + $withdrawals;
     }
 
     private function whereDatedInside(Builder $query, ?string $from, ?string $to): Builder

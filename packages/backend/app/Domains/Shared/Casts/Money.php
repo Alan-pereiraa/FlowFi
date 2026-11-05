@@ -25,6 +25,18 @@ class Money implements CastsAttributes
         return sprintf('%s%d.%02d', $cents < 0 ? '-' : '', intdiv($magnitude, 100), $magnitude % 100);
     }
 
+    public static function toBrl(int $cents): string
+    {
+        $magnitude = abs($cents);
+
+        return sprintf(
+            '%sR$ %s,%02d',
+            $cents < 0 ? '-' : '',
+            number_format(intdiv($magnitude, 100), 0, ',', '.'),
+            $magnitude % 100,
+        );
+    }
+
     public static function toCents(mixed $value, string $key = 'value'): int
     {
         if (is_float($value)) {

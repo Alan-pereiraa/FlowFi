@@ -37,7 +37,7 @@ class RecentTransactionResource extends JsonResource
 
     private function status(int $paid): string
     {
-        if ($this->type === Transaction::TYPE_TRANSFER) {
+        if (in_array($this->type, [Transaction::TYPE_TRANSFER, Transaction::TYPE_WITHDRAWAL], true)) {
             return 'paid';
         }
 

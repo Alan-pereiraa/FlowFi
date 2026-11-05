@@ -68,6 +68,10 @@ class TransactionService
                 $this->ensureBalanceCovers($user, Money::toCents($data['total_amount']));
             }
 
+            if ($data['type'] === Transaction::TYPE_WITHDRAWAL) {
+                $this->goals->ensureCanWithdraw($user, (int) $data['goal_id'], Money::toCents($data['total_amount']));
+            }
+
             $transaction = $this->transactions->create($user, [
                 'category_id' => $data['category_id'] ?? null,
                 'goal_id' => $data['goal_id'] ?? null,
@@ -143,6 +147,10 @@ class TransactionService
     public function delete(Transaction $transaction): void
     {
         DB::transaction(function () use ($transaction): void {
+            if ($transaction->type === Transaction::TYPE_WITHDRAWAL) {
+                $this->ensureBalanceCovers($transaction->user, Money::toCents($transaction->total_amount), true);
+            }
+
             $transaction->installments()->delete();
             $this->transactions->delete($transaction);
 
@@ -195,10 +203,25 @@ class TransactionService
 
         if ($transaction->type === Transaction::TYPE_TRANSFER) {
             $this->ensureBalanceCovers($transaction->user, $new - $old);
+
+            return;
+        }
+
+        if ($transaction->type !== Transaction::TYPE_WITHDRAWAL) {
+            return;
+        }
+
+        $this->ensureBalanceCovers($transaction->user, $old - $new, true);
+
+        $goalId = array_key_exists('goal_id', $data) ? (int) $data['goal_id'] : $transaction->goal_id;
+        $needed = $goalId === $transaction->goal_id ? $new - $old : $new;
+
+        if ($needed > 0) {
+            $this->goals->ensureCanWithdraw($transaction->user, $goalId, $needed);
         }
     }
 
-    private function ensureBalanceCovers(User $user, int $cents): void
+    private function ensureBalanceCovers(User $user, int $cents, bool $returningToGoal = false): void
     {
         if ($cents <= 0) {
             return;
@@ -207,7 +230,9 @@ class TransactionService
         $today = CarbonImmutable::today(self::TIMEZONE);
 
         if ($this->transactions->lockAvailableBalanceCents($user, $today) < $cents) {
-            throw InsufficientBalanceException::forTransfer();
+            throw $returningToGoal
+                ? InsufficientBalanceException::forWithdrawal()
+                : InsufficientBalanceException::forTransfer();
         }
     }
 
@@ -281,6 +306,7 @@ class TransactionService
 
         return match ($transaction->type) {
             Transaction::TYPE_TRANSFER => $cents,
+            Transaction::TYPE_WITHDRAWAL => -$cents,
             Transaction::TYPE_EXPENSE => -$cents,
             default => 0,
         };

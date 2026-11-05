@@ -96,10 +96,11 @@ class DashboardService
             'period' => $this->describe($period),
             'income' => $month['income'],
             'expense' => $month['expense'],
-            'balance' => $month['income']['paid'] - $month['expense']['paid'] - $month['transfer']['paid'],
-            'projected_balance' => $month['income']['total'] - $month['expense']['total'] - $month['transfer']['total'],
-            'balance_to_date' => $allTime['income']['paid'] - $allTime['expense']['paid'] - $allTime['transfer']['paid'],
+            'balance' => $this->balance($month, 'paid'),
+            'projected_balance' => $this->balance($month, 'total'),
+            'balance_to_date' => $this->balance($allTime, 'paid'),
             'transferred_to_goals' => $month['transfer']['paid'],
+            'withdrawn_from_goals' => $month['withdrawal']['paid'],
             'overdue' => $overdue,
         ];
     }
@@ -133,6 +134,7 @@ class DashboardService
             'income' => ['paid' => 0, 'pending' => 0, 'total' => 0],
             'expense' => ['paid' => 0, 'pending' => 0, 'total' => 0],
             'transfer' => ['paid' => 0, 'pending' => 0, 'total' => 0],
+            'withdrawal' => ['paid' => 0, 'pending' => 0, 'total' => 0],
         ];
 
         foreach ($rows as $row) {
@@ -145,6 +147,12 @@ class DashboardService
         }
 
         return $sums;
+    }
+
+    private function balance(array $totals, string $column): int
+    {
+        return $totals['income'][$column] - $totals['expense'][$column]
+            - $totals['transfer'][$column] + $totals['withdrawal'][$column];
     }
 
     private function describe(array $period): array

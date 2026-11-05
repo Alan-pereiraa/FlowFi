@@ -20,6 +20,8 @@ class TransactionDraftService
 
     public const string KIND_RECURRING = 'recurring';
 
+    private const array TYPES = [Transaction::TYPE_INCOME, Transaction::TYPE_EXPENSE, Transaction::TYPE_TRANSFER];
+
     private const string TIMEZONE = 'America/Sao_Paulo';
 
     private const int MIN_OCCURRENCES = 2;
@@ -49,7 +51,7 @@ class TransactionDraftService
         'type' => 'object',
         'properties' => [
             'kind' => ['type' => 'string', 'enum' => [self::KIND_TRANSACTION, self::KIND_RECURRING]],
-            'type' => ['type' => 'string', 'enum' => Transaction::TYPES],
+            'type' => ['type' => 'string', 'enum' => self::TYPES],
             'total_amount' => ['type' => ['string', 'null'], 'description' => 'Decimal with a dot and two places, e.g. "50.00".'],
             'date' => ['type' => 'string', 'format' => 'date'],
             'description' => ['type' => ['string', 'null']],
@@ -158,7 +160,7 @@ class TransactionDraftService
 
     private function type(array $draft): string
     {
-        return in_array($draft['type'] ?? null, Transaction::TYPES, true) ? $draft['type'] : Transaction::TYPE_EXPENSE;
+        return in_array($draft['type'] ?? null, self::TYPES, true) ? $draft['type'] : Transaction::TYPE_EXPENSE;
     }
 
     private function amount(array $draft): ?string

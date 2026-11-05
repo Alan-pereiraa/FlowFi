@@ -29,7 +29,11 @@ class Transaction extends Model
 
     public const string TYPE_TRANSFER = 'transfer';
 
-    public const array TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE, self::TYPE_TRANSFER];
+    public const string TYPE_WITHDRAWAL = 'withdrawal';
+
+    public const array TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE, self::TYPE_TRANSFER, self::TYPE_WITHDRAWAL];
+
+    public const array RECURRING_TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE, self::TYPE_TRANSFER];
 
     public const array PERIOD_UNITS = ['day', 'week', 'month', 'year'];
 

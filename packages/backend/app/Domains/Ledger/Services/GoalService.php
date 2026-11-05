@@ -5,6 +5,7 @@ namespace App\Domains\Ledger\Services;
 use App\Domains\Identity\Models\User;
 use App\Domains\Ledger\Models\Goal;
 use App\Domains\Ledger\Repositories\GoalRepositoryInterface;
+use App\Domains\Shared\Casts\Money;
 use App\Domains\Shared\Services\AppearanceService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -71,6 +72,17 @@ class GoalService
         if (! $this->goals->adjustCurrentAmount($goalId, $cents)) {
             throw ValidationException::withMessages([
                 'goal_id' => 'A meta não tem saldo suficiente para esta transação.',
+            ]);
+        }
+    }
+
+    public function ensureCanWithdraw(User $user, int $goalId, int $cents): void
+    {
+        $saved = Money::toCents($this->findOwned($user, $goalId)->current_amount);
+
+        if ($cents > $saved) {
+            throw ValidationException::withMessages([
+                'total_amount' => 'O resgate não pode ser maior que o valor guardado na meta ('.Money::toBrl($saved).').',
             ]);
         }
     }

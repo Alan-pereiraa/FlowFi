@@ -37,8 +37,8 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->when($from, fn ($query) => $query->whereDate('date', '>=', $from->toDateString()))
             ->when($to, fn ($query) => $query->whereDate('date', '<=', $to->toDateString()))
             ->selectRaw(
-                'type, CASE WHEN type = ? OR DATE(date) <= ? THEN ? ELSE ? END as status, SUM(total_amount) as total, COUNT(*) as count',
-                [Transaction::TYPE_TRANSFER, $today->toDateString(), Installment::STATUS_PAID, Installment::STATUS_PENDING],
+                'type, CASE WHEN type IN (?, ?) OR DATE(date) <= ? THEN ? ELSE ? END as status, SUM(total_amount) as total, COUNT(*) as count',
+                [Transaction::TYPE_TRANSFER, Transaction::TYPE_WITHDRAWAL, $today->toDateString(), Installment::STATUS_PAID, Installment::STATUS_PENDING],
             )
             ->groupBy('type', 'status')
             ->toBase()

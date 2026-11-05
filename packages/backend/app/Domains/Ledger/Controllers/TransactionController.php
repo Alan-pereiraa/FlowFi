@@ -43,7 +43,7 @@ class TransactionController extends Controller
             new OA\Parameter(
                 name: 'type',
                 in: 'query',
-                schema: new OA\Schema(type: 'string', enum: ['income', 'expense', 'transfer']),
+                schema: new OA\Schema(type: 'string', enum: ['income', 'expense', 'transfer', 'withdrawal']),
             ),
             new OA\Parameter(name: 'category_id', in: 'query', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(
@@ -89,7 +89,7 @@ class TransactionController extends Controller
         operationId: 'createTransaction',
         tags: ['Transações'],
         summary: 'Criar transação',
-        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, quando a meta não tem saldo suficiente para a transação, ou quando uma transferência ultrapassa o saldo disponível (entradas realizadas menos saídas pagas e transferências).',
+        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, quando a meta não tem saldo suficiente para a transação, quando uma transferência ultrapassa o saldo disponível (entradas realizadas menos saídas pagas e transferências, mais resgates), ou quando um resgate é maior que o valor guardado na meta.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -166,7 +166,7 @@ class TransactionController extends Controller
         operationId: 'updateTransaction',
         tags: ['Transações'],
         summary: 'Atualizar transação',
-        description: 'Em saídas, alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas. Entradas e transferências não têm parcelas. Transações geradas por recorrência não podem ser parceladas (422).',
+        description: 'Em saídas, alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas. Entradas, transferências e resgates não têm parcelas. Transações geradas por recorrência não podem ser parceladas (422).',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
@@ -198,7 +198,7 @@ class TransactionController extends Controller
         operationId: 'deleteTransaction',
         tags: ['Transações'],
         summary: 'Apagar transação',
-        description: 'Faz soft delete da transação e das parcelas, quando houver, e desfaz o efeito dela no saldo da meta.',
+        description: 'Faz soft delete da transação e das parcelas, quando houver, e desfaz o efeito dela no saldo da meta. Apagar um resgate devolve o valor à meta e retorna 422 quando o saldo disponível não cobre essa devolução.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),

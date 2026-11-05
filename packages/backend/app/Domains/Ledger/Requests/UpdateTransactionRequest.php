@@ -26,11 +26,12 @@ class UpdateTransactionRequest extends FormRequest
     {
         $type = $this->transaction->type;
         $isExpense = $type === Transaction::TYPE_EXPENSE;
+        $movesGoal = in_array($type, [Transaction::TYPE_TRANSFER, Transaction::TYPE_WITHDRAWAL], true);
 
         return [
             'category_id' => [
                 'sometimes',
-                Rule::prohibitedIf($type === Transaction::TYPE_TRANSFER),
+                Rule::prohibitedIf($movesGoal),
                 'required',
                 'integer',
                 Rule::exists('categories', 'id')
@@ -40,7 +41,7 @@ class UpdateTransactionRequest extends FormRequest
             'goal_id' => [
                 'sometimes',
                 Rule::prohibitedIf($type === Transaction::TYPE_INCOME),
-                Rule::requiredIf($type === Transaction::TYPE_TRANSFER),
+                Rule::requiredIf($movesGoal),
                 'nullable',
                 'integer',
                 Rule::exists('goals', 'id')
@@ -77,6 +78,9 @@ class UpdateTransactionRequest extends FormRequest
             'installments.prohibited' => $onlyExpenses,
             'period_unit.prohibited' => $onlyExpenses,
             'period_interval.prohibited' => $onlyExpenses,
+            'category_id.prohibited' => 'Transferências e resgates não usam categoria.',
+            'goal_id.required' => 'Informe a meta.',
+            'goal_id.prohibited' => 'Entradas não podem ter meta.',
         ];
     }
 

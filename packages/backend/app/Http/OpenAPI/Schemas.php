@@ -312,7 +312,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'Transaction',
     type: 'object',
-    description: 'Uma movimentação de dinheiro com seu cronograma de pagamento. `category_id` é null em transferências.',
+    description: 'Uma movimentação de dinheiro com seu cronograma de pagamento. `category_id` é null em transferências e resgates.',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'category_id', type: 'integer', nullable: true, example: 5),
@@ -320,7 +320,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'type',
             type: 'string',
-            enum: ['income', 'expense', 'transfer'],
+            enum: ['income', 'expense', 'transfer', 'withdrawal'],
             example: 'expense',
         ),
         new OA\Property(
@@ -355,7 +355,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: 'installments',
             type: 'array',
-            description: 'Cronograma da saída. Fica vazio em income e transfer.',
+            description: 'Cronograma da saída. Fica vazio em income, transfer e withdrawal.',
             items: new OA\Items(ref: '#/components/schemas/Installment'),
         ),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
@@ -366,26 +366,26 @@ use OpenApi\Attributes as OA;
     schema: 'StoreTransactionRequest',
     type: 'object',
     required: ['type', 'date', 'total_amount'],
-    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório; `goal_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). Em expense, envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422.',
+    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório; `goal_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). Em expense, envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422. withdrawal (resgate): `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; o valor não pode passar do que está guardado na meta.',
     properties: [
         new OA\Property(
             property: 'type',
             type: 'string',
-            enum: ['income', 'expense', 'transfer'],
+            enum: ['income', 'expense', 'transfer', 'withdrawal'],
             example: 'expense',
         ),
         new OA\Property(
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Obrigatório, exceto quando type=transfer; proibido em transfer',
+            description: 'Obrigatório, exceto quando type=transfer ou withdrawal; proibido nesses dois',
             example: 5,
         ),
         new OA\Property(
             property: 'goal_id',
             type: 'integer',
             nullable: true,
-            description: 'Obrigatório em transfer; proibido em income; opcional em expense',
+            description: 'Obrigatório em transfer e withdrawal; proibido em income; opcional em expense',
         ),
         new OA\Property(
             property: 'description',

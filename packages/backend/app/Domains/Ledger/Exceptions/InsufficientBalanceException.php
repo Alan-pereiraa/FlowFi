@@ -12,4 +12,11 @@ class InsufficientBalanceException extends ValidationException
             'total_amount' => 'Saldo insuficiente para fazer esta transferência.',
         ]);
     }
+
+    public static function forWithdrawal(): static
+    {
+        return static::withMessages([
+            'total_amount' => 'Saldo insuficiente para devolver este valor à meta.',
+        ]);
+    }
 }
