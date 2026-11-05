@@ -119,6 +119,29 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
             ->get();
     }
 
+    public function lockAvailableBalanceCents(User $user, CarbonInterface $today): int
+    {
+        User::whereKey($user->id)->lockForUpdate()->first();
+
+        $income = (int) $user->transactions()
+            ->where('type', Transaction::TYPE_INCOME)
+            ->whereDate('date', '<=', $today->toDateString())
+            ->sum('total_amount');
+
+        $transfers = (int) $user->transactions()
+            ->where('type', Transaction::TYPE_TRANSFER)
+            ->sum('total_amount');
+
+        $paidExpenses = (int) Installment::query()
+            ->where('status', Installment::STATUS_PAID)
+            ->whereHas('transaction', fn ($query) => $query
+                ->where('user_id', $user->id)
+                ->where('type', Transaction::TYPE_EXPENSE))
+            ->sum('amount');
+
+        return $income - $paidExpenses - $transfers;
+    }
+
     private function whereDatedInside(Builder $query, ?string $from, ?string $to): Builder
     {
         $inRange = fn ($query) => $this->whereInRange($query, $from, $to);

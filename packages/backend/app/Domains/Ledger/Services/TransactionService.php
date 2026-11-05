@@ -3,6 +3,7 @@
 namespace App\Domains\Ledger\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Ledger\Exceptions\InsufficientBalanceException;
 use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Ledger\Repositories\TransactionRepositoryInterface;
@@ -63,6 +64,10 @@ class TransactionService
                 $this->categories->ensureInMonthLimit($data['category_id'], $plan['rows'], null);
             }
 
+            if ($data['type'] === Transaction::TYPE_TRANSFER) {
+                $this->ensureBalanceCovers($user, Money::toCents($data['total_amount']));
+            }
+
             $transaction = $this->transactions->create($user, [
                 'category_id' => $data['category_id'] ?? null,
                 'goal_id' => $data['goal_id'] ?? null,
@@ -94,6 +99,8 @@ class TransactionService
             $oldGoalId = $transaction->goal_id;
             $oldEffect = $this->goalEffect($transaction);
             $replan = $this->needsReplan($transaction, $data);
+
+            $this->ensureGoalMoveStaysCovered($transaction, $data);
 
             $simple = Arr::only($data, self::SIMPLE_KEYS);
 
@@ -179,6 +186,29 @@ class TransactionService
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection
     {
         return $this->transactions->overduePendingExpenseInstallments($today);
+    }
+
+    private function ensureGoalMoveStaysCovered(Transaction $transaction, array $data): void
+    {
+        $old = Money::toCents($transaction->total_amount);
+        $new = isset($data['total_amount']) ? Money::toCents($data['total_amount']) : $old;
+
+        if ($transaction->type === Transaction::TYPE_TRANSFER) {
+            $this->ensureBalanceCovers($transaction->user, $new - $old);
+        }
+    }
+
+    private function ensureBalanceCovers(User $user, int $cents): void
+    {
+        if ($cents <= 0) {
+            return;
+        }
+
+        $today = CarbonImmutable::today(self::TIMEZONE);
+
+        if ($this->transactions->lockAvailableBalanceCents($user, $today) < $cents) {
+            throw InsufficientBalanceException::forTransfer();
+        }
     }
 
     private function ensureRecurringIsNotSplit(Transaction $transaction, array $data): void

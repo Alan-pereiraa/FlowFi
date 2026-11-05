@@ -89,7 +89,7 @@ class TransactionController extends Controller
         operationId: 'createTransaction',
         tags: ['Transações'],
         summary: 'Criar transação',
-        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, ou quando a meta não tem saldo suficiente para a transação.',
+        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, quando a meta não tem saldo suficiente para a transação, ou quando uma transferência ultrapassa o saldo disponível (entradas realizadas menos saídas pagas e transferências).',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,

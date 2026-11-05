@@ -209,15 +209,15 @@ class TransactionTest extends TestCase
         $goal = Goal::factory()->for($user)->create();
         $category = Category::factory()->for($user)->create();
 
-        $transferId = $this->withToken($token)->postJson('/api/v1/transactions', [
-            'goal_id' => $goal->id,
-            'type' => 'transfer',
-            'date' => '2026-01-01',
-            'total_amount' => '90.00',
-        ])->json('data.id');
         $incomeId = $this->withToken($token)->postJson('/api/v1/transactions', [
             'category_id' => $category->id,
             'type' => 'income',
+            'date' => '2026-01-01',
+            'total_amount' => '90.00',
+        ])->json('data.id');
+        $transferId = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'goal_id' => $goal->id,
+            'type' => 'transfer',
             'date' => '2026-01-01',
             'total_amount' => '90.00',
         ])->json('data.id');

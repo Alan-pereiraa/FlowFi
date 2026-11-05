@@ -149,9 +149,20 @@ class TransactionServiceTest extends TestCase
         $this->assertNotNull($transaction->id);
     }
 
+    private function fund(User $user): void
+    {
+        $this->service()->create($user, [
+            'type' => Transaction::TYPE_INCOME,
+            'category_id' => $this->category($user)->id,
+            'date' => '2020-01-01',
+            'total_amount' => '1000.00',
+        ]);
+    }
+
     public function test_transferencia_aumenta_o_saldo_da_meta(): void
     {
         $user = User::factory()->create();
+        $this->fund($user);
         $goal = $this->goal($user, '0.00');
 
         $this->service()->create($user, [
@@ -222,6 +233,7 @@ class TransactionServiceTest extends TestCase
     public function test_transferencia_e_receita_nao_geram_parcelas(): void
     {
         $user = User::factory()->create();
+        $this->fund($user);
         $goal = $this->goal($user, '0.00');
         $category = $this->category($user);
 
@@ -290,6 +302,7 @@ class TransactionServiceTest extends TestCase
     public function test_mudar_a_data_de_uma_transferencia_nao_exige_saldo_na_meta(): void
     {
         $user = User::factory()->create();
+        $this->fund($user);
         $goal = $this->goal($user, '0.00');
         $category = $this->category($user);
 
@@ -355,6 +368,7 @@ class TransactionServiceTest extends TestCase
     public function test_apagar_uma_transferencia_devolve_o_valor_para_a_meta(): void
     {
         $user = User::factory()->create();
+        $this->fund($user);
         $goal = $this->goal($user, '0.00');
 
         $transaction = $this->service()->create($user, [

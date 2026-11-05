@@ -32,4 +32,6 @@ interface TransactionRepositoryInterface
     public function pendingExpenseInstallmentsDueBetween(CarbonInterface $from, CarbonInterface $to): Collection;
 
     public function overduePendingExpenseInstallments(CarbonInterface $today): Collection;
+
+    public function lockAvailableBalanceCents(User $user, CarbonInterface $today): int;
 }
