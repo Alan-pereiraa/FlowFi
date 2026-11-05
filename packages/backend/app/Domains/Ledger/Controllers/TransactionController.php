@@ -58,6 +58,12 @@ class TransactionController extends Controller
                 description: 'Saídas com alguma parcela nesta data ou antes; entradas e transferências com a data da transação nesta data ou antes; deve ser >= date_from',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
+            new OA\Parameter(
+                name: 'overdue',
+                in: 'query',
+                description: 'Somente saídas com parcela pendente vencida antes de hoje (America/Sao_Paulo); com período informado, a parcela vencida precisa estar dentro dele',
+                schema: new OA\Schema(type: 'boolean'),
+            ),
         ],
         responses: [
             new OA\Response(
@@ -74,7 +80,7 @@ class TransactionController extends Controller
         return TransactionResource::collection($this->transactions->list(
             $request->user(),
             min(max($request->integer('per_page', 20), 1), 100),
-            $request->only(['type', 'category_id', 'date_from', 'date_to'])
+            $request->only(['type', 'category_id', 'date_from', 'date_to', 'overdue'])
         ));
     }
 

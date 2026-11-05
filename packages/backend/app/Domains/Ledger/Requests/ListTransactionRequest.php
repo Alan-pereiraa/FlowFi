@@ -15,6 +15,7 @@ class ListTransactionRequest extends FormRequest
             'category_id' => ['sometimes', 'integer'],
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+            'overdue' => ['sometimes', 'boolean'],
         ];
     }
 }

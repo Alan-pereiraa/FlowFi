@@ -33,6 +33,10 @@ class TransactionService
 
     public function list(User $user, int $perPage, array $filters = []): LengthAwarePaginator
     {
+        if (! empty($filters['overdue'])) {
+            $filters['overdue_before'] = CarbonImmutable::today(self::TIMEZONE)->toDateString();
+        }
+
         return $this->transactions->listFor($user, $perPage, $filters);
     }
 

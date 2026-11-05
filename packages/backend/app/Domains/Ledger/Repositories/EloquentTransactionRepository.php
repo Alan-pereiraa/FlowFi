@@ -17,6 +17,7 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
     {
         $from = $filters['date_from'] ?? null;
         $to = $filters['date_to'] ?? null;
+        $overdueBefore = $filters['overdue_before'] ?? null;
 
         return $user->transactions()
             ->with('installments')
@@ -26,6 +27,13 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
                 $from || $to,
                 fn ($query) => $this->whereDatedInside($query, $from, $to),
             )
+            ->when($overdueBefore, fn ($query) => $query
+                ->where('type', Transaction::TYPE_EXPENSE)
+                ->whereHas('installments', fn ($query) => $this->whereInRange(
+                    $this->whereOverdue($query, $overdueBefore),
+                    $from,
+                    $to,
+                )))
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate($perPage);
@@ -127,6 +135,13 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         return $query
             ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
             ->when($to, fn ($query) => $query->whereDate('date', '<=', $to));
+    }
+
+    private function whereOverdue(Builder $query, string $before): Builder
+    {
+        return $query
+            ->where('status', Installment::STATUS_PENDING)
+            ->whereDate('date', '<', $before);
     }
 
     private function pendingExpenseInstallments(): Builder
