@@ -13,6 +13,7 @@ import '../../domain/entities/transaction_input.dart';
 import '../../domain/entities/transaction_type.dart';
 import '../../domain/entities/transaction_update.dart';
 import 'transaction_form_state.dart';
+import '../../domain/entities/recurrence.dart';
 
 /// Keyed by the transaction id; null is "Nova Transação".
 final transactionFormControllerProvider = NotifierProvider.autoDispose
@@ -54,11 +55,17 @@ class TransactionFormController extends Notifier<TransactionFormState> {
           ? await ref.read(transactionRepositoryProvider).show(transactionId!)
           : null;
       final categories = await ref.read(categoryRepositoryProvider).list();
+      final recurringId = original?.recurringTransactionId;
+      final (recurrence, recurrenceActive) = recurringId == null
+          ? (null, false)
+          : await _loadRecurrence(recurringId);
       if (!ref.mounted) return;
       state = state.copyWith(
         loading: false,
         original: original,
         categories: categories,
+        recurrenceActive: recurrenceActive,
+        recurrence: () => recurrence,
       );
       if (original?.type == TransactionType.transfer) await loadGoals();
     } on Failure catch (failure) {
@@ -67,6 +74,19 @@ class TransactionFormController extends Notifier<TransactionFormState> {
         loading: false,
         loadError: () => ErrorMessages.general(failure),
       );
+    }
+  }
+
+  Future<(Recurrence?, bool)> _loadRecurrence(int recurringId) async {
+    try {
+      final recurrence = await ref
+          .read(transactionRepositoryProvider)
+          .recurrence(recurringId);
+      return (recurrence, recurrence.active);
+    } on NotFoundFailure {
+      return (null, false);
+    } on Failure {
+      return (null, true);
     }
   }
 

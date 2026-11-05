@@ -9,6 +9,7 @@ import 'package:flowfi_app/features/transactions/domain/entities/transaction_sch
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_type.dart';
 import 'package:flowfi_app/features/transactions/domain/entities/transaction_update.dart';
 import 'package:flowfi_app/features/transactions/domain/repositories/transaction_repository.dart';
+import 'package:flowfi_app/features/transactions/domain/entities/recurrence.dart';
 import 'package:flowfi_app/features/transactions/presentation/controllers/transaction_form_controller.dart';
 import 'package:flowfi_app/shared/money/money.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -198,6 +199,14 @@ void main() {
         ...transactionJson(id: 13),
         'recurring_transaction_id': 5,
       }).toEntity(),
+    );
+    when(() => transactions.recurrence(5)).thenAnswer(
+      (_) async => Recurrence(
+        periodUnit: 'month',
+        periodInterval: 1,
+        generatedCount: 1,
+        nextOccurrenceOn: DateTime(2026, 12, 5),
+      ),
     );
     when(() => transactions.endRecurring(5)).thenAnswer((_) async {});
 

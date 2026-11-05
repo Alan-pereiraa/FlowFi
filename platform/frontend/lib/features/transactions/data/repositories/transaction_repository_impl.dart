@@ -14,6 +14,7 @@ import '../../domain/entities/transaction_update.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../datasources/transactions_api.dart';
 import '../models/transaction_request_dto.dart';
+import '../../domain/entities/recurrence.dart';
 
 final transactionRepositoryProvider = Provider<TransactionRepository>(
   (ref) => TransactionRepositoryImpl(ref.watch(transactionsApiProvider)),
@@ -90,6 +91,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<void> createRecurring(RecurringInput input) => guardApi(
     () => _api.storeRecurring(TransactionRequestDto.recurring(input)),
   );
+
+  @override
+  Future<Recurrence> recurrence(int recurringId) =>
+      guardApi(() => _api.showRecurring(recurringId));
 
   @override
   Future<void> endRecurring(int recurringId) =>

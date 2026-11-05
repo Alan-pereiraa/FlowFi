@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show immutable;
 import '../../../categories/domain/entities/category.dart';
 import '../../../goals/domain/entities/goal.dart';
 import '../../domain/entities/transaction.dart';
+import '../../domain/entities/recurrence.dart';
 
 @immutable
 class TransactionFormState {
@@ -17,6 +18,8 @@ class TransactionFormState {
     this.saving = false,
     this.deleting = false,
     this.endingRecurrence = false,
+    this.recurrenceActive = false,
+    this.recurrence,
     this.updatingInstallmentId,
     this.saved = false,
     this.deleted = false,
@@ -40,6 +43,9 @@ class TransactionFormState {
   final bool saving;
   final bool deleting;
   final bool endingRecurrence;
+  final bool recurrenceActive;
+
+  final Recurrence? recurrence;
   final int? updatingInstallmentId;
   final bool saved;
   final bool deleted;
@@ -67,6 +73,8 @@ class TransactionFormState {
     bool? saving,
     bool? deleting,
     bool? endingRecurrence,
+    bool? recurrenceActive,
+    Recurrence? Function()? recurrence,
     int? Function()? updatingInstallmentId,
     bool? saved,
     bool? deleted,
@@ -85,6 +93,8 @@ class TransactionFormState {
       saving: saving ?? this.saving,
       deleting: deleting ?? this.deleting,
       endingRecurrence: endingRecurrence ?? this.endingRecurrence,
+      recurrenceActive: recurrenceActive ?? this.recurrenceActive,
+      recurrence: recurrence == null ? this.recurrence : recurrence(),
       updatingInstallmentId: updatingInstallmentId == null
           ? this.updatingInstallmentId
           : updatingInstallmentId(),

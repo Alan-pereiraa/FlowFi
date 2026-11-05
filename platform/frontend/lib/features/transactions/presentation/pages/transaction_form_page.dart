@@ -8,7 +8,6 @@ import '../../../../shared/money/money.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_danger_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/money_amount_field.dart';
@@ -20,6 +19,7 @@ import '../../domain/entities/transaction_draft.dart';
 import '../../domain/entities/transaction_input.dart';
 import '../../domain/entities/transaction_schedule.dart';
 import '../../domain/entities/transaction_type.dart';
+import '../../domain/entities/recurrence.dart';
 import '../controllers/transaction_form_controller.dart';
 import '../controllers/transaction_form_state.dart';
 import '../controllers/voice_draft_controller.dart';
@@ -300,6 +300,36 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         : 'Repetir a cada $_periodInterval $unit';
   }
 
+  static String _every(String unit, int interval) {
+    if (interval == 1) {
+      return switch (unit) {
+        'day' => 'todo dia',
+        'week' => 'toda semana',
+        'year' => 'todo ano',
+        _ => 'todo mês',
+      };
+    }
+    final units = switch (unit) {
+      'day' => 'dias',
+      'week' => 'semanas',
+      'year' => 'anos',
+      _ => 'meses',
+    };
+    return 'a cada $interval $units';
+  }
+
+  String _savedRecurrenceSubtitle(Recurrence recurrence) {
+    final every = _every(recurrence.periodUnit, recurrence.periodInterval);
+    if (!recurrence.active) return 'Encerrada. Repetia $every.';
+    final end = recurrence.occurrences != null
+        ? '${recurrence.generatedCount} de ${recurrence.occurrences} vezes'
+        : recurrence.endDate != null
+        ? 'até ${Dates.input(recurrence.endDate!)}'
+        : 'sem data para terminar';
+    return 'Repete $every, $end.\n'
+        'Próxima: ${Dates.input(recurrence.nextOccurrenceOn!)}';
+  }
+
   Future<bool> _confirm({
     required String title,
     required String message,
@@ -424,7 +454,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       TransactionType.transfer => scheme.primary,
     };
     final original = state.original;
-    final linkedToRecurrence = original?.isRecurring ?? false;
+    final recurrenceOn = _isEdit ? state.recurrenceActive : _recurring;
+    final splitBlocked = recurrenceOn || (original?.isRecurring ?? false);
 
     Widget error(String message) => Padding(
       padding: const EdgeInsets.only(top: 4),
@@ -527,14 +558,11 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   ChoiceRow(
                     title: 'Transação Parcelada',
                     selected: _installments > 1,
-                    onTap: () => setState(() {
-                      if (_installments > 1) {
-                        _installments = 1;
-                      } else {
-                        _installments = 2;
-                        _recurring = false;
-                      }
-                    }),
+                    onTap: splitBlocked && _installments <= 1
+                        ? null
+                        : () => setState(() {
+                            _installments = _installments > 1 ? 1 : 2;
+                          }),
                     trailing: _installments > 1
                         ? _CountMenu(
                             value: _installments,
@@ -588,30 +616,28 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                     case final message?)
                   error(message),
               ],
-              if (!_isSplit) ...[
-                const SizedBox(height: 16),
-                RecurrenceCard(
-                  value: _isEdit ? linkedToRecurrence : _recurring,
-                  subtitle: _recurrenceSubtitle,
-                  onChanged: _isEdit
-                      ? null
-                      : (on) => setState(() {
-                          _recurring = on;
-                          if (!on) {
-                            _periodUnit = 'month';
-                            _periodInterval = 1;
-                          }
-                        }),
-                ),
-              ],
-              if (_isEdit && linkedToRecurrence) ...[
-                const SizedBox(height: 16),
-                AppDangerButton(
-                  label: 'Cancelar Transação Recorrente',
-                  loading: state.endingRecurrence,
-                  onPressed: state.busy ? null : _confirmEndRecurrence,
-                ),
-              ],
+              const SizedBox(height: 16),
+              RecurrenceCard(
+                value: recurrenceOn,
+                subtitle: _isEdit && state.recurrence != null
+                    ? _savedRecurrenceSubtitle(state.recurrence!)
+                    : _recurrenceSubtitle,
+                onChanged: _isSplit
+                    ? null
+                    : _isEdit
+                    ? (recurrenceOn && !state.busy
+                          ? (on) {
+                              if (!on) _confirmEndRecurrence();
+                            }
+                          : null)
+                    : (on) => setState(() {
+                        _recurring = on;
+                        if (!on) {
+                          _periodUnit = 'month';
+                          _periodInterval = 1;
+                        }
+                      }),
+              ),
               if (!_isEdit && _recurring && !_isSplit) ...[
                 const SizedBox(height: 16),
                 ChoiceRow(

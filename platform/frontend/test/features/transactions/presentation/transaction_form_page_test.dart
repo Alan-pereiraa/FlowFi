@@ -65,21 +65,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a split expense hides the recurrence', (tester) async {
+  testWidgets('a split expense disables the recurrence', (tester) async {
     await pumpForm(tester);
-    expect(find.text('Transação Recorrente'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNotNull);
 
     await tap(tester, 'Transação Parcelada');
 
-    expect(find.text('Transação Recorrente'), findsNothing);
+    expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNull);
     expect(find.text('2x'), findsOneWidget);
 
     await tap(tester, 'Transação Parcelada');
 
-    expect(find.text('Transação Recorrente'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNotNull);
   });
 
-  testWidgets('choosing a split turns the recurrence off', (tester) async {
+  testWidgets('a recurrence disables the split', (tester) async {
     await pumpForm(tester);
     await tester.ensureVisible(find.byType(Switch));
     await tester.tap(find.byType(Switch));
@@ -87,10 +87,16 @@ void main() {
     expect(find.text('Até ser cancelado'), findsOneWidget);
 
     await tap(tester, 'Transação Parcelada');
+
+    expect(find.byTooltip('Número de parcelas'), findsNothing);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(find.text('Até ser cancelado'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
     await tap(tester, 'Transação Parcelada');
 
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
-    expect(find.text('Até ser cancelado'), findsNothing);
+    expect(find.byTooltip('Número de parcelas'), findsOneWidget);
   });
 
   testWidgets('income cannot be split', (tester) async {

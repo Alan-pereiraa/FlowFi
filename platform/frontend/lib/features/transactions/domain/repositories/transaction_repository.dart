@@ -8,6 +8,7 @@ import '../entities/transaction_draft.dart';
 import '../entities/transaction_filter.dart';
 import '../entities/transaction_input.dart';
 import '../entities/transaction_update.dart';
+import '../entities/recurrence.dart';
 
 abstract interface class TransactionRepository {
   /// Newest first.
@@ -32,6 +33,8 @@ abstract interface class TransactionRepository {
   Future<void> createRecurring(RecurringInput input);
 
   Future<void> endRecurring(int recurringId);
+
+  Future<Recurrence> recurrence(int recurringId);
 
   Future<TransactionDraft> draftFromAudio(Uint8List wav);
 }

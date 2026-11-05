@@ -9,6 +9,8 @@ import '../../../../core/network/paginated.dart';
 import '../models/transaction_draft_dto.dart';
 import '../models/installment_dto.dart';
 import '../models/transaction_dto.dart';
+import '../../domain/entities/recurrence.dart';
+import '../models/recurrence_dto.dart';
 
 final transactionsApiProvider = Provider<TransactionsApi>(
   (ref) => TransactionsApi(ref.watch(apiClientProvider)),
@@ -97,6 +99,15 @@ class TransactionsApi {
 
   Future<void> storeRecurring(Map<String, dynamic> body) =>
       _send(() => _dio.post<void>('/recurring-transactions', data: body));
+
+  Future<Recurrence> showRecurring(int id) async {
+    final response = await _send(
+      () => _dio.get<Map<String, dynamic>>('/recurring-transactions/$id'),
+    );
+    return RecurrenceDto.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
 
   Future<void> endRecurring(int id) =>
       _send(() => _dio.patch<void>('/recurring-transactions/$id/end'));
