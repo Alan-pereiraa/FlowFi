@@ -21,7 +21,7 @@ class SplashPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AppLogo(size: 36),
+              const AppLogo(height: 64),
               const SizedBox(height: 32),
               if (error == null)
                 const CircularProgressIndicator()

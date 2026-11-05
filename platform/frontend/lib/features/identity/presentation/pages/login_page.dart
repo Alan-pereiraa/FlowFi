@@ -57,7 +57,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Center(child: AppLogo(size: 32)),
+                        const Center(child: AppLogo(height: 54)),
                         const SizedBox(height: 24),
                         Text(
                           'Bem-Vindo!',

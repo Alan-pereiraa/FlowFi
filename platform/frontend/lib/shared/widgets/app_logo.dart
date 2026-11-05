@@ -1,29 +1,22 @@
 import 'package:material_ui/material_ui.dart';
 
-/// FlowFi wordmark.
-// GAP: the design uses an image logo; no asset exported yet, so this renders
-// a text wordmark. Swap for the asset once it is in `assets/`.
 class AppLogo extends StatelessWidget {
-  const AppLogo({super.key, this.size = 28});
+  const AppLogo({super.key, this.height = 32});
 
-  final double size;
+  static const asset = 'assets/images/logo.png';
+  static const darkAsset = 'assets/images/logo_dark.png';
+
+  final double height;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Semantics(
-      label: 'FlowFi',
-      excludeSemantics: true,
-      child: Text(
-        'FlowFi',
-        style: TextStyle(
-          fontFamily: 'Montserrat',
-          fontWeight: FontWeight.w700,
-          fontSize: size,
-          color: theme.colorScheme.onSurface,
-          letterSpacing: -0.5,
-        ),
-      ),
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Image.asset(
+      dark ? darkAsset : asset,
+      height: height,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+      semanticLabel: 'FlowFi',
     );
   }
 }
