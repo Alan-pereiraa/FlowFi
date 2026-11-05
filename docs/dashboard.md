@@ -39,14 +39,18 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 - **`paid` vs `pending`.** For expenses, only `paid` installments are real money. An installment due today
   or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can change
   either through the `pay` and `unpay` routes. Income has no status: dated today or earlier it counts as
-  `paid`, later as `pending`. `balance` is paid income minus paid expense and transfers for the month;
+  `paid`, later as `pending`. `balance` is paid income minus paid expense and transfers, plus withdrawals, for the month;
   `projected_balance` is the same with pending ones included.
-- **`balance_to_date`** is paid income minus paid expense and transfers across all time and ignores `month`.
+- **`balance_to_date`** is paid income minus paid expense and transfers, plus withdrawals, across all time and
+  ignores `month`.
 - **Transfers are neither income nor expense, but they leave the balance.** A transfer moves money into a
   goal, so it never touches `income`, `expense` or `spending_by_category`, and it is subtracted from
   `balance`, `projected_balance` and `balance_to_date`. The month's transfers are also reported on their own
   as `transferred_to_goals`. They still appear in `recent_transactions` (with `category: null` and the
   `goal` they went to).
+- **Withdrawals (`withdrawal`) are the reverse of a transfer.** They move money from a goal back to the
+  balance: they are added to `balance`, `projected_balance` and `balance_to_date`, never count as income, and
+  the month's total is reported as `withdrawn_from_goals`. Like a transfer, a withdrawal is always `paid`.
 - **`overdue`** is every pending expense installment due before today, from any month, under `expense`. An
   installment due today is not overdue.
 - **`upcoming-installments`** only lists expenses. It always includes overdue ones (`overdue: true`), then
@@ -93,6 +97,7 @@ over `limit_amount`. It can go past 100.
       "projected_balance": "3919.70",
       "balance_to_date": "3769.60",
       "transferred_to_goals": "250.00",
+      "withdrawn_from_goals": "0.00",
       "overdue": {
         "expense": {
           "count": 1,

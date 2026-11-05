@@ -38,9 +38,9 @@ ao contrário de `goalId`, já que nada no desenho original sugeria o
 contrário); `goalId` → `goal_id` (FK, indexada, **anulável**, conforme o ponto
 em aberto abaixo); `totalAmount`/`INSTALLMENT.amount` → centavos inteiros via
 `Money`, conforme o ponto em aberto abaixo; `deleteAt` → `deleted_at` em
-ambas. `type` é validado contra `Transaction::TYPES` (`income`, `expense`) —
-uma suposição, já que o desenho original deixou os valores do enum
-indefinidos. `period` virou o par `period_unit`
+ambas. `type` é validado contra `Transaction::TYPES` (`income`, `expense`,
+`transfer`, `withdrawal`); recorrências aceitam só os três primeiros
+(`Transaction::RECURRING_TYPES`). `period` virou o par `period_unit`
 (`day`/`week`/`month`/`year`, `Transaction::PERIOD_UNITS`) + `period_interval`
 (inteiro positivo), resolvendo o ponto em aberto "period também parece um
 enum" e ainda permitindo, por exemplo, "a cada 15 dias".
@@ -63,8 +63,8 @@ cronograma sempre que um campo que o afeta muda (valor, número de parcelas,
 período, uma lista explícita de parcelas ou a data, exceto em `custom`). As
 parcelas recriadas seguem a regra de status: data até hoje em
 `America/Sao_Paulo` fica `paid` e data futura fica `pending` — veja
-`TransactionService::settleInstallments()`. Só saídas têm parcelas: entradas e
-transferências não podem ser parceladas, não têm linhas em `installments` e
+`TransactionService::settleInstallments()`. Só saídas têm parcelas: entradas,
+transferências e resgates não podem ser parcelados, não têm linhas em `installments` e
 ficam com `installments_count = 1` e `schedule_type = single`.
 
 Três tabelas existem nas migrations sem estar no desenho original:
@@ -133,7 +133,7 @@ O diagrama original usa pares mín-máx; o par fica do lado que ele conta.
 | ACCOUNT → TRANSACTION | 1 conta tem 0..n transações |
 | CATEGORY → TRANSACTION | 1 categoria classifica 0..n transações |
 | GOAL → TRANSACTION | 1 meta é financiada por 0..n transações |
-| TRANSACTION → INSTALLMENT | 1 saída se divide em 1..n parcelas; entradas e transferências não têm parcelas |
+| TRANSACTION → INSTALLMENT | 1 saída se divide em 1..n parcelas; entradas, transferências e resgates não têm parcelas |
 | ACCOUNT → DEVICE_TOKEN | 1 conta tem 0..n tokens de dispositivo |
 | ACCOUNT → PERSONAL_ACCESS_TOKEN | 1 conta tem 0..n tokens de acesso (polimórfico, sem FK) |
 | ACCOUNT → OTP_CODE | 1 e-mail tem 0..n códigos OTP (vinculado pelo e-mail, sem FK) |
@@ -143,7 +143,7 @@ O diagrama original usa pares mín-máx; o par fica do lado que ele conta.
 | RECURRENCE → TRANSACTION | 1 recorrência gera 0..n transações; 1 transação vem de 0..1 recorrência |
 
 O par de `TRANSACTION → INSTALLMENT` é `(1,1) (0,n)`: toda saída tem ao menos
-uma parcela, e entradas e transferências não têm nenhuma.
+uma parcela, e entradas, transferências e resgates não têm nenhuma.
 
 ## Diagrama
 
@@ -351,6 +351,5 @@ erDiagram
   códigos ficam em `otp_codes`) e `email_verified_at` foi mantido e é
   preenchido quando um código é verificado.
 - Os valores do enum `TRANSACTION.type` nunca foram especificados no desenho
-  original. Assumidos como `income` / `expense` (`Transaction::TYPES`) como
-  o mínimo que o FlowFi precisa; revisitar se o produto pedir mais (ex.:
-  transferência).
+  original. Hoje são `income`, `expense`, `transfer` (saldo → meta) e
+  `withdrawal` (resgate, meta → saldo), em `Transaction::TYPES`.
