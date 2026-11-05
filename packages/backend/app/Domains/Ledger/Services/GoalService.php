@@ -70,7 +70,7 @@ class GoalService
 
         if (! $this->goals->adjustCurrentAmount($goalId, $cents)) {
             throw ValidationException::withMessages([
-                'goal_id' => 'The goal does not have enough balance for this transaction.',
+                'goal_id' => 'A meta não tem saldo suficiente para esta transação.',
             ]);
         }
     }
