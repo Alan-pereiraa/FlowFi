@@ -93,30 +93,33 @@ void main() {
     );
   });
 
-  test('the initial amount is deposited as a transfer into the new goal', () async {
-    when(() => api.createGoal(any())).thenAnswer((_) async => created);
-    when(
-      () => api.depositToGoal(
-        goalId: any(named: 'goalId'),
-        amount: any(named: 'amount'),
-        date: any(named: 'date'),
-        description: any(named: 'description'),
-      ),
-    ).thenAnswer((_) async {});
+  test(
+    'the initial amount is deposited as a transfer into the new goal',
+    () async {
+      when(() => api.createGoal(any())).thenAnswer((_) async => created);
+      when(
+        () => api.depositToGoal(
+          goalId: any(named: 'goalId'),
+          amount: any(named: 'amount'),
+          date: any(named: 'date'),
+          description: any(named: 'description'),
+        ),
+      ).thenAnswer((_) async {});
 
-    final result = await repository.create(draft);
+      final result = await repository.create(draft);
 
-    verify(
-      () => api.depositToGoal(
-        goalId: 7,
-        amount: '3500.00',
-        date: '2026-10-16',
-        description: 'Valor inicial',
-      ),
-    ).called(1);
-    expect(result.goal.currentCents, 350000);
-    expect(result.initialDepositFailed, isFalse);
-  });
+      verify(
+        () => api.depositToGoal(
+          goalId: 7,
+          amount: '3500.00',
+          date: '2026-10-16',
+          description: 'Valor inicial',
+        ),
+      ).called(1);
+      expect(result.goal.currentCents, 350000);
+      expect(result.initialDepositFailed, isFalse);
+    },
+  );
 
   test('a failed deposit keeps the goal and says so', () async {
     when(() => api.createGoal(any())).thenAnswer((_) async => created);

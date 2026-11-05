@@ -1,11 +1,7 @@
 import 'package:flowfi_app/features/goals/domain/entities/goal.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Goal goal({
-  int target = 600000,
-  int current = 0,
-  DateTime? expiresAt,
-}) => Goal(
+Goal goal({int target = 600000, int current = 0, DateTime? expiresAt}) => Goal(
   id: 1,
   name: 'Viagem',
   icon: 'flight',
@@ -54,15 +50,18 @@ void main() {
       );
     });
 
-    test('splits what is left over the months to the deadline, rounding up', () {
-      // Dec 2026 is ~2.5 months away -> 3 months; (500000 - 350000) / 3.
-      final g = goal(
-        target: 500000,
-        current: 350000,
-        expiresAt: DateTime(2026, 12, 31),
-      );
-      expect(g.monthlyContributionCents(now), 50000);
-    });
+    test(
+      'splits what is left over the months to the deadline, rounding up',
+      () {
+        // Dec 2026 is ~2.5 months away -> 3 months; (500000 - 350000) / 3.
+        final g = goal(
+          target: 500000,
+          current: 350000,
+          expiresAt: DateTime(2026, 12, 31),
+        );
+        expect(g.monthlyContributionCents(now), 50000);
+      },
+    );
 
     test('a deadline that is today or past counts as one month', () {
       final g = goal(

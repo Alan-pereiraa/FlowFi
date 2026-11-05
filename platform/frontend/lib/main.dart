@@ -7,7 +7,6 @@ import 'package:material_ui/material_ui.dart';
 import 'app/app.dart';
 import 'firebase_options.dart';
 
-
 @pragma('vm:entry-point')
 Future<void> _onBackgroundMessage(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

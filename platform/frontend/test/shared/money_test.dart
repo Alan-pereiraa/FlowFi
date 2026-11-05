@@ -42,11 +42,10 @@ void main() {
   group('CurrencyInputFormatter', () {
     const formatter = CurrencyInputFormatter();
 
-    TextEditingValue type(String from, String to) =>
-        formatter.formatEditUpdate(
-          TextEditingValue(text: from),
-          TextEditingValue(text: to),
-        );
+    TextEditingValue type(String from, String to) => formatter.formatEditUpdate(
+      TextEditingValue(text: from),
+      TextEditingValue(text: to),
+    );
 
     test('digits fill from the cents', () {
       expect(type('', '1').text, '0,01');
