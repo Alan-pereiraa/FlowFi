@@ -75,18 +75,28 @@ class MonthSummaryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('VALOR TOTAL', style: labelStyle),
-                    const SizedBox(height: 4),
-                    Text(
-                      income,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: onHero,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'VALOR TOTAL DE ENTRADAS',
+                        textAlign: TextAlign.end,
+                        style: labelStyle,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          income,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: onHero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
