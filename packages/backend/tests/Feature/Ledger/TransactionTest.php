@@ -274,13 +274,23 @@ class TransactionTest extends TestCase
                 ['amount' => '10.00', 'date' => '2026-03-31'],
             ],
         ])->json('data.id');
-        $this->withToken($token)->postJson('/api/v1/transactions', [
+        $splitCrossing = $this->withToken($token)->postJson('/api/v1/transactions', [
             'category_id' => $category->id,
             'type' => 'expense',
             'date' => '2026-03-01',
             'total_amount' => '20.00',
             'installments_count' => 2,
             'period_unit' => 'month',
+        ])->json('data.id');
+        $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'date' => '2026-01-01',
+            'total_amount' => '20.00',
+            'installments' => [
+                ['amount' => '10.00', 'date' => '2026-01-01'],
+                ['amount' => '10.00', 'date' => '2026-05-01'],
+            ],
         ])->assertCreated();
 
         $ids = $this->withToken($token)
@@ -289,7 +299,7 @@ class TransactionTest extends TestCase
             ->json('data.*.id');
 
         sort($ids);
-        $this->assertSame([$inside, $splitInside], $ids);
+        $this->assertSame([$inside, $splitInside, $splitCrossing], $ids);
     }
 
     public function test_deleting_a_transaction_soft_deletes_its_installments(): void

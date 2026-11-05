@@ -15,12 +15,17 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
 {
     public function listFor(User $user, int $perPage, ?array $filters): LengthAwarePaginator
     {
+        $from = $filters['date_from'] ?? null;
+        $to = $filters['date_to'] ?? null;
+
         return $user->transactions()
             ->with('installments')
             ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
             ->when($filters['category_id'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
-            ->when($filters['date_from'] ?? null, fn ($query, $from) => $this->whereDatedInside($query, '>=', $from, '<'))
-            ->when($filters['date_to'] ?? null, fn ($query, $to) => $this->whereDatedInside($query, '<=', $to, '>'))
+            ->when(
+                $from || $to,
+                fn ($query) => $this->whereDatedInside($query, $from, $to),
+            )
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate($perPage);
@@ -106,15 +111,22 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
             ->get();
     }
 
-    private function whereDatedInside(Builder $query, string $operator, string $date, string $outsideOperator): Builder
+    private function whereDatedInside(Builder $query, ?string $from, ?string $to): Builder
     {
+        $inRange = fn ($query) => $this->whereInRange($query, $from, $to);
+
         return $query->where(fn ($query) => $query
-            ->where(fn ($query) => $query
-                ->where('type', '!=', Transaction::TYPE_EXPENSE)
-                ->whereDate('date', $operator, $date))
+            ->where(fn ($query) => $inRange($query->where('type', '!=', Transaction::TYPE_EXPENSE)))
             ->orWhere(fn ($query) => $query
                 ->where('type', Transaction::TYPE_EXPENSE)
-                ->whereDoesntHave('installments', fn ($query) => $query->whereDate('date', $outsideOperator, $date))));
+                ->whereHas('installments', $inRange)));
+    }
+
+    private function whereInRange(Builder $query, ?string $from, ?string $to): Builder
+    {
+        return $query
+            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
+            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to));
     }
 
     private function pendingExpenseInstallments(): Builder

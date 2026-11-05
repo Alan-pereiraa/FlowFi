@@ -49,13 +49,13 @@ class TransactionController extends Controller
             new OA\Parameter(
                 name: 'date_from',
                 in: 'query',
-                description: 'Saídas com todas as parcelas nesta data ou depois; entradas e transferências com a data da transação nesta data ou depois',
+                description: 'Saídas com alguma parcela nesta data ou depois; entradas e transferências com a data da transação nesta data ou depois',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
             new OA\Parameter(
                 name: 'date_to',
                 in: 'query',
-                description: 'Saídas com todas as parcelas nesta data ou antes; entradas e transferências com a data da transação nesta data ou antes; deve ser >= date_from',
+                description: 'Saídas com alguma parcela nesta data ou antes; entradas e transferências com a data da transação nesta data ou antes; deve ser >= date_from',
                 schema: new OA\Schema(type: 'string', format: 'date'),
             ),
         ],
@@ -160,7 +160,7 @@ class TransactionController extends Controller
         operationId: 'updateTransaction',
         tags: ['Transações'],
         summary: 'Atualizar transação',
-        description: 'Em saídas, alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas. Entradas e transferências não têm parcelas.',
+        description: 'Em saídas, alterar valor, cronograma ou data recria as parcelas e reaplica a regra de status pela data, descartando alterações manuais de status. Em cronogramas com parcelas explícitas, alterar só a data não recria as parcelas. Entradas e transferências não têm parcelas. Transações geradas por recorrência não podem ser parceladas (422).',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
