@@ -22,6 +22,8 @@ class TransactionListState {
     this.error,
     this.payingId,
     this.month,
+    this.overdueOnly = false,
+    this.overdueOn,
   });
 
   final List<Transaction> items;
@@ -54,6 +56,10 @@ class TransactionListState {
 
   final DateTime? month;
 
+  final bool overdueOnly;
+
+  final DateTime? overdueOn;
+
   List<Transaction> get visibleItems {
     final query = _fold(search.trim());
     if (query.isEmpty) return items;
@@ -68,11 +74,12 @@ class TransactionListState {
   List<StatementEntry> get entries {
     final entries = <StatementEntry>[
       for (final item in visibleItems)
-        if (item.installments.isEmpty)
+        if (item.installments.isEmpty && overdueOn == null)
           StatementEntry(transaction: item)
         else
           for (final installment in item.installments)
-            if (_inMonth(installment.date))
+            if (_inMonth(installment.date) &&
+                (overdueOn == null || installment.isOverdueOn(overdueOn!)))
               StatementEntry(transaction: item, installment: installment),
     ];
     entries.sort((a, b) {
@@ -112,6 +119,8 @@ class TransactionListState {
     String? Function()? error,
     int? Function()? payingId,
     DateTime? Function()? month,
+    bool? overdueOnly,
+    DateTime? Function()? overdueOn,
   }) {
     return TransactionListState(
       items: items ?? this.items,
@@ -127,6 +136,8 @@ class TransactionListState {
       error: error == null ? this.error : error(),
       payingId: payingId == null ? this.payingId : payingId(),
       month: month == null ? this.month : month(),
+      overdueOnly: overdueOnly ?? this.overdueOnly,
+      overdueOn: overdueOn == null ? this.overdueOn : overdueOn(),
     );
   }
 

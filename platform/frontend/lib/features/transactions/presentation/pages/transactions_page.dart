@@ -166,6 +166,19 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       ];
     }
+    final byDay = state.byDay;
+    if (state.overdueOnly && byDay.isEmpty && state.search.trim().isEmpty) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyState(
+            icon: Icons.check_circle_outline,
+            title: 'Nenhuma parcela vencida',
+            message: 'Nada em atraso com os filtros selecionados.',
+          ),
+        ),
+      ];
+    }
     if (state.items.isEmpty) {
       return const [
         SliverFillRemaining(
@@ -178,7 +191,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       ];
     }
-    if (state.visibleItems.isEmpty) {
+    if (byDay.isEmpty) {
       return const [
         SliverFillRemaining(
           hasScrollBody: false,
@@ -193,7 +206,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     final today = ref.read(clockProvider)();
     return [
-      for (final (day, items) in state.byDay)
+      for (final (day, items) in byDay)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
           sliver: SliverList.list(
@@ -302,6 +315,12 @@ class _FilterChips extends ConsumerWidget {
             label: 'Este Mês',
             selected: state.thisMonth,
             onTap: controller.toggleThisMonth,
+          ),
+          const SizedBox(width: 8),
+          chip(
+            label: 'Vencidas',
+            selected: state.overdueOnly,
+            onTap: controller.toggleOverdueOnly,
           ),
           const SizedBox(width: 8),
           Builder(

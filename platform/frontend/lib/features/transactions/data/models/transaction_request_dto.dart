@@ -60,6 +60,7 @@ abstract final class TransactionRequestDto {
     if (filter.categoryId != null) 'category_id': filter.categoryId,
     if (filter.dateFrom != null) 'date_from': Dates.toApi(filter.dateFrom!),
     if (filter.dateTo != null) 'date_to': Dates.toApi(filter.dateTo!),
+    if (filter.overdue) 'overdue': 1,
   };
 
   /// A split over N months, or a single installment (null period so the

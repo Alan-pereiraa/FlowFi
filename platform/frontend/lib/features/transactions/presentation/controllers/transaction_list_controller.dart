@@ -32,15 +32,13 @@ class TransactionListController extends Notifier<TransactionListState> {
   }
 
   TransactionFilter get _filter {
-    if (!state.thisMonth) {
-      return TransactionFilter(type: state.type, categoryId: state.categoryId);
-    }
     final now = ref.read(clockProvider)();
     return TransactionFilter(
       type: state.type,
       categoryId: state.categoryId,
-      dateFrom: DateTime(now.year, now.month),
-      dateTo: DateTime(now.year, now.month + 1, 0),
+      dateFrom: state.thisMonth ? DateTime(now.year, now.month) : null,
+      dateTo: state.thisMonth ? DateTime(now.year, now.month + 1, 0) : null,
+      overdue: state.overdueOnly,
     );
   }
 
@@ -52,6 +50,7 @@ class TransactionListController extends Notifier<TransactionListState> {
       loading: true,
       error: () => null,
       month: () => state.thisMonth ? DateTime(now.year, now.month) : null,
+      overdueOn: () => state.overdueOnly ? now : null,
     );
     try {
       final (page, categories) = await (
@@ -127,6 +126,15 @@ class TransactionListController extends Notifier<TransactionListState> {
 
   void toggleThisMonth() {
     state = state.copyWith(thisMonth: !state.thisMonth);
+    refresh();
+  }
+
+  void toggleOverdueOnly() {
+    final overdueOnly = !state.overdueOnly;
+    state = state.copyWith(
+      overdueOnly: overdueOnly,
+      thisMonth: overdueOnly ? false : state.thisMonth,
+    );
     refresh();
   }
 

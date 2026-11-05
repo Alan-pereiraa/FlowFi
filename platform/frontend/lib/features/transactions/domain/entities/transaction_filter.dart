@@ -10,16 +10,16 @@ class TransactionFilter {
     this.categoryId,
     this.dateFrom,
     this.dateTo,
+    this.overdue = false,
   });
 
   final TransactionType? type;
 
   final int? categoryId;
 
-  /// The backend matches the range against the installments: a transaction
-  /// is listed only when all of them fall inside it.
   final DateTime? dateFrom;
   final DateTime? dateTo;
+  final bool overdue;
 
   @override
   bool operator ==(Object other) =>
@@ -27,8 +27,9 @@ class TransactionFilter {
       other.type == type &&
       other.categoryId == categoryId &&
       other.dateFrom == dateFrom &&
-      other.dateTo == dateTo;
+      other.dateTo == dateTo &&
+      other.overdue == overdue;
 
   @override
-  int get hashCode => Object.hash(type, categoryId, dateFrom, dateTo);
+  int get hashCode => Object.hash(type, categoryId, dateFrom, dateTo, overdue);
 }
