@@ -44,9 +44,11 @@ class GoalDetailPage extends ConsumerStatefulWidget {
 class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
   final _editKey = GlobalKey<FormState>();
   final _depositKey = GlobalKey<FormState>();
+  final _withdrawKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _target = TextEditingController();
   final _deposit = TextEditingController();
+  final _withdraw = TextEditingController();
 
   DateTime? _expiresAt;
   String _icon = AppIcons.defaultGoal;
@@ -72,6 +74,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     _name.dispose();
     _target.dispose();
     _deposit.dispose();
+    _withdraw.dispose();
     super.dispose();
   }
 
@@ -120,6 +123,14 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     ref
         .read(goalDetailControllerProvider.notifier)
         .deposit(goal, CurrencyInputFormatter.centsOf(_deposit.text));
+  }
+
+  void _withdrawMoney(Goal goal) {
+    if (!_withdrawKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    ref
+        .read(goalDetailControllerProvider.notifier)
+        .withdraw(goal, CurrencyInputFormatter.centsOf(_withdraw.text));
   }
 
   Future<void> _confirmRemove() async {
@@ -191,6 +202,16 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           .showSnackBar(const SnackBar(content: Text('Valor adicionado.')));
     });
 
+    ref.listen(goalDetailControllerProvider.select((s) => s.withdrawCount), (
+      previous,
+      count,
+    ) {
+      if (count == previous) return;
+      _withdraw.clear();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Valor resgatado.')));
+    });
+
     final state = ref.watch(goalDetailControllerProvider);
     final goal = state.goal ?? widget.initial;
 
@@ -231,6 +252,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
   Widget _content(BuildContext context, GoalDetailState state, Goal goal) {
     final summary = _SummaryCard(goal: goal);
     final deposit = _depositCard(context, state, goal);
+    final withdraw = _withdrawCard(context, state, goal);
     final edit = _editCard(context, state);
 
     return LayoutBuilder(
@@ -245,6 +267,8 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
               const SizedBox(height: 16),
               deposit,
               const SizedBox(height: 16),
+              withdraw,
+              const SizedBox(height: 16),
               edit,
               const SizedBox(height: 16),
             ],
@@ -256,7 +280,13 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [summary, const SizedBox(height: 16), deposit],
+                children: [
+                  summary,
+                  const SizedBox(height: 16),
+                  deposit,
+                  const SizedBox(height: 16),
+                  withdraw,
+                ],
               ),
             ),
             const SizedBox(width: 24),
@@ -267,21 +297,74 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     );
   }
 
-  Widget _depositCard(BuildContext context, GoalDetailState state, Goal goal) {
+  Widget _depositCard(BuildContext context, GoalDetailState state, Goal goal) =>
+      _moneyCard(
+        context,
+        formKey: _depositKey,
+        controller: _deposit,
+        title: 'Adicionar valor',
+        subtitle: 'Quanto você guardou para essa meta agora?',
+        error: state.depositError,
+        enabled: !state.busy,
+        loading: state.depositing,
+        buttonIcon: Icons.add,
+        onSubmit: () => _addMoney(goal),
+        validator: (cents) => cents > 0 ? null : 'Informe o valor.',
+      );
+
+  Widget _withdrawCard(BuildContext context, GoalDetailState state, Goal goal) {
+    final saved = Money.format(goal.currentCents);
+    final hasMoney = goal.currentCents > 0;
+    return _moneyCard(
+      context,
+      formKey: _withdrawKey,
+      controller: _withdraw,
+      title: 'Resgatar valor',
+      subtitle: hasMoney
+          ? 'O valor volta para o seu saldo. Disponível na meta: $saved.'
+          : 'Não há valor guardado nesta meta para resgatar.',
+      error: state.withdrawError,
+      enabled: !state.busy && hasMoney,
+      loading: state.withdrawing,
+      buttonIcon: Icons.remove,
+      onSubmit: () => _withdrawMoney(goal),
+      validator: (cents) {
+        if (cents <= 0) return 'Informe o valor.';
+        if (cents > goal.currentCents) {
+          return 'O resgate não pode ser maior que $saved.';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _moneyCard(
+    BuildContext context, {
+    required GlobalKey<FormState> formKey,
+    required TextEditingController controller,
+    required String title,
+    required String subtitle,
+    required String? error,
+    required bool enabled,
+    required bool loading,
+    required IconData buttonIcon,
+    required VoidCallback onSubmit,
+    required String? Function(int cents) validator,
+  }) {
     final theme = Theme.of(context);
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
-          key: _depositKey,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Adicionar valor', style: theme.textTheme.titleMedium),
+              Text(title, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                'Quanto você guardou para essa meta agora?',
+                subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -289,21 +372,20 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
               const SizedBox(height: 16),
               AppMoneyField(
                 label: 'Valor',
-                controller: _deposit,
-                errorText: state.depositError,
-                enabled: !state.busy,
+                controller: controller,
+                errorText: error,
+                enabled: enabled,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _addMoney(goal),
-                validator: (v) => CurrencyInputFormatter.centsOf(v ?? '') > 0
-                    ? null
-                    : 'Informe o valor.',
+                onSubmitted: (_) => onSubmit(),
+                validator: (v) =>
+                    validator(CurrencyInputFormatter.centsOf(v ?? '')),
               ),
               const SizedBox(height: 16),
               AppButton(
-                label: 'Adicionar valor',
-                icon: Icons.add,
-                loading: state.depositing,
-                onPressed: state.busy ? null : () => _addMoney(goal),
+                label: title,
+                icon: buttonIcon,
+                loading: loading,
+                onPressed: enabled ? onSubmit : null,
               ),
             ],
           ),

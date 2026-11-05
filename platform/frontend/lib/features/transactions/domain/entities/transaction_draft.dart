@@ -35,13 +35,13 @@ class TransactionDraft {
   final int? occurrences;
   final DateTime? endDate;
 
-  bool get isTransfer => type == TransactionType.transfer;
+  bool get movesGoal => type.movesGoal;
 
   bool get missingAmount => amount == null || amount!.isZero;
 
-  bool get missingCategory => !isTransfer && categoryId == null;
+  bool get missingCategory => !movesGoal && categoryId == null;
 
-  bool get missingGoal => isTransfer && goalId == null;
+  bool get missingGoal => movesGoal && goalId == null;
 
   int get missingCount =>
       [missingAmount, missingCategory, missingGoal].where((m) => m).length;

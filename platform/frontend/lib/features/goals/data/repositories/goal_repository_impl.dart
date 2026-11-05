@@ -26,6 +26,8 @@ class GoalRepositoryImpl implements GoalRepository {
   /// Description stored on a deposit made from the goal screen.
   static const depositDescription = 'Depósito na meta';
 
+  static const withdrawalDescription = 'Resgate da meta';
+
   final GoalsApi _api;
   final DateTime Function() _clock;
 
@@ -60,14 +62,29 @@ class GoalRepositoryImpl implements GoalRepository {
         description: depositDescription,
       ),
     );
+    return _refreshed(goal, cents);
+  }
 
+  @override
+  Future<Goal> withdraw(Goal goal, int cents) async {
+    await guardApi(
+      () => _api.withdrawFromGoal(
+        goalId: goal.id,
+        amount: Money.toApi(cents),
+        date: DateLabels.toApi(_clock()),
+        description: withdrawalDescription,
+      ),
+    );
+    return _refreshed(goal, -cents);
+  }
+
+  Future<Goal> _refreshed(Goal goal, int movedCents) async {
     try {
       return await show(goal.id);
     } on UnauthorizedFailure {
       rethrow;
     } on Failure {
-      // The money is already in: don't report the deposit as failed.
-      return goal.copyWith(currentCents: goal.currentCents + cents);
+      return goal.copyWith(currentCents: goal.currentCents + movedCents);
     }
   }
 

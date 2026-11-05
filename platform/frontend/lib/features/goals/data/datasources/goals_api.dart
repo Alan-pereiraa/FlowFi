@@ -59,11 +59,26 @@ class GoalsApi {
     required String amount,
     required String date,
     required String description,
-  }) => _send(
+  }) => _moveMoney('transfer', goalId, amount, date, description);
+
+  Future<void> withdrawFromGoal({
+    required int goalId,
+    required String amount,
+    required String date,
+    required String description,
+  }) => _moveMoney('withdrawal', goalId, amount, date, description);
+
+  Future<void> _moveMoney(
+    String type,
+    int goalId,
+    String amount,
+    String date,
+    String description,
+  ) => _send(
     () => _dio.post<Map<String, dynamic>>(
       '/transactions',
       data: {
-        'type': 'transfer',
+        'type': type,
         'goal_id': goalId,
         'total_amount': amount,
         'date': date,

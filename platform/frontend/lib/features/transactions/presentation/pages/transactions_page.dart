@@ -267,6 +267,7 @@ class _FilterChips extends ConsumerWidget {
     TransactionType.expense: 'Saídas',
     TransactionType.income: 'Entradas',
     TransactionType.transfer: 'Transferências',
+    TransactionType.withdrawal: 'Resgates',
   };
 
   @override

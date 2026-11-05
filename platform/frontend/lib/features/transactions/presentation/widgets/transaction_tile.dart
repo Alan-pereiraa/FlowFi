@@ -37,18 +37,24 @@ class TransactionTile extends StatelessWidget {
     final success = theme.extension<AppColors>()!.success;
     final type = transaction.type;
 
-    final accent = type == TransactionType.transfer
-        ? scheme.primary
-        : HexColor.parse(category?.color, fallback: scheme.onSurfaceVariant);
-    final icon = type == TransactionType.transfer
-        ? Icons.savings
-        : AppIcons.resolve(category?.icon);
+    final accent = switch (type) {
+      TransactionType.transfer => scheme.primary,
+      TransactionType.withdrawal => scheme.tertiary,
+      _ => HexColor.parse(category?.color, fallback: scheme.onSurfaceVariant),
+    };
+    final icon = switch (type) {
+      TransactionType.transfer => Icons.savings,
+      TransactionType.withdrawal => Icons.account_balance_wallet,
+      _ => AppIcons.resolve(category?.icon),
+    };
     final overdue =
         today != null && (installment?.isOverdueOn(today!) ?? false);
     final subtitle = [
-      type == TransactionType.transfer
-          ? 'Transferência para meta'
-          : category?.name,
+      switch (type) {
+        TransactionType.transfer => 'Transferência para meta',
+        TransactionType.withdrawal => 'Resgate da meta',
+        _ => category?.name,
+      },
       if (installment != null && transaction.installmentsCount > 1)
         '${installment!.step}/${transaction.installmentsCount}',
       if (installment != null && !overdue)
@@ -64,7 +70,8 @@ class TransactionTile extends StatelessWidget {
         overdue ? scheme.error : scheme.onSurface,
       ),
       TransactionType.income => ('+ $amount', success),
-      TransactionType.transfer => (amount, scheme.onSurfaceVariant),
+      TransactionType.transfer ||
+      TransactionType.withdrawal => (amount, scheme.onSurfaceVariant),
     };
 
     return Card(
@@ -99,9 +106,11 @@ class TransactionTile extends StatelessWidget {
                         Text(
                           transaction.description?.trim().isNotEmpty == true
                               ? transaction.description!
-                              : (type == TransactionType.transfer
-                                    ? 'Transferência'
-                                    : category?.name ?? 'Transação'),
+                              : switch (type) {
+                                  TransactionType.transfer => 'Transferência',
+                                  TransactionType.withdrawal => 'Resgate',
+                                  _ => category?.name ?? 'Transação',
+                                },
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(

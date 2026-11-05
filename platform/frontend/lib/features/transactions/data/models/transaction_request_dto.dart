@@ -8,16 +8,16 @@ import '../../domain/entities/transaction_update.dart';
 
 abstract final class TransactionRequestDto {
   static Map<String, dynamic> store(TransactionInput input) {
-    final isTransfer = input.type == TransactionType.transfer;
+    final movesGoal = input.type.movesGoal;
     return {
       'type': input.type.apiValue,
-      if (isTransfer)
+      if (movesGoal)
         'goal_id': input.goalId
       else
         'category_id': input.categoryId,
       'description': input.description,
       'date': Dates.toApi(input.date),
-      if (isTransfer)
+      if (movesGoal)
         'total_amount': input.schedule.totalAmount.toDecimal()
       else
         ..._schedule(input.schedule),

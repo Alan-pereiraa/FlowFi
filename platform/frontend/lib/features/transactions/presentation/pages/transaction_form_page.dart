@@ -71,6 +71,11 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
 
   bool get _isEdit => widget.transactionId != null;
   bool get _isTransfer => _type == TransactionType.transfer;
+  bool get _isWithdrawal => _type == TransactionType.withdrawal;
+  bool get _movesGoal => _type.movesGoal;
+  String get _goalMissingMessage => _isWithdrawal
+      ? 'Escolha a meta de origem.'
+      : 'Escolha a meta de destino.';
   bool get _canSplit => _type == TransactionType.expense;
   bool get _isSplit => _canSplit && _installments > 1;
 
@@ -113,7 +118,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       _type = type;
       if (type != TransactionType.expense) _installments = 1;
     });
-    if (type == TransactionType.transfer &&
+    if (type.movesGoal &&
         ref
             .read(transactionFormControllerProvider(widget.transactionId))
             .goals
@@ -166,12 +171,10 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     final creatingRecurrence = !_isEdit && _recurring && !_isSplit;
     setState(() {
       _amountMissing = _amount.isZero ? 'Informe um valor.' : null;
-      _categoryMissing = !_isTransfer && _categoryId == null
+      _categoryMissing = !_movesGoal && _categoryId == null
           ? 'Escolha uma categoria.'
           : null;
-      _goalMissing = _isTransfer && _goalId == null
-          ? 'Escolha a meta de destino.'
-          : null;
+      _goalMissing = _movesGoal && _goalId == null ? _goalMissingMessage : null;
       _endDateMissing =
           creatingRecurrence &&
               _recurrenceEnd == RecurrenceEnd.date &&
@@ -193,8 +196,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       _controller.saveRecurring(
         RecurringInput(
           type: _type,
-          categoryId: _isTransfer ? null : _categoryId,
-          goalId: _isTransfer ? _goalId : null,
+          categoryId: _movesGoal ? null : _categoryId,
+          goalId: _movesGoal ? _goalId : null,
           amount: _amount,
           startDate: _date,
           description: description,
@@ -212,8 +215,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     _controller.save(
       TransactionInput(
         type: _type,
-        categoryId: _isTransfer ? null : _categoryId,
-        goalId: _isTransfer ? _goalId : null,
+        categoryId: _movesGoal ? null : _categoryId,
+        goalId: _movesGoal ? _goalId : null,
         date: _date,
         description: description,
         schedule: TransactionSchedule(
@@ -231,8 +234,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       _amount = draft.amount ?? Money.zero;
       _description.text = draft.description ?? '';
       _setDate(draft.date ?? today);
-      _categoryId = draft.isTransfer ? null : draft.categoryId;
-      _goalId = draft.isTransfer ? draft.goalId : null;
+      _categoryId = draft.movesGoal ? null : draft.categoryId;
+      _goalId = draft.movesGoal ? draft.goalId : null;
       _installments =
           !draft.recurring &&
               draft.type == TransactionType.expense &&
@@ -260,7 +263,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       _goalMissing = draft.missingGoal ? 'Escolha a meta de destino.' : null;
       _endDateMissing = null;
     });
-    if (draft.isTransfer &&
+    if (draft.movesGoal &&
         ref
             .read(transactionFormControllerProvider(widget.transactionId))
             .goals
@@ -452,6 +455,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       TransactionType.expense => scheme.error,
       TransactionType.income => theme.extension<AppColors>()!.success,
       TransactionType.transfer => scheme.primary,
+      TransactionType.withdrawal => scheme.tertiary,
     };
     final original = state.original;
     final recurrenceOn = _isEdit ? state.recurrenceActive : _recurring;
@@ -527,7 +531,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 onTap: _pickDate,
               ),
               const SizedBox(height: 16),
-              if (_isTransfer) ...[
+              if (_movesGoal) ...[
                 if (state.goalsLoading)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -547,6 +551,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   GoalPicker(
                     goals: state.goals,
                     selectedId: _goalId,
+                    label: _isWithdrawal ? 'Meta de origem' : 'Meta de destino',
                     errorText: _goalMissing ?? state.fieldErrors['goal_id'],
                     onSelected: (id) => setState(() {
                       _goalId = id;
@@ -616,28 +621,30 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                     case final message?)
                   error(message),
               ],
-              const SizedBox(height: 16),
-              RecurrenceCard(
-                value: recurrenceOn,
-                subtitle: _isEdit && state.recurrence != null
-                    ? _savedRecurrenceSubtitle(state.recurrence!)
-                    : _recurrenceSubtitle,
-                onChanged: _isSplit
-                    ? null
-                    : _isEdit
-                    ? (recurrenceOn && !state.busy
-                          ? (on) {
-                              if (!on) _confirmEndRecurrence();
-                            }
-                          : null)
-                    : (on) => setState(() {
-                        _recurring = on;
-                        if (!on) {
-                          _periodUnit = 'month';
-                          _periodInterval = 1;
-                        }
-                      }),
-              ),
+              if (!_isWithdrawal) ...[
+                const SizedBox(height: 16),
+                RecurrenceCard(
+                  value: recurrenceOn,
+                  subtitle: _isEdit && state.recurrence != null
+                      ? _savedRecurrenceSubtitle(state.recurrence!)
+                      : _recurrenceSubtitle,
+                  onChanged: _isSplit
+                      ? null
+                      : _isEdit
+                      ? (recurrenceOn && !state.busy
+                            ? (on) {
+                                if (!on) _confirmEndRecurrence();
+                              }
+                            : null)
+                      : (on) => setState(() {
+                          _recurring = on;
+                          if (!on) {
+                            _periodUnit = 'month';
+                            _periodInterval = 1;
+                          }
+                        }),
+                ),
+              ],
               if (!_isEdit && _recurring && !_isSplit) ...[
                 const SizedBox(height: 16),
                 ChoiceRow(

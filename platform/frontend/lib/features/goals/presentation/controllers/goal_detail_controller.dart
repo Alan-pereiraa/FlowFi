@@ -105,6 +105,29 @@ class GoalDetailController extends Notifier<GoalDetailState> {
     }
   }
 
+  Future<void> withdraw(Goal goal, int cents) async {
+    if (state.busy) return;
+    state = state.copyWith(withdrawing: true, withdrawError: () => null);
+    try {
+      final updated = await ref
+          .read(goalRepositoryProvider)
+          .withdraw(state.goal ?? goal, cents);
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        withdrawing: false,
+        goal: updated,
+        withdrawCount: state.withdrawCount + 1,
+      );
+      ref.invalidate(goalsListControllerProvider);
+    } on Failure catch (failure) {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        withdrawing: false,
+        withdrawError: () => ErrorMessages.general(failure),
+      );
+    }
+  }
+
   Future<void> remove(int id) async {
     if (state.busy) return;
     state = state.copyWith(removing: true, formError: () => null);

@@ -65,6 +65,16 @@ class TransactionTypeToggle extends StatelessWidget {
                     : () => onChanged!(TransactionType.income),
               ),
             ),
+            if (value == TransactionType.withdrawal)
+              Expanded(
+                child: _Segment(
+                  label: 'Resgate',
+                  selected: true,
+                  background: scheme.tertiaryContainer,
+                  foreground: scheme.onTertiaryContainer,
+                  onTap: null,
+                ),
+              ),
           ],
         ),
       ),

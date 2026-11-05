@@ -10,7 +10,6 @@ import '../../data/repositories/transaction_repository_impl.dart';
 import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction_input.dart';
-import '../../domain/entities/transaction_type.dart';
 import '../../domain/entities/transaction_update.dart';
 import 'transaction_form_state.dart';
 import '../../domain/entities/recurrence.dart';
@@ -67,7 +66,7 @@ class TransactionFormController extends Notifier<TransactionFormState> {
         recurrenceActive: recurrenceActive,
         recurrence: () => recurrence,
       );
-      if (original?.type == TransactionType.transfer) await loadGoals();
+      if (original?.type.movesGoal ?? false) await loadGoals();
     } on Failure catch (failure) {
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -118,15 +117,15 @@ class TransactionFormController extends Notifier<TransactionFormState> {
       await repository.create(draft);
       return;
     }
-    final isTransfer = original.type == TransactionType.transfer;
+    final movesGoal = original.type.movesGoal;
     final scheduleChanged =
         draft.schedule.totalAmount != original.totalAmount ||
         draft.schedule.installmentsCount != original.installmentsCount;
     await repository.update(
       original.id,
       TransactionUpdate(
-        categoryId: isTransfer ? null : draft.categoryId,
-        goalId: isTransfer ? draft.goalId : null,
+        categoryId: movesGoal ? null : draft.categoryId,
+        goalId: movesGoal ? draft.goalId : null,
         description: draft.description,
         date: draft.date,
         schedule: scheduleChanged ? draft.schedule : null,

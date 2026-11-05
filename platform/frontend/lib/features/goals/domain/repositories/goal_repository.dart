@@ -23,4 +23,6 @@ abstract interface class GoalRepository {
   /// moves in one call; the refresh that follows is best effort, so a failed
   /// refresh still returns the goal with the amount added.
   Future<Goal> deposit(Goal goal, int cents);
+
+  Future<Goal> withdraw(Goal goal, int cents);
 }

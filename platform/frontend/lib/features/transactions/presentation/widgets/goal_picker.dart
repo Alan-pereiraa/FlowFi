@@ -12,6 +12,7 @@ class GoalPicker extends StatelessWidget {
     required this.onSelected,
     this.errorText,
     this.enabled = true,
+    this.label = 'Meta de destino',
   });
 
   final List<Goal> goals;
@@ -19,6 +20,7 @@ class GoalPicker extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final String? errorText;
   final bool enabled;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,7 @@ class GoalPicker extends StatelessWidget {
       children: [
         Text.rich(
           TextSpan(
-            text: 'Meta de destino ',
+            text: '$label ',
             children: [
               TextSpan(
                 text: '*',

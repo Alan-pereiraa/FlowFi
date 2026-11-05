@@ -23,26 +23,34 @@ class LatestTransactionRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     final success = theme.extension<AppColors>()!.success;
     final type = transaction.type;
-    final isTransfer = type == TransactionType.transfer;
-    final tag = isTransfer ? transaction.goal : transaction.category;
+    final movesGoal = type.movesGoal;
+    final tag = movesGoal ? transaction.goal : transaction.category;
 
     final accent = HexColor.parse(
       tag?.color,
-      fallback: isTransfer ? scheme.primary : scheme.onSurfaceVariant,
+      fallback: movesGoal ? scheme.primary : scheme.onSurfaceVariant,
     );
-    final icon = tag == null && isTransfer
-        ? Icons.savings
+    final icon = tag == null && movesGoal
+        ? (type == TransactionType.withdrawal
+              ? Icons.account_balance_wallet
+              : Icons.savings)
         : AppIcons.resolve(tag?.icon);
     final description = transaction.description?.trim() ?? '';
     final title = description.isNotEmpty
         ? description
-        : tag?.name ?? (isTransfer ? 'Transferência para meta' : 'Transação');
+        : tag?.name ??
+              switch (type) {
+                TransactionType.transfer => 'Transferência para meta',
+                TransactionType.withdrawal => 'Resgate da meta',
+                _ => 'Transação',
+              };
 
     final amount = transaction.totalAmount.format();
     final (signed, amountColor) = switch (type) {
       TransactionType.expense => ('- $amount', scheme.error),
       TransactionType.income => ('+ $amount', success),
-      TransactionType.transfer => (amount, scheme.onSurfaceVariant),
+      TransactionType.transfer ||
+      TransactionType.withdrawal => (amount, scheme.onSurfaceVariant),
     };
 
     return Row(
