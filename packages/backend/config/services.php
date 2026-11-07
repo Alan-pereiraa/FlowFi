@@ -35,7 +35,6 @@ return [
         ],
     ],
 
-    // Gemini Interactions API (AI Studio key). gemini-3.5-transcribe is only on v1beta for now.
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'url' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta'),

@@ -2,16 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | The Flutter web dev server runs on its own origin (FRONTEND_URL), so
-    | browser calls to the API are cross-origin and need these headers.
-    |
-    */
-
     'paths' => ['api/*'],
 
     'allowed_methods' => ['*'],
