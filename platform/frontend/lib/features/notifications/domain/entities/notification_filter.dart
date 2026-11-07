@@ -1,5 +1,3 @@
-/// Which notifications the list shows. [status] is the API's `status` query
-/// value; `null` means no filter.
 enum NotificationFilter {
   all(label: 'Todas', status: null),
   unread(label: 'Não lidas', status: 'unread'),

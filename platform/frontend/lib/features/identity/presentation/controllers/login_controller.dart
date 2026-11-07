@@ -14,10 +14,7 @@ final loginControllerProvider =
       LoginController.new,
     );
 
-/// Email + OTP login on a single screen.
 class LoginController extends Notifier<LoginState> {
-  /// Fallback cooldown after each send. The backend allows 3 requests/min per
-  /// email; the 202 carries no `Retry-After` and web can't read the header.
   static const resendCooldown = Duration(seconds: 60);
 
   Timer? _timer;
@@ -105,7 +102,6 @@ class LoginController extends Notifier<LoginState> {
           .verifyOtp(email: email, code: code);
       if (!ref.mounted) return;
       state = state.copyWith(verifying: false);
-      // The router redirects off the login screen from the new session state.
       ref.read(sessionControllerProvider.notifier).signedIn(user);
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;

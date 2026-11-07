@@ -8,7 +8,6 @@ import '../../features/notifications/presentation/controllers/unread_count_contr
 import '../../shared/widgets/app_logo.dart';
 import '../routes.dart';
 
-/// Authenticated layout: shared top bar + four-tab bottom bar.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 

@@ -10,7 +10,6 @@ final goalsListControllerProvider =
       GoalsListController.new,
     );
 
-/// Loads the caller's goals; also used for pull-to-refresh and "retry".
 class GoalsListController extends Notifier<GoalsListState> {
   @override
   GoalsListState build() {
@@ -19,7 +18,6 @@ class GoalsListController extends Notifier<GoalsListState> {
   }
 
   Future<void> load() async {
-    // Keep what is already on screen while a refresh is in flight.
     state = GoalsListState(
       loading: true,
       loaded: state.loaded,

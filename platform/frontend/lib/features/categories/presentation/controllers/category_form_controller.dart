@@ -13,16 +13,12 @@ final categoryFormControllerProvider =
       CategoryFormController.new,
     );
 
-/// "Adicionar Categoria".
-/// Add, edit and remove a category from the same form.
 class CategoryFormController extends Notifier<CategoryFormState> {
   static const _fields = ['name', 'icon', 'color', 'limit_amount'];
 
   @override
   CategoryFormState build() => const CategoryFormState();
 
-  /// Fetches a category to edit when the screen was opened by id alone (a deep
-  /// link or a browser refresh on web) and nothing was handed over.
   Future<void> loadForEdit(int id) async {
     state = state.copyWith(loadingInitial: true, loadError: () => null);
     try {
@@ -86,7 +82,6 @@ class CategoryFormController extends Notifier<CategoryFormState> {
         created: () => outcome == CategoryOutcome.created ? category : null,
         outcome: () => outcome,
       );
-      // The list behind this form is now stale.
       ref.invalidate(categoriesListControllerProvider);
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;

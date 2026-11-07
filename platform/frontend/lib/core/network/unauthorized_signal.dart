@@ -8,9 +8,6 @@ final unauthorizedSignalProvider = Provider<UnauthorizedSignal>((ref) {
   return signal;
 });
 
-/// Fired by `AuthInterceptor` on a 401. `SessionController` listens to it.
-/// Exists so the interceptor never depends on the session controller, which
-/// would create a provider cycle.
 class UnauthorizedSignal {
   final _controller = StreamController<void>.broadcast();
 

@@ -4,7 +4,6 @@ import '../../../../shared/appearance/app_icons.dart';
 import '../../../../shared/appearance/hex_color.dart';
 import '../../../categories/domain/entities/category.dart';
 
-/// Horizontal row: "Criar Categoria" first, then one chip per category.
 class CategoryChips extends StatelessWidget {
   const CategoryChips({
     super.key,

@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Full-width primary button with a built-in loading state.
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,

@@ -2,11 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../utils/date_labels.dart';
 
-/// Filled field that opens the date picker. It is read-only on purpose: the
-/// picker is localized (pt-BR) and works the same on touch and on desktop web,
-/// and it keeps a malformed date from ever being typed.
-///
-/// A set date can be cleared with the trailing button, which reports `null`.
 class AppDateField extends StatefulWidget {
   const AppDateField({
     super.key,
@@ -28,10 +23,8 @@ class AppDateField extends StatefulWidget {
   final String? helper;
   final String? errorText;
 
-  /// Defaults to today.
   final DateTime? firstDate;
 
-  /// Defaults to 50 years from today.
   final DateTime? lastDate;
   final bool enabled;
 

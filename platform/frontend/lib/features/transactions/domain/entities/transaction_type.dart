@@ -2,7 +2,6 @@ enum TransactionType {
   income('income'),
   expense('expense'),
 
-  /// Money moved into a goal. Not creatable from the transaction form.
   transfer('transfer'),
   withdrawal('withdrawal');
 

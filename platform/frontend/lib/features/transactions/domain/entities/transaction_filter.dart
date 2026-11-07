@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import 'transaction_type.dart';
 
-/// Query filters of `GET /transactions`.
 @immutable
 class TransactionFilter {
   const TransactionFilter({

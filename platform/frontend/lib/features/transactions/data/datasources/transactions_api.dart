@@ -16,7 +16,6 @@ final transactionsApiProvider = Provider<TransactionsApi>(
   (ref) => TransactionsApi(ref.watch(apiClientProvider)),
 );
 
-/// One method per Transaction endpoint. Throws [ApiException].
 class TransactionsApi {
   TransactionsApi(this._dio);
 

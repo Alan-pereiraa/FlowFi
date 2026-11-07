@@ -2,8 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/breakpoints.dart';
 
-/// Page body that is full-bleed on phones and a centered column on wide
-/// screens, with side padding that grows with the viewport.
 class ResponsiveCenter extends StatelessWidget {
   const ResponsiveCenter({
     super.key,

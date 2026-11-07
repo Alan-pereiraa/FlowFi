@@ -4,7 +4,6 @@ import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 import 'installment_dto.dart';
 
-/// Mirrors the backend `TransactionResource` (the inner object).
 class TransactionDto {
   const TransactionDto({
     required this.id,
@@ -50,7 +49,6 @@ class TransactionDto {
   final String totalAmount;
   final int installmentsCount;
 
-  /// `single` | `periodic` | `custom`.
   final String? scheduleType;
   final String? periodUnit;
   final int? periodInterval;

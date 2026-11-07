@@ -1,36 +1,21 @@
 import 'package:material_ui/material_ui.dart';
 
-/// One group of the backend's icon catalog (`GET /icons`).
 class IconGroup {
   const IconGroup({required this.id, required this.label, required this.names});
 
   final String id;
 
-  /// pt-BR heading shown in the picker.
   final String label;
   final List<String> names;
 }
 
-/// Icon names the API accepts (backend `Shared/Constants/IconCatalog`, also
-/// served by `GET /icons`), resolved statically so icon tree-shaking keeps
-/// working. Keep in sync with the backend catalog.
-///
-/// The API stores icons by their Flutter `Icons` *name* (`"flight"`). This is
-/// the client side of that contract: name -> [IconData], plus the pt-BR
-/// grouping used by the picker.
-///
-/// The catalog is a closed set validated by the backend (`IconCatalog`), so it
-/// is bundled instead of fetched; when the backend adds an icon, add it here.
-/// An unknown name renders [fallback] instead of failing.
 abstract final class AppIcons {
   static const legacyFallback = Icons.label_outline;
   static const fallback = Icons.category_outlined;
 
-  /// Used when the user saves without choosing an icon.
   static const defaultCategory = 'local_offer';
   static const defaultGoal = 'savings';
 
-  /// Grouped like the backend catalog; the picker shows them in this order.
   static const groupsByKey = <String, Map<String, IconData>>{
     'finance': {
       'savings': Icons.savings,
@@ -138,7 +123,6 @@ abstract final class AppIcons {
     for (final group in groupsByKey.values) ...group,
   };
 
-  /// Unknown names (catalog drift) fall back to a neutral icon.
   static IconData resolveFromGroups(String? name) =>
       _byNameFromGroups[name] ?? legacyFallback;
 
@@ -285,12 +269,9 @@ abstract final class AppIcons {
     ),
   ];
 
-  /// Resolves an API icon name. Unknown or null gives [fallback].
   static IconData resolve(String? name) => _byName[name] ?? fallback;
 
-  // A const map of `Icons.*` keeps icon font tree-shaking working.
   static const _byName = <String, IconData>{
-    // finance
     'savings': Icons.savings,
     'account_balance': Icons.account_balance,
     'account_balance_wallet': Icons.account_balance_wallet,
@@ -299,7 +280,6 @@ abstract final class AppIcons {
     'attach_money': Icons.attach_money,
     'trending_up': Icons.trending_up,
     'receipt_long': Icons.receipt_long,
-    // home
     'home': Icons.home,
     'house': Icons.house,
     'chair': Icons.chair,
@@ -308,7 +288,6 @@ abstract final class AppIcons {
     'lightbulb': Icons.lightbulb,
     'build': Icons.build,
     'yard': Icons.yard,
-    // transport
     'directions_car': Icons.directions_car,
     'two_wheeler': Icons.two_wheeler,
     'directions_bus': Icons.directions_bus,
@@ -317,7 +296,6 @@ abstract final class AppIcons {
     'electric_car': Icons.electric_car,
     'pedal_bike': Icons.pedal_bike,
     'local_taxi': Icons.local_taxi,
-    // travel
     'flight': Icons.flight,
     'flight_takeoff': Icons.flight_takeoff,
     'luggage': Icons.luggage,
@@ -326,7 +304,6 @@ abstract final class AppIcons {
     'map': Icons.map,
     'explore': Icons.explore,
     'sailing': Icons.sailing,
-    // health
     'favorite': Icons.favorite,
     'fitness_center': Icons.fitness_center,
     'local_hospital': Icons.local_hospital,
@@ -335,7 +312,6 @@ abstract final class AppIcons {
     'self_improvement': Icons.self_improvement,
     'medication': Icons.medication,
     'monitor_heart': Icons.monitor_heart,
-    // education
     'school': Icons.school,
     'menu_book': Icons.menu_book,
     'science': Icons.science,
@@ -344,7 +320,6 @@ abstract final class AppIcons {
     'language': Icons.language,
     'psychology': Icons.psychology,
     'history_edu': Icons.history_edu,
-    // leisure
     'sports_esports': Icons.sports_esports,
     'movie': Icons.movie,
     'music_note': Icons.music_note,
@@ -353,7 +328,6 @@ abstract final class AppIcons {
     'celebration': Icons.celebration,
     'camera_alt': Icons.camera_alt,
     'restaurant': Icons.restaurant,
-    // shopping
     'shopping_cart': Icons.shopping_cart,
     'shopping_bag': Icons.shopping_bag,
     'storefront': Icons.storefront,
@@ -362,7 +336,6 @@ abstract final class AppIcons {
     'redeem': Icons.redeem,
     'local_offer': Icons.local_offer,
     'diamond': Icons.diamond,
-    // tech
     'smartphone': Icons.smartphone,
     'laptop': Icons.laptop,
     'headphones': Icons.headphones,
@@ -371,7 +344,6 @@ abstract final class AppIcons {
     'computer': Icons.computer,
     'videogame_asset': Icons.videogame_asset,
     'memory': Icons.memory,
-    // family
     'family_restroom': Icons.family_restroom,
     'child_care': Icons.child_care,
     'pets': Icons.pets,

@@ -63,8 +63,6 @@ abstract final class TransactionRequestDto {
     if (filter.overdue) 'overdue': 1,
   };
 
-  /// A split over N months, or a single installment (null period so the
-  /// backend stores it as `single`).
   static Map<String, dynamic> _schedule(TransactionSchedule schedule) => {
     'total_amount': schedule.totalAmount.toDecimal(),
     'installments_count': schedule.installmentsCount,

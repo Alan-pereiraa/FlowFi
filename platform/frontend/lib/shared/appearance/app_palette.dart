@@ -1,10 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Colors a user can give a category or goal. They are *data* (stored as
-/// `#RRGGBB` by the API), not theme tokens, so hex literals live here and
-/// nowhere in widgets. The set mirrors the backend seeders.
 abstract final class AppPalette {
-  /// Used when the user saves without choosing: the brand green.
   static const defaultHex = '#00530C';
 
   static const hexes = <String>[
@@ -26,7 +22,6 @@ abstract final class AppPalette {
     '#37474F',
   ];
 
-  /// Hues of the "choose a color" dot shown before anything is picked.
   static const wheel = <Color>[
     Colors.red,
     Colors.orange,
@@ -38,7 +33,6 @@ abstract final class AppPalette {
     Colors.red,
   ];
 
-  /// `#RRGGBB` -> [Color]. Falls back to [fallback], then to the brand green.
   static Color parse(String? hex, {Color? fallback}) {
     final cleaned = (hex ?? '').replaceFirst('#', '');
     final value = cleaned.length == 6 ? int.tryParse(cleaned, radix: 16) : null;

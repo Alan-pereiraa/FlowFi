@@ -173,7 +173,6 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           IconButton(
             tooltip: 'Marcar todas como lidas',
             icon: const Icon(Icons.done_all),
-            // The badge count covers unread items the current filter hides.
             onPressed:
                 ref.watch(unreadCountControllerProvider) > 0 ||
                     state.items.any((item) => !item.isRead)
@@ -203,7 +202,6 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   }
 }
 
-/// "Todas / Não lidas / Lidas", styled like the transactions filter chips.
 class _FilterChips extends StatelessWidget {
   const _FilterChips({required this.selected, required this.onSelected});
 

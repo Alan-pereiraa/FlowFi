@@ -1,9 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-/// `#RRGGBB` ↔ [Color] for the colors the API stores on categories and goals.
 abstract final class HexColor {
-  /// Choices offered by the color picker. These are user data sent to the
-  /// API, not theme colors.
   static const palette = [
     '#00530C',
     '#43A94D',
@@ -28,7 +25,6 @@ abstract final class HexColor {
     return Color(0xFF000000 | int.parse(match.group(1)!, radix: 16));
   }
 
-  /// [hex] or [fallback] when it is missing or malformed.
   static Color parse(String? hex, {required Color fallback}) =>
       tryParse(hex) ?? fallback;
 }

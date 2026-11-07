@@ -20,7 +20,6 @@ class User {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  /// First login: the account exists but has no name yet.
   bool get needsProfile => firstName == null || firstName!.trim().isEmpty;
 
   String get displayName => [

@@ -18,11 +18,9 @@ final transactionListControllerProvider =
       TransactionListState
     >(TransactionListController.new);
 
-/// Statement ("Transações" tab): filters, first page and infinite scroll.
 class TransactionListController extends Notifier<TransactionListState> {
   static const perPage = 20;
 
-  /// Bumped on every reload so a slow response for old filters is dropped.
   int _generation = 0;
 
   @override
@@ -42,7 +40,6 @@ class TransactionListController extends Notifier<TransactionListState> {
     );
   }
 
-  /// Reloads the first page (and the categories used by the rows).
   Future<void> refresh() async {
     final generation = ++_generation;
     final now = ref.read(clockProvider)();
@@ -91,7 +88,6 @@ class TransactionListController extends Notifier<TransactionListState> {
         loadingMore: false,
       );
     } on Failure {
-      // Keep what is on screen; scrolling again retries.
       if (!ref.mounted || generation != _generation) return;
       state = state.copyWith(loadingMore: false);
     }

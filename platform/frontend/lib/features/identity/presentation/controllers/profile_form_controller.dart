@@ -12,8 +12,6 @@ final profileFormControllerProvider =
       ProfileFormController.new,
     );
 
-/// Complete-profile (first login) and edit-profile forms, plus logout and
-/// account deletion, which have no screen of their own in the design.
 class ProfileFormController extends Notifier<ProfileFormState> {
   static const _fields = ['first_name', 'last_name', 'phone_number', 'email'];
 

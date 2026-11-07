@@ -1,9 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Round back button for app bars. Pair with `AppBar(leadingWidth: 64)`.
-/// Falls back to [fallbackRoute] when there is nothing to pop (a deep link or
-/// a browser refresh on web).
 class AppBackButton extends StatelessWidget {
   const AppBackButton({super.key, required this.fallbackRoute});
 

@@ -5,8 +5,6 @@ final secureStorageProvider = Provider<SecureStorage>(
   (ref) => SecureStorage(const FlutterSecureStorage()),
 );
 
-/// Session credentials. The API has no `GET /me`, so the user id is stored
-/// next to the token and used for every `/users/{id}` call.
 class SecureStorage {
   SecureStorage(this._storage);
 

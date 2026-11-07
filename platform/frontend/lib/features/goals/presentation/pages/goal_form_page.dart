@@ -17,10 +17,6 @@ import '../controllers/goal_form_controller.dart';
 import '../goal_routes.dart';
 import '../widgets/goal_tip_card.dart';
 
-/// "Nova Meta". Lives inside the app shell, so it has no `Scaffold`.
-// GAP: the design has no icon or color field for a goal, but the API requires
-// both. They default to the savings icon in the brand green and can be changed
-// from the button at the end of the name field.
 class GoalFormPage extends ConsumerStatefulWidget {
   const GoalFormPage({super.key});
 

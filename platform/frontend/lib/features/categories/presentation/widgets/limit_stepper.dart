@@ -4,8 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../shared/utils/currency_input_formatter.dart';
 
-/// The big "R$  −  00,00  +" limit control. The number can be typed (cents
-/// first, same mask as the money fields) or nudged with − and +.
 class LimitStepper extends StatefulWidget {
   const LimitStepper({
     super.key,
@@ -21,15 +19,11 @@ class LimitStepper extends StatefulWidget {
   final int cents;
   final ValueChanged<int> onChanged;
 
-  /// "Adicionar Limite" / "Editar Limite".
   final String caption;
 
-  /// The edit design puts the caption under the number; the add design puts
-  /// it above.
   final bool captionBelow;
   final String? errorText;
 
-  /// How much − and + move the value, in cents (R$ 50,00 by default).
   final int step;
   final bool enabled;
 
@@ -45,7 +39,6 @@ class _LimitStepperState extends State<LimitStepper> {
   @override
   void didUpdateWidget(LimitStepper oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Typing already keeps the controller in sync; this only reacts to − / +.
     if (CurrencyInputFormatter.centsOf(_controller.text) != widget.cents) {
       final text = CurrencyInputFormatter.textOf(widget.cents);
       _controller.value = TextEditingValue(
@@ -68,8 +61,7 @@ class _LimitStepperState extends State<LimitStepper> {
     );
   }
 
-  /// Slider range when the limit is small; it grows to fit a bigger typed value.
-  static const _sliderBaseMax = 500000; // R$ 5.000,00
+  static const _sliderBaseMax = 500000;
 
   Widget _limitSlider(BuildContext context) {
     final step = widget.step;
@@ -137,7 +129,6 @@ class _LimitStepperState extends State<LimitStepper> {
                       widget.onChanged(CurrencyInputFormatter.centsOf(text)),
                   cursorColor: scheme.primary,
                   style: amountStyle,
-                  // The theme's field is filled and outlined; this one is bare.
                   decoration: InputDecoration(
                     filled: false,
                     isDense: true,

@@ -1,5 +1,3 @@
-/// Route paths. Kept apart from `router.dart` so pages can navigate without
-/// importing the router (which imports the pages).
 abstract final class Routes {
   static const splash = '/splash';
   static const login = '/login';

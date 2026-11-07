@@ -32,7 +32,6 @@ class GoalFormController extends Notifier<GoalFormState> {
       final created = await ref.read(goalRepositoryProvider).create(data);
       if (!ref.mounted) return;
       state = GoalFormState(created: created);
-      // The list behind this form is now stale.
       ref.invalidate(goalsListControllerProvider);
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;

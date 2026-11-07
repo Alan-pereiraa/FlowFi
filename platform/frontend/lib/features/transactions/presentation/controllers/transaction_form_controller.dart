@@ -14,7 +14,6 @@ import '../../domain/entities/transaction_update.dart';
 import 'transaction_form_state.dart';
 import '../../domain/entities/recurrence.dart';
 
-/// Keyed by the transaction id; null is "Nova Transação".
 final transactionFormControllerProvider = NotifierProvider.autoDispose
     .family<TransactionFormController, TransactionFormState, int?>(
       TransactionFormController.new,
@@ -105,7 +104,6 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     }
   }
 
-  /// A category created from the "Criar Categoria" chip.
   void categoryCreated(Category category) {
     state = state.copyWith(categories: [...state.categories, category]);
   }

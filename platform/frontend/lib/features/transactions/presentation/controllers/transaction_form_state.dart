@@ -28,11 +28,9 @@ class TransactionFormState {
     this.formError,
   });
 
-  /// Loading categories (and the transaction, when editing).
   final bool loading;
   final String? loadError;
 
-  /// The transaction being edited; null on "Nova Transação".
   final Transaction? original;
   final List<Category> categories;
 
@@ -51,7 +49,6 @@ class TransactionFormState {
   final bool deleted;
   final bool recurrenceEnded;
 
-  /// pt-BR messages keyed by backend field name.
   final Map<String, String> fieldErrors;
   final String? formError;
 

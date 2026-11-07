@@ -1,7 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Rounded square with a pale wash of [color] and the icon in full [color]:
-/// how a goal or category is identified in lists.
 class AppIconTile extends StatelessWidget {
   const AppIconTile({
     super.key,

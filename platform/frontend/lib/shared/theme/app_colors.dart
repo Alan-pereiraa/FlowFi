@@ -1,7 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Design colors that have no slot in [ColorScheme].
-/// Read with `Theme.of(context).extension<AppColors>()!`.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({

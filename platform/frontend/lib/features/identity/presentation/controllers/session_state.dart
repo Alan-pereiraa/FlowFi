@@ -1,6 +1,5 @@
 import '../../domain/entities/user.dart';
 
-/// App-wide session. The router derives every auth redirect from it.
 sealed class SessionState {
   const SessionState();
 
@@ -15,8 +14,6 @@ sealed class SessionState {
   };
 }
 
-/// Booting: restoring the stored session. [errorMessage] is set when the
-/// restore failed for a reason other than a dead token (e.g. offline).
 final class SessionUnknown extends SessionState {
   const SessionUnknown({this.errorMessage});
 
@@ -27,7 +24,6 @@ final class SessionUnauthenticated extends SessionState {
   const SessionUnauthenticated();
 }
 
-/// Logged in, but `first_name` is still empty (first login).
 final class SessionNeedsProfile extends SessionState {
   const SessionNeedsProfile(this.user);
 

@@ -2,9 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../theme/app_colors.dart';
 
-/// Rounded progress bar. Defaults to the design system's track/success
-/// colors; pass [color] to tint it (a category's own color, or the error
-/// color when a limit is close). [value] is 0..1.
 class AppProgressBar extends StatelessWidget {
   const AppProgressBar({
     super.key,

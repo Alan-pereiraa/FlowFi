@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 
 import '../network/api_exception.dart';
 
-/// The only error type above the data layer.
 sealed class Failure implements Exception {
   const Failure();
 
@@ -17,7 +16,6 @@ sealed class Failure implements Exception {
   };
 }
 
-/// Session is over. The interceptor already cleared the token.
 final class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure();
 }
@@ -38,7 +36,6 @@ final class ValidationFailure extends Failure {
 final class RateLimitedFailure extends Failure {
   const RateLimitedFailure({this.retryAfter});
 
-  /// Null on web, where the `Retry-After` header is not exposed.
   final Duration? retryAfter;
 }
 
@@ -52,7 +49,6 @@ final class UnexpectedFailure extends Failure {
   final String? message;
 }
 
-/// Runs a datasource call and rethrows any API error as a [Failure].
 Future<T> guardApi<T>(Future<T> Function() call) async {
   try {
     return await call();

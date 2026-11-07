@@ -2,11 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../shared/money/money.dart';
 
-/// Amount and duration of a transaction. The backend splits [totalAmount]
-/// evenly over [installmentsCount] monthly installments.
-// GAP: the design's "Repetir mensalmente" means repeating the full amount,
-// but the backend only splits it (`installments_count`). Until that is
-// decided, the duration maps to a monthly split.
 @immutable
 class TransactionSchedule {
   const TransactionSchedule({

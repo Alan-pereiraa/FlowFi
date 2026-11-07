@@ -8,14 +8,11 @@ import '../../../../shared/widgets/app_icon_tile.dart';
 import '../../../../shared/widgets/app_progress_bar.dart';
 import '../../domain/entities/goal.dart';
 
-/// One goal in the "Minhas Metas" list: identity, deadline, saved vs. target
-/// and progress.
 class GoalCard extends StatelessWidget {
   const GoalCard({super.key, required this.goal, this.onTap});
 
   final Goal goal;
 
-  /// Opens the goal to edit it or add money. Null makes the card static.
   final VoidCallback? onTap;
 
   @override
@@ -44,7 +41,6 @@ class GoalCard extends StatelessWidget {
           onTap: onTap,
           child: Stack(
             children: [
-              // Soft glow in the corner, tinted by the goal's own color.
               Positioned(
                 top: -56,
                 right: -56,
@@ -142,7 +138,6 @@ class GoalCard extends StatelessWidget {
   }
 }
 
-/// Deadline chip: "Dez 2026", or "Contínuo" for a goal with no end date.
 class _DatePill extends StatelessWidget {
   const _DatePill({required this.date});
 

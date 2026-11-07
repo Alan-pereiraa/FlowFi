@@ -394,7 +394,6 @@ class _FilterChips extends ConsumerWidget {
   }
 }
 
-/// Wraps the nullable type so "all types" is distinguishable from dismissal.
 class _TypeChoice {
   const _TypeChoice(this.type);
 

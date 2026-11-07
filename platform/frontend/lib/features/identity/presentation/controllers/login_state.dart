@@ -17,10 +17,8 @@ class LoginState {
   final bool verifying;
   final bool codeSent;
 
-  /// Seconds left before "Enviar Código" can be used again.
   final int cooldownSeconds;
 
-  /// Bumped when the code field must be cleared (too many attempts).
   final int codeResetCount;
 
   final String? emailError;

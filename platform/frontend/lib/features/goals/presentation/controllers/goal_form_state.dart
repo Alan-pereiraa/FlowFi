@@ -13,10 +13,8 @@ class GoalFormState {
 
   final bool saving;
 
-  /// Set once the goal was created; the page then moves to the success screen.
   final GoalCreation? created;
 
-  /// pt-BR messages keyed by backend field name.
   final Map<String, String> fieldErrors;
   final String? formError;
 }

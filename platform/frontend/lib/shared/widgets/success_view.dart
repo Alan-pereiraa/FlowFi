@@ -3,7 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import 'app_button.dart';
 import 'app_logo.dart';
 
-/// Full-screen confirmation: logo, title, message and one primary action.
 class SuccessView extends StatelessWidget {
   const SuccessView({
     super.key,

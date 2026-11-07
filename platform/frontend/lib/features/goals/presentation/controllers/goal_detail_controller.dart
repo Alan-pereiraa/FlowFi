@@ -13,7 +13,6 @@ final goalDetailControllerProvider =
       GoalDetailController.new,
     );
 
-/// One goal: fetch it, edit it, add money to it, delete it.
 class GoalDetailController extends Notifier<GoalDetailState> {
   static const _fields = [
     'name',
@@ -26,8 +25,6 @@ class GoalDetailController extends Notifier<GoalDetailState> {
   @override
   GoalDetailState build() => const GoalDetailState();
 
-  /// Fetches the goal when the screen was opened by id alone and nothing was
-  /// handed over.
   Future<void> load(int id) async {
     state = state.copyWith(loadingInitial: true, loadError: () => null);
     try {
@@ -58,7 +55,6 @@ class GoalDetailController extends Notifier<GoalDetailState> {
         goal: goal,
         outcome: () => GoalOutcome.updated,
       );
-      // The list behind this screen is now stale.
       ref.invalidate(goalsListControllerProvider);
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;
@@ -81,7 +77,6 @@ class GoalDetailController extends Notifier<GoalDetailState> {
     }
   }
 
-  /// Adds [cents] to [goal]. The screen stays open and shows the new balance.
   Future<void> deposit(Goal goal, int cents) async {
     if (state.busy) return;
     state = state.copyWith(depositing: true, depositError: () => null);
