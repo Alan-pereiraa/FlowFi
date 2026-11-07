@@ -5,6 +5,7 @@ namespace App\Domains\Ledger\Services;
 use App\Domains\Ledger\Models\Installment;
 use App\Domains\Notification\Enums\NotificationType;
 use App\Domains\Notification\Service\NotificationService;
+use App\Domains\Shared\Casts\Money;
 use Carbon\CarbonImmutable;
 
 class ReminderService
@@ -47,8 +48,8 @@ class ReminderService
 
             $notification = $this->notifications->notifyOnce(
                 $user,
-                'Installment due soon',
-                "{$this->describe($installment)} is due on {$installment->date->toDateString()}.",
+                'Parcela vencendo em breve',
+                "{$this->describe($installment)} vence em {$installment->date->format('d/m/Y')}.",
                 NotificationType::Info,
                 'installment_due_soon',
                 $installment->id,
@@ -75,8 +76,8 @@ class ReminderService
 
             $notification = $this->notifications->notifyOnce(
                 $user,
-                'Installment overdue',
-                "{$this->describe($installment)} was due on {$installment->date->toDateString()} and is still unpaid.",
+                'Parcela em atraso',
+                "{$this->describe($installment)} venceu em {$installment->date->format('d/m/Y')} e ainda não foi paga.",
                 NotificationType::Error,
                 'installment_overdue',
                 $installment->id,
@@ -102,8 +103,8 @@ class ReminderService
 
             $notification = $this->notifications->notifyOnce(
                 $goal->user,
-                'Goal deadline approaching',
-                "Your goal \"{$goal->name}\" ends on {$goal->expires_at->toDateString()} and has {$goal->current_amount} of {$goal->target_amount} saved.",
+                'Prazo da meta se aproximando',
+                "Sua meta \"{$goal->name}\" termina em {$goal->expires_at->format('d/m/Y')} e tem {$this->brl($goal->current_amount)} de {$this->brl($goal->target_amount)} guardados.",
                 NotificationType::Warning,
                 'goal_deadline',
                 $goal->id,
@@ -123,19 +124,24 @@ class ReminderService
         if ($transaction->installments_count > 1) {
             $label = match (true) {
                 $transaction->description !== null => "\"{$transaction->description}\"",
-                $categoryName !== null => "your \"{$categoryName}\" expense",
-                default => 'your expense',
+                $categoryName !== null => "seu gasto em \"{$categoryName}\"",
+                default => 'seu gasto',
             };
 
-            return "Installment {$installment->step}/{$transaction->installments_count} of {$label} ({$installment->amount})";
+            return "Parcela {$installment->step}/{$transaction->installments_count} de {$label} ({$this->brl($installment->amount)})";
         }
 
         $label = match (true) {
-            $transaction->description !== null => "Expense \"{$transaction->description}\"",
-            $categoryName !== null => "Your \"{$categoryName}\" expense",
-            default => 'Your expense',
+            $transaction->description !== null => "Gasto \"{$transaction->description}\"",
+            $categoryName !== null => "Seu gasto em \"{$categoryName}\"",
+            default => 'Seu gasto',
         };
 
-        return "{$label} ({$installment->amount})";
+        return "{$label} ({$this->brl($installment->amount)})";
+    }
+
+    private function brl(string $amount): string
+    {
+        return Money::toBrl(Money::toCents($amount));
     }
 }

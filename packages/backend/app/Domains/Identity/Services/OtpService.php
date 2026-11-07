@@ -11,9 +11,9 @@ use Illuminate\Validation\ValidationException;
 
 class OtpService
 {
-    private const string INVALID = 'The code is invalid or has expired.';
+    private const string INVALID = 'O código é inválido ou expirou.';
 
-    private const string TOO_MANY_ATTEMPTS = 'Too many attempts. Request a new code.';
+    private const string TOO_MANY_ATTEMPTS = 'Muitas tentativas. Solicite um novo código.';
 
     public function __construct(
         private readonly OtpCodeRepositoryInterface $codes,

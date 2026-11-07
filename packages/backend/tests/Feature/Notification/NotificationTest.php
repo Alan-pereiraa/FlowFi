@@ -118,9 +118,9 @@ class NotificationTest extends TestCase
 
         $messages = Notification::where('subject', 'installment_overdue')->orderBy('id')->pluck('message')->all();
 
-        $this->assertContains('Your "Food" expense (45.00) was due on 2026-09-10 and is still unpaid.', $messages);
-        $this->assertContains('Installment 1/3 of "Notebook" (100.00) was due on 2026-08-10 and is still unpaid.', $messages);
-        $this->assertContains('Installment 2/3 of "Notebook" (100.00) was due on 2026-09-10 and is still unpaid.', $messages);
+        $this->assertContains('Seu gasto em "Food" (R$ 45,00) venceu em 10/09/2026 e ainda não foi paga.', $messages);
+        $this->assertContains('Parcela 1/3 de "Notebook" (R$ 100,00) venceu em 10/08/2026 e ainda não foi paga.', $messages);
+        $this->assertContains('Parcela 2/3 de "Notebook" (R$ 100,00) venceu em 10/09/2026 e ainda não foi paga.', $messages);
     }
 
     public function test_reminders_notify_only_unreached_goals_near_their_deadline(): void

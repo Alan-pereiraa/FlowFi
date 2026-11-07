@@ -27,7 +27,7 @@ class TranscriptionService
     public function transcribe(UploadedFile $audio): string
     {
         $mimeType = self::MIME_TYPES[$audio->guessExtension()] ?? throw ValidationException::withMessages([
-            'audio' => 'This audio format is not supported.',
+            'audio' => 'Este formato de áudio não é suportado.',
         ]);
 
         $transcript = trim($this->gemini->interact([
@@ -47,7 +47,7 @@ class TranscriptionService
 
         if ($transcript === '') {
             throw ValidationException::withMessages([
-                'audio' => 'The audio could not be understood. Record it again or type the transaction.',
+                'audio' => 'Não foi possível entender o áudio. Grave novamente ou digite a transação.',
             ]);
         }
 

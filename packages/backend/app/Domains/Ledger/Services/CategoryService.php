@@ -37,7 +37,7 @@ class CategoryService
     public function findOwned(User $user, int $id): Category
     {
         return $this->categories->findFor($user, $id)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function update(Category $category, array $data): Category
@@ -90,7 +90,7 @@ class CategoryService
 
             if ($spent + $total > $limit) {
                 throw ValidationException::withMessages([
-                    'total_amount' => "This transaction exceeds the category limit for {$month}.",
+                    'total_amount' => "Esta transação ultrapassa o limite da categoria em {$monthStart->format('m/Y')}.",
                 ]);
             }
         }
@@ -110,8 +110,8 @@ class CategoryService
         if ($spent * 100 >= $limit * 80) {
             $this->notifications->notifyOnce(
                 $user,
-                'Category limit warning',
-                "You have spent over 80% of your limit for the category \"{$category->name}\".",
+                'Limite da categoria quase atingido',
+                "Você já gastou mais de 80% do limite da categoria \"{$category->name}\".",
                 NotificationType::Warning,
                 'category_limit_warning',
                 $category->id,

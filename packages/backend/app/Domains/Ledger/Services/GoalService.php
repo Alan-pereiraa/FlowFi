@@ -34,7 +34,7 @@ class GoalService
     public function findOwned(User $user, int $id): Goal
     {
         return $this->goals->findFor($user, $id)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function update(Goal $goal, array $data): Goal
@@ -56,7 +56,7 @@ class GoalService
     {
         if ($this->goals->hasTransactions($goal)) {
             throw ValidationException::withMessages([
-                'goal' => 'Cannot delete a goal that has transactions.',
+                'goal' => 'Não é possível apagar uma meta que possui transações.',
             ]);
         }
 
