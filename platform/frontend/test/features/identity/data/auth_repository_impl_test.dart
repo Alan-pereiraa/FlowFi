@@ -49,7 +49,7 @@ void main() {
       const ApiException(
         statusCode: 422,
         fieldErrors: {
-          'code': ['The code is invalid or has expired.'],
+          'code': ['O código é inválido ou expirou.'],
         },
       ),
     );

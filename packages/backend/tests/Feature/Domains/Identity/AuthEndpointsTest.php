@@ -40,7 +40,7 @@ class AuthEndpointsTest extends TestCase
     {
         $this->postJson(self::REQUEST_OTP_URL, ['email' => self::EMAIL])
             ->assertStatus(202)
-            ->assertExactJson(['message' => 'Code sent.']);
+            ->assertExactJson(['message' => 'Código enviado.']);
 
         Mail::assertSent(
             OtpCodeMail::class,
@@ -141,7 +141,7 @@ class AuthEndpointsTest extends TestCase
         $this->withToken($token)
             ->json(self::LOGOUT_METHOD, self::LOGOUT_URL)
             ->assertOk()
-            ->assertExactJson(['message' => 'Logged out.']);
+            ->assertExactJson(['message' => 'Sessão encerrada.']);
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }

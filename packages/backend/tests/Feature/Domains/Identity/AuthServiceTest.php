@@ -19,9 +19,9 @@ class AuthServiceTest extends TestCase
 
     private const EMAIL = 'user@example.com';
 
-    private const INVALID = 'The code is invalid or has expired.';
+    private const INVALID = 'O código é inválido ou expirou.';
 
-    private const DEACTIVATED = 'This account has been deactivated.';
+    private const DEACTIVATED = 'Esta conta foi desativada.';
 
     protected function setUp(): void
     {

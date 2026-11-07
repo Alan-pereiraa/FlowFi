@@ -16,7 +16,7 @@ class UserService
     public function findOwned(User $caller, int $id): User
     {
         if ($caller->id !== $id) {
-            throw new ModelNotFoundException('Not found.');
+            throw new ModelNotFoundException('Não encontrado.');
         }
 
         return $caller;

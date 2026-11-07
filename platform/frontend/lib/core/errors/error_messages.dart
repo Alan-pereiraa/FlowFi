@@ -1,7 +1,7 @@
 import 'failure.dart';
 
 abstract final class ErrorMessages {
-  static const _tooManyAttempts = 'Too many attempts. Request a new code.';
+  static const _tooManyAttempts = 'Muitas tentativas. Solicite um novo código.';
 
   static String? forField(ValidationFailure failure, String field) =>
       failure.firstErrorFor(field);

@@ -15,9 +15,9 @@ class OtpServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const INVALID = 'The code is invalid or has expired.';
+    private const INVALID = 'O código é inválido ou expirou.';
 
-    private const TOO_MANY_ATTEMPTS = 'Too many attempts. Request a new code.';
+    private const TOO_MANY_ATTEMPTS = 'Muitas tentativas. Solicite um novo código.';
 
     private const EMAIL = 'user@example.com';
 

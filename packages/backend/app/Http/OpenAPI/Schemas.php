@@ -41,7 +41,7 @@ use OpenApi\Attributes as OA;
     description: 'Token ausente ou inválido',
     content: new OA\JsonContent(
         properties: [
-            new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+            new OA\Property(property: 'message', type: 'string', example: 'Não autenticado.'),
         ],
     ),
 )]
@@ -50,7 +50,7 @@ use OpenApi\Attributes as OA;
     description: 'Recurso não encontrado (ou não pertence ao usuário autenticado)',
     content: new OA\JsonContent(
         properties: [
-            new OA\Property(property: 'message', type: 'string', example: 'Not found.'),
+            new OA\Property(property: 'message', type: 'string', example: 'Não encontrado.'),
         ],
     ),
 )]
@@ -59,12 +59,12 @@ use OpenApi\Attributes as OA;
     description: 'Erro de validação',
     content: new OA\JsonContent(
         properties: [
-            new OA\Property(property: 'message', type: 'string', example: 'The name field is required.'),
+            new OA\Property(property: 'message', type: 'string', example: 'O campo nome é obrigatório.'),
             new OA\Property(
                 property: 'errors',
                 type: 'object',
                 additionalProperties: new OA\AdditionalProperties(type: 'array', items: new OA\Items(type: 'string')),
-                example: ['name' => ['The name field is required.']],
+                example: ['name' => ['O campo nome é obrigatório.']],
             ),
         ],
     ),
@@ -74,7 +74,7 @@ use OpenApi\Attributes as OA;
     description: 'Limite de requisições excedido',
     content: new OA\JsonContent(
         properties: [
-            new OA\Property(property: 'message', type: 'string', example: 'Too Many Attempts.'),
+            new OA\Property(property: 'message', type: 'string', example: 'Muitas tentativas. Aguarde um momento.'),
         ],
     ),
 )]
@@ -86,7 +86,7 @@ use OpenApi\Attributes as OA;
             new OA\Property(
                 property: 'message',
                 type: 'string',
-                example: 'The AI provider could not process this request. Try again or fill in the transaction manually.',
+                example: 'O provedor de IA não conseguiu processar esta solicitação. Tente novamente ou preencha a transação manualmente.',
             ),
         ],
     ),

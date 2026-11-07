@@ -26,9 +26,9 @@ void main() {
       _error(
         422,
         data: {
-          'message': 'The code is invalid or has expired.',
+          'message': 'O código é inválido ou expirou.',
           'errors': {
-            'code': ['The code is invalid or has expired.'],
+            'code': ['O código é inválido ou expirou.'],
           },
         },
       ),
@@ -38,7 +38,7 @@ void main() {
     expect(failure, isA<ValidationFailure>());
     expect(
       (failure as ValidationFailure).firstErrorFor('code'),
-      'The code is invalid or has expired.',
+      'O código é inválido ou expirou.',
     );
   });
 

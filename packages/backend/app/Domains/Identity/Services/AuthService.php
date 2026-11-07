@@ -29,7 +29,7 @@ class AuthService
 
         if ($user?->trashed()) {
             throw ValidationException::withMessages([
-                'email' => ['This account has been deactivated.'],
+                'email' => ['Esta conta foi desativada.'],
             ]);
         }
 

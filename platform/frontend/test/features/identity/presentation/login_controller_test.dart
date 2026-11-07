@@ -96,7 +96,7 @@ void main() {
     ).thenThrow(
       const ValidationFailure(
         fieldErrors: {
-          'code': ['Too many attempts. Request a new code.'],
+          'code': ['Muitas tentativas. Solicite um novo código.'],
         },
       ),
     );
@@ -105,7 +105,7 @@ void main() {
     await controller().verify('a@b.com', '000000');
 
     final state = container.read(loginControllerProvider);
-    expect(state.codeError, 'Too many attempts. Request a new code.');
+    expect(state.codeError, 'Muitas tentativas. Solicite um novo código.');
     expect(state.codeResetCount, 1);
     expect(state.canSend, isTrue);
   });

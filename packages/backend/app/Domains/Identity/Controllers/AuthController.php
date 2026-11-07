@@ -40,7 +40,7 @@ class AuthController extends Controller
     {
         $this->auth->requestOtp($request->validated('email'));
 
-        return response()->json(['message' => 'Code sent.'], 202);
+        return response()->json(['message' => 'Código enviado.'], 202);
     }
 
     #[OA\Post(
@@ -96,6 +96,6 @@ class AuthController extends Controller
     {
         $this->auth->logout($request->user(), $request->validated('device_token'));
 
-        return response()->json(['message' => 'Logged out.']);
+        return response()->json(['message' => 'Sessão encerrada.']);
     }
 }

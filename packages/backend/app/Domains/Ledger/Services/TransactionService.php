@@ -44,7 +44,7 @@ class TransactionService
     public function findOwned(User $user, int $id): Transaction
     {
         return $this->transactions->findFor($user, $id)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function findOwnedInstallment(User $user, int $transactionId, int $installmentId): Installment
@@ -52,7 +52,7 @@ class TransactionService
         $transaction = $this->findOwned($user, $transactionId);
 
         return $this->transactions->findInstallmentFor($transaction, $installmentId)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function create(User $user, array $data): Transaction

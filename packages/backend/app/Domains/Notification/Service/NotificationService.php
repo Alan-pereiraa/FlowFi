@@ -29,7 +29,7 @@ class NotificationService
     public function findOwned(User $user, int $id): Notification
     {
         return $this->notifications->findFor($user, $id)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function notify(

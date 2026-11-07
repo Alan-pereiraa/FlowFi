@@ -101,7 +101,7 @@ class TransactionDraftService
         $draft = json_decode($output, true);
 
         if (! is_array($draft)) {
-            throw new HttpException(502, 'The AI provider returned an invalid draft. Try again or fill in the transaction manually.');
+            throw new HttpException(502, 'O provedor de IA retornou um rascunho inválido. Tente novamente ou preencha a transação manualmente.');
         }
 
         $categoryIds = $categories->modelKeys();

@@ -41,7 +41,7 @@ class RecurringTransactionService
     public function findOwned(User $user, int $id): RecurringTransaction
     {
         return $this->recurring->findFor($user, $id)
-            ?? throw new ModelNotFoundException('Not found.');
+            ?? throw new ModelNotFoundException('Não encontrado.');
     }
 
     public function create(User $user, array $data): RecurringTransaction

@@ -41,7 +41,7 @@ class GeminiClient
         Log::warning('Gemini request failed.', ['status' => $status, 'reason' => $reason]);
 
         return in_array($status, [429, 503], true)
-            ? new HttpException(503, 'The AI provider is busy. Try again in a moment.')
-            : new HttpException(502, 'The AI provider could not process this request. Try again or fill in the transaction manually.');
+            ? new HttpException(503, 'O provedor de IA está ocupado. Tente novamente em instantes.')
+            : new HttpException(502, 'O provedor de IA não conseguiu processar esta solicitação. Tente novamente ou preencha a transação manualmente.');
     }
 }
