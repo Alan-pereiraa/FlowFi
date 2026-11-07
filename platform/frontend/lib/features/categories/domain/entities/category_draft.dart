@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-/// What the add/edit category form collects. Used for both create and update:
-/// an update always sends every field, so `limitCents: null` clears the limit.
 @immutable
 class CategoryDraft {
   const CategoryDraft({
@@ -15,6 +13,5 @@ class CategoryDraft {
   final String icon;
   final String color;
 
-  /// Null removes (or never sets) the monthly limit.
   final int? limitCents;
 }

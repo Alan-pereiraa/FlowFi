@@ -27,8 +27,6 @@ class SessionController extends Notifier<SessionState> {
     return const SessionUnknown();
   }
 
-  /// Reads the stored session and loads the user. Also used as "retry" on the
-  /// splash screen.
   Future<void> restore() async {
     state = const SessionUnknown();
     final auth = ref.read(authRepositoryProvider);
@@ -48,7 +46,6 @@ class SessionController extends Notifier<SessionState> {
     } on UnauthorizedFailure {
       if (ref.mounted) state = const SessionUnauthenticated();
     } on NotFoundFailure {
-      // Stored id doesn't match the token: treat the session as broken.
       await auth.clearSession();
       if (ref.mounted) state = const SessionUnauthenticated();
     } on Failure catch (failure) {
@@ -66,14 +63,11 @@ class SessionController extends Notifier<SessionState> {
   void userUpdated(User user) => state = SessionState.fromUser(user);
 
   Future<void> logout() async {
-    // Before the API token is cleared: unregistering the device needs it.
     await ref.read(pushRegistrationProvider).stop();
     await ref.read(authRepositoryProvider).logout();
     if (ref.mounted) state = const SessionUnauthenticated();
   }
 
-  /// Soft-deletes the account. Throws `Failure`; the email stays blocked for
-  /// future logins.
   Future<void> deleteAccount() async {
     final user = state.user;
     if (user == null) return;

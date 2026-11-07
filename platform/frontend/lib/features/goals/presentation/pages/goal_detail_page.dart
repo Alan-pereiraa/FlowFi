@@ -23,14 +23,6 @@ import '../../domain/entities/goal_update.dart';
 import '../controllers/goal_detail_controller.dart';
 import '../controllers/goal_detail_state.dart';
 
-/// One goal: where it stands, add money to it, edit it, delete it. Lives
-/// inside the app shell, so it has no `Scaffold`.
-///
-/// Opened with the [Goal] already in hand (`extra`) when coming from the list;
-/// with only the [goalId] (a deep link, or a browser refresh on web) it is
-/// fetched first.
-// GAP: no design exists for this screen; it is built from the design system's
-// own pieces (cards, fields, buttons) and mirrors the "Nova Meta" form.
 class GoalDetailPage extends ConsumerStatefulWidget {
   const GoalDetailPage({super.key, required this.goalId, this.initial});
 
@@ -78,7 +70,6 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     super.dispose();
   }
 
-  /// Fills the edit form once, from the goal as first known.
   void _fill(Goal goal) {
     _filled = true;
     _name.text = goal.name;
@@ -215,7 +206,6 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     final state = ref.watch(goalDetailControllerProvider);
     final goal = state.goal ?? widget.initial;
 
-    // Fetched by id: fill the form once, when the goal arrives.
     if (!_filled && state.goal != null) _fill(state.goal!);
 
     return SingleChildScrollView(
@@ -257,8 +247,6 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Phone: one column. Wide: where it stands and add-money on the left,
-        // the edit form on the right.
         if (constraints.maxWidth < 860) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -479,7 +467,6 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
   }
 }
 
-/// Spinner while the goal is fetched, or the error with a retry.
 class _Loading extends StatelessWidget {
   const _Loading({required this.error, required this.onRetry});
 
@@ -518,7 +505,6 @@ class _Loading extends StatelessWidget {
   }
 }
 
-/// Where the goal stands: identity, deadline, saved vs. target, what is left.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.goal});
 

@@ -12,13 +12,10 @@ class ProfileFormState {
 
   final bool saving;
 
-  /// Logging out or deleting the account.
   final bool leaving;
 
-  /// The last save succeeded.
   final bool saved;
 
-  /// pt-BR messages keyed by backend field name.
   final Map<String, String> fieldErrors;
   final String? formError;
 

@@ -10,14 +10,11 @@ import '../controllers/goals_list_controller.dart';
 import '../goal_routes.dart';
 import '../widgets/goal_card.dart';
 
-/// "Minhas Metas". Lives inside the app shell (top bar + bottom tabs), so it
-/// has no `Scaffold` of its own.
 class GoalsPage extends ConsumerWidget {
   const GoalsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // A refresh that fails over data already on screen: say so, keep the data.
     ref.listen(goalsListControllerProvider.select((s) => s.errorMessage), (
       _,
       message,
@@ -82,8 +79,6 @@ class GoalsPage extends ConsumerWidget {
   }
 }
 
-/// Title and subtitle, with the create button under them on a phone and
-/// beside them on a wide screen.
 class _Header extends StatelessWidget {
   const _Header({required this.onCreate});
 
@@ -130,7 +125,6 @@ class _Header extends StatelessWidget {
           children: [
             Expanded(child: texts),
             const SizedBox(width: 24),
-            // Tight width: the theme's filled button is otherwise infinitely wide.
             SizedBox(width: 240, child: button),
           ],
         );

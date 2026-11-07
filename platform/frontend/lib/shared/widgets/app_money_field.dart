@@ -2,9 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../utils/currency_input_formatter.dart';
 
-/// Filled field for an amount in reais, same look as `AppTextField` (label
-/// above, theme decoration) with an "R$" prefix and a cents-first mask.
-/// Read the value with `CurrencyInputFormatter.centsOf(controller.text)`.
 class AppMoneyField extends StatelessWidget {
   const AppMoneyField({
     super.key,

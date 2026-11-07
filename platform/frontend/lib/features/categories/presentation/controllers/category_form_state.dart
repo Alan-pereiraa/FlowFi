@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import '../../domain/entities/category.dart';
 
-/// How the form ended; the page reacts by showing a message and leaving.
 enum CategoryOutcome { created, updated, removed }
 
 @immutable
@@ -19,10 +18,8 @@ class CategoryFormState {
     this.formError,
   });
 
-  /// Edit by id with nothing handed over: the category is being fetched.
   final bool loadingInitial;
 
-  /// The fetched category, for that same case.
   final Category? initial;
   final String? loadError;
 
@@ -30,10 +27,8 @@ class CategoryFormState {
   final bool removing;
   final CategoryOutcome? outcome;
 
-  /// Set once the API accepted the category.
   final Category? created;
 
-  /// pt-BR messages keyed by backend field name.
   final Map<String, String> fieldErrors;
   final String? formError;
 

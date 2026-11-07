@@ -2,7 +2,6 @@ import '../../../../shared/utils/date_labels.dart';
 import '../../../../shared/utils/money.dart';
 import '../../domain/entities/new_goal.dart';
 
-/// Body of `POST /goals`. The initial amount is not part of it.
 class NewGoalDto {
   const NewGoalDto(this.data);
 

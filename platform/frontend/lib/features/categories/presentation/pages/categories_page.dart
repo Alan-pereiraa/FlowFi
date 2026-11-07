@@ -10,15 +10,11 @@ import '../category_routes.dart';
 import '../controllers/categories_list_controller.dart';
 import '../widgets/category_card.dart';
 
-/// "Categorias": every category with its limit, the entry point to add, edit
-/// and remove them. A tab of the app shell (top bar + bottom tabs), so it has
-/// no `Scaffold` of its own.
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // A refresh that fails over data already on screen: say so, keep the data.
     ref.listen(categoriesListControllerProvider.select((s) => s.errorMessage), (
       _,
       message,
@@ -105,8 +101,6 @@ class CategoriesPage extends ConsumerWidget {
   }
 }
 
-/// Title and subtitle, with the create button under them on a phone and
-/// beside them on a wide screen.
 class _Header extends StatelessWidget {
   const _Header({required this.onCreate});
 
@@ -153,7 +147,6 @@ class _Header extends StatelessWidget {
           children: [
             Expanded(child: texts),
             const SizedBox(width: 24),
-            // Tight width: the theme's filled button is otherwise infinitely wide.
             SizedBox(width: 240, child: button),
           ],
         );

@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Centered icon + title + optional message, for empty or not-yet-built screens.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,

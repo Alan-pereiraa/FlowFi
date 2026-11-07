@@ -7,12 +7,6 @@ import '../../../../shared/widgets/app_icon_tile.dart';
 import '../../../../shared/widgets/app_progress_bar.dart';
 import '../../domain/entities/category.dart';
 
-/// One category, as on the dashboard: icon, name, an "Editar" pill and the
-/// limit.
-///
-/// Without [spentCents] it shows the limit only. With it, it also shows the
-/// spent / limit amounts, a progress bar in the category's color, the
-/// percentage, and adds a red "Próximo do limite" warning from 80%.
 class CategoryCard extends StatelessWidget {
   const CategoryCard({
     super.key,
@@ -24,7 +18,6 @@ class CategoryCard extends StatelessWidget {
   final Category category;
   final VoidCallback onEdit;
 
-  /// Spent this month in this category; null when unknown.
   final int? spentCents;
 
   @override
@@ -35,8 +28,6 @@ class CategoryCard extends StatelessWidget {
 
     final spent = spentCents;
     final nearLimit = spent != null && category.isNearLimit(spent);
-    // The card always keeps the category's own color; only the
-    // "Próximo do limite" warning is red.
     final accent = color;
     final limitText = category.limitCents == null
         ? 'Sem limite'

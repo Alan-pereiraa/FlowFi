@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-/// One page of a Laravel paginator response (`data`, `meta`, `links`).
 @immutable
 class Paginated<T> {
   const Paginated({

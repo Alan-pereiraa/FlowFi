@@ -13,11 +13,6 @@ import '../../../../shared/widgets/responsive_grid.dart';
 import '../../domain/entities/goal_creation.dart';
 import '../goal_routes.dart';
 
-/// "Meta criada com sucesso!". Lives inside the app shell, so it has no
-/// `Scaffold`.
-// GAP: the design lists a "Categoria" row, but goals have no category in the
-// API. It is left out rather than invented. "Contribuição Mensal" is derived
-// on the client from the target, what is saved and the deadline.
 class GoalCreatedPage extends StatelessWidget {
   const GoalCreatedPage({super.key, required this.creation});
 

@@ -17,15 +17,12 @@ import '../features/transactions/presentation/pages/transactions_page.dart';
 import 'routes.dart';
 import 'shell/app_shell.dart';
 
-/// Every auth redirect, derived from session state only. Navigation after
-/// login/logout is never imperative.
 String? redirectFor(SessionState session, String location) {
   return switch (session) {
     SessionUnknown() => location == Routes.splash ? null : Routes.splash,
     SessionUnauthenticated() => location == Routes.login ? null : Routes.login,
     SessionNeedsProfile() =>
       location == Routes.completeProfile ? null : Routes.completeProfile,
-    // Only reachable right after the first-login form is saved.
     SessionAuthenticated() when location == Routes.completeProfile =>
       Routes.profileSuccess,
     SessionAuthenticated()

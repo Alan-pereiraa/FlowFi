@@ -11,7 +11,6 @@ final goalsApiProvider = Provider<GoalsApi>(
   (ref) => GoalsApi(ref.watch(apiClientProvider)),
 );
 
-/// One method per endpoint used by the goals screens. Throws [ApiException].
 class GoalsApi {
   GoalsApi(this._dio);
 
@@ -51,9 +50,6 @@ class GoalsApi {
     return GoalDto.fromJson(response.data!['data'] as Map<String, dynamic>);
   }
 
-  /// Puts money into a goal: a `transfer` transaction, which is how the
-  /// backend credits `current_amount`. [amount] is a decimal string and
-  /// [date] is `yyyy-MM-dd`.
   Future<void> depositToGoal({
     required int goalId,
     required String amount,

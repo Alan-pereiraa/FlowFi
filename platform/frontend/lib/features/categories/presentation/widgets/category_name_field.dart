@@ -3,12 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../shared/appearance/app_icons.dart';
 import '../../../../shared/appearance/app_palette.dart';
 
-/// Category name field with its two appearance controls built in, as in the
-/// design: a color dot at the start (opens the palette) and an icon button at
-/// the end (opens the icon catalog).
-///
-/// `AppTextField` only takes a plain icon as prefix, so this field builds its
-/// own decoration from the same theme.
 class CategoryNameField extends StatelessWidget {
   const CategoryNameField({
     super.key,
@@ -28,10 +22,8 @@ class CategoryNameField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
 
-  /// `#RRGGBB`, or null while the user has not chosen one.
   final String? color;
 
-  /// Icon name, or null while the user has not chosen one.
   final String? icon;
   final VoidCallback onPickColor;
   final VoidCallback onPickIcon;
@@ -87,7 +79,6 @@ class CategoryNameField extends StatelessWidget {
   }
 }
 
-/// The chosen color, or a color wheel while none is chosen.
 class _ColorDot extends StatelessWidget {
   const _ColorDot({required this.hex});
 

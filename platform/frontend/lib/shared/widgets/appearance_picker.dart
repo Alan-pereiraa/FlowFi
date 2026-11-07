@@ -4,8 +4,6 @@ import '../appearance/app_icons.dart';
 import '../appearance/app_palette.dart';
 import 'app_button.dart';
 
-/// What the picker returns: the icon name and/or `#RRGGBB` color the user
-/// settled on. A field is null when the picker did not offer it.
 class AppearanceChoice {
   const AppearanceChoice({this.icon, this.color});
 
@@ -13,7 +11,6 @@ class AppearanceChoice {
   final String? color;
 }
 
-/// Bottom sheet to choose both an icon and a color, confirmed with "Concluir".
 Future<AppearanceChoice?> showAppearanceSheet(
   BuildContext context, {
   String? icon,
@@ -28,7 +25,6 @@ Future<AppearanceChoice?> showAppearanceSheet(
   );
 }
 
-/// Bottom sheet with only the color palette. Returns the chosen `#RRGGBB`.
 Future<String?> showColorPickerSheet(
   BuildContext context, {
   String? selected,
@@ -42,7 +38,6 @@ Future<String?> showColorPickerSheet(
   return choice?.color;
 }
 
-/// Bottom sheet with only the icon catalog. Returns the chosen icon name.
 Future<String?> showIconPickerSheet(
   BuildContext context, {
   String? selected,
@@ -70,7 +65,6 @@ Future<AppearanceChoice?> _show(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    // Keeps the sheet a readable column on wide web windows.
     constraints: const BoxConstraints(maxWidth: 560),
     builder: (_) => _AppearanceSheet(
       icon: icon,
@@ -102,7 +96,6 @@ class _AppearanceSheetState extends State<_AppearanceSheet> {
   String? _icon;
   String? _color;
 
-  /// One section only: tapping a value closes the sheet at once.
   bool get _single => !(widget.pickIcon && widget.pickColor);
 
   @override

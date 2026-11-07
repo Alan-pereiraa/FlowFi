@@ -26,7 +26,6 @@ class NotificationListController extends Notifier<NotificationListState> {
     return const NotificationListState(loading: true);
   }
 
-  /// Switches the filter and reloads from the first page.
   Future<void> setFilter(NotificationFilter filter) async {
     if (filter == state.filter) return;
     state = NotificationListState(filter: filter, loading: true);
@@ -104,8 +103,6 @@ class NotificationListController extends Notifier<NotificationListState> {
     }
   }
 
-  /// Marks every notification read, including ones not loaded yet (the API
-  /// updates them all). The list updates right away and rolls back on error.
   Future<String?> markAllAsRead() async {
     final original = state.items;
     final now = ref.read(clockProvider)();
@@ -117,7 +114,6 @@ class NotificationListController extends Notifier<NotificationListState> {
     try {
       await ref.read(notificationRepositoryProvider).markAllAsRead();
       if (!ref.mounted) return null;
-      // "Não lidas" is now empty and "Lidas" gained items: reload those.
       if (state.filter != NotificationFilter.all) {
         await refresh();
       } else {

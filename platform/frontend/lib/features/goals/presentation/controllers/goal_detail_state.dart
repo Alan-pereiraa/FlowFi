@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import '../../domain/entities/goal.dart';
 
-/// How the goal screen ended; the page shows a message and leaves.
 enum GoalOutcome { updated, removed }
 
 @immutable
@@ -24,10 +23,8 @@ class GoalDetailState {
     this.formError,
   });
 
-  /// Opened by id alone (deep link, browser refresh): the goal is fetched.
   final bool loadingInitial;
 
-  /// The latest known goal: fetched, saved, or after a deposit.
   final Goal? goal;
   final String? loadError;
 
@@ -37,13 +34,9 @@ class GoalDetailState {
   final bool removing;
   final GoalOutcome? outcome;
 
-  /// Bumped on every successful deposit, so the page can react to each one
-  /// (clear the field, say "Valor adicionado.") even when the goal looks the
-  /// same.
   final int depositCount;
   final int withdrawCount;
 
-  /// pt-BR messages keyed by backend field name (the edit form).
   final Map<String, String> fieldErrors;
   final String? depositError;
   final String? withdrawError;

@@ -2,7 +2,6 @@ import '../../../../shared/money/money.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../domain/entities/installment.dart';
 
-/// Mirrors the backend `InstallmentResource`.
 class InstallmentDto {
   const InstallmentDto({
     required this.id,

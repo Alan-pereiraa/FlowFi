@@ -19,14 +19,6 @@ import '../controllers/category_form_state.dart';
 import '../widgets/category_name_field.dart';
 import '../widgets/limit_stepper.dart';
 
-/// "Adicionar Categoria" and "Editar" share this screen.
-///
-/// Edit is opened with the [Category] already in hand (`extra`) when coming
-/// from the list; when only the [categoryId] is known (a deep link, or a
-/// browser refresh on web) it is fetched first.
-// GAP: icon and color are required by the API but the design shows them only
-// as the two small controls inside the name field. Untouched, they save as the
-// "local_offer" icon in the brand green.
 class CategoryFormPage extends ConsumerStatefulWidget {
   const CategoryFormPage.create({super.key})
     : categoryId = null,
@@ -103,7 +95,6 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     name: _name.text.trim(),
     icon: _icon ?? AppIcons.defaultCategory,
     color: _color ?? AppPalette.defaultHex,
-    // Zero means "no limit": the API takes null, never 0.00.
     limitCents: _limitCents > 0 ? _limitCents : null,
   );
 
@@ -178,7 +169,6 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
 
     final state = ref.watch(categoryFormControllerProvider);
 
-    // Fetched by id: fill the form once, when the category arrives.
     final fetched = state.initial;
     if (!_filled && fetched != null) _fill(fetched);
 
@@ -295,8 +285,6 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
             ),
           ),
         ),
-        // Pinned under the scroll area, as in the design: "Salvar" never
-        // moves, and stays reachable with the keyboard open.
         ResponsiveCenter(
           maxWidth: Breakpoints.formMax,
           verticalPadding: 16,

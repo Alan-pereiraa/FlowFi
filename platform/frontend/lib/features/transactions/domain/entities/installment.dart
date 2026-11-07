@@ -17,12 +17,10 @@ class Installment {
 
   final int id;
 
-  /// 1-based position in the schedule.
   final int step;
   final Money amount;
   final InstallmentStatus status;
 
-  /// Due date (calendar date, no time).
   final DateTime date;
   final DateTime? paidAt;
 

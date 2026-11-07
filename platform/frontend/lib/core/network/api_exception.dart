@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// Error thrown by datasources. Never crosses the data layer: repositories
-/// convert it into a `Failure`.
 class ApiException implements Exception {
   const ApiException({
     this.statusCode,
@@ -31,7 +29,6 @@ class ApiException implements Exception {
       }
     }
 
-    // Unreadable on web: the API's CORS config exposes no headers.
     final retryAfterHeader = response.headers.value('retry-after');
     final retrySeconds = retryAfterHeader == null
         ? null
@@ -45,7 +42,6 @@ class ApiException implements Exception {
     );
   }
 
-  /// Null when no response arrived (offline, timeout, server down).
   final int? statusCode;
   final String? message;
   final Map<String, List<String>> fieldErrors;

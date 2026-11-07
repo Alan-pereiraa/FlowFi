@@ -32,7 +32,6 @@ import '../widgets/recurrence_card.dart';
 import '../widgets/transaction_type_toggle.dart';
 import '../widgets/voice_fill_card.dart';
 
-/// "Nova Transação" ([transactionId] null) and "Editar Transação".
 class TransactionFormPage extends ConsumerStatefulWidget {
   const TransactionFormPage({super.key, this.transactionId});
 
@@ -63,7 +62,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   String _periodUnit = 'month';
   int _periodInterval = 1;
 
-  /// Client-side "empty field" checks; the API's 422 is the real validation.
   String? _amountMissing;
   String? _categoryMissing;
   String? _goalMissing;
@@ -492,7 +490,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
               ],
               TransactionTypeToggle(
                 value: _type,
-                // Immutable on the backend: changing it means delete + create.
                 onChanged: _isEdit ? null : _setType,
               ),
               const SizedBox(height: 32),

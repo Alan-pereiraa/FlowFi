@@ -20,10 +20,8 @@ class GoalRepositoryImpl implements GoalRepository {
   GoalRepositoryImpl(this._api, {DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
 
-  /// Description stored on the transfer that carries the initial amount.
   static const initialDepositDescription = 'Valor inicial';
 
-  /// Description stored on a deposit made from the goal screen.
   static const depositDescription = 'Depósito na meta';
 
   static const withdrawalDescription = 'Resgate da meta';
@@ -105,10 +103,8 @@ class GoalRepositoryImpl implements GoalRepository {
         ),
       );
     } on UnauthorizedFailure {
-      // The session is over: let the app handle it like any other call.
       rethrow;
     } on Failure {
-      // The goal already exists, so don't report the whole creation as failed.
       return GoalCreation(
         goal: goal,
         initialCents: data.initialCents,

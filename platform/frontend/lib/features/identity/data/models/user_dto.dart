@@ -1,6 +1,5 @@
 import '../../domain/entities/user.dart';
 
-/// Mirrors the backend `UserResource` (the inner object, without envelope).
 class UserDto {
   const UserDto({
     required this.id,

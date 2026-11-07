@@ -1,5 +1,3 @@
-/// UX-only input checks (format, empty field). The API's 422 is the source of
-/// truth; never encode a business rule here.
 abstract final class Validators {
   static final _email = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -27,7 +25,6 @@ abstract final class Validators {
     return null;
   }
 
-  /// Optional Brazilian phone: empty is valid, otherwise 10 or 11 digits.
   static String? optionalPhone(String? value) {
     final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) return null;

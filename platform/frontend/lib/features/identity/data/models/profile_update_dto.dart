@@ -1,6 +1,5 @@
 import '../../domain/entities/profile_update.dart';
 
-/// Body of `PATCH /users/{id}`.
 class ProfileUpdateDto {
   const ProfileUpdateDto(this.data);
 

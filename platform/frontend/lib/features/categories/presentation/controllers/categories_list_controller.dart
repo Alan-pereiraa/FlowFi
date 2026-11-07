@@ -11,8 +11,6 @@ final categoriesListControllerProvider =
       CategoriesListController.new,
     );
 
-/// Loads the caller's categories and this month's spending in each; also used
-/// for pull-to-refresh and "retry".
 class CategoriesListController extends Notifier<CategoriesListState> {
   @override
   CategoriesListState build() {
@@ -21,7 +19,6 @@ class CategoriesListController extends Notifier<CategoriesListState> {
   }
 
   Future<void> load() async {
-    // Keep what is already on screen while a refresh is in flight.
     state = CategoriesListState(
       loading: true,
       loaded: state.loaded,
@@ -50,7 +47,6 @@ class CategoriesListController extends Notifier<CategoriesListState> {
     }
   }
 
-  /// Spending is extra: if it fails the list still shows, with limits only.
   Future<Map<int, int>?> _loadSpending() async {
     try {
       return await ref

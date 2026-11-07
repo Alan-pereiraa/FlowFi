@@ -1,7 +1,5 @@
 import 'user_dto.dart';
 
-/// `POST /auth/otp/verify` body: `{ "user": {...}, "token": "..." }`.
-/// Unlike the other endpoints there is no `data` envelope.
 class AuthResponseDto {
   const AuthResponseDto({required this.user, required this.token});
 

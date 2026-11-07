@@ -11,7 +11,6 @@ final identityApiProvider = Provider<IdentityApi>(
   (ref) => IdentityApi(ref.watch(apiClientProvider)),
 );
 
-/// One method per Identity endpoint. Throws [ApiException].
 class IdentityApi {
   IdentityApi(this._dio);
 
@@ -49,7 +48,6 @@ class IdentityApi {
   Future<void> deleteUser(int id) =>
       _send(() => _dio.delete<void>('/users/$id'));
 
-  /// `GET`/`PATCH /users/{id}` wrap the resource in `{ "data": {...} }`.
   UserDto _unwrapUser(Map<String, dynamic> body) =>
       UserDto.fromJson(body['data'] as Map<String, dynamic>);
 

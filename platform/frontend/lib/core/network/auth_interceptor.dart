@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../storage/secure_storage.dart';
 import 'unauthorized_signal.dart';
 
-/// Adds the bearer token and ends the session on a 401.
 class AuthInterceptor extends Interceptor {
   AuthInterceptor(this._storage, this._unauthorized);
 

@@ -28,28 +28,22 @@ class TransactionListState {
 
   final List<Transaction> items;
 
-  /// For each row's icon, color and name.
   final Map<int, Category> categories;
 
-  /// "Este Mês" chip.
   final bool thisMonth;
 
-  /// "Todos os Tipos" chip; null = all.
   final TransactionType? type;
 
   final int? categoryId;
 
   final String search;
 
-  /// First page (or a refresh after a filter change).
   final bool loading;
   final bool loadingMore;
   final bool hasMore;
 
-  /// Last page loaded; 0 before the first load.
   final int page;
 
-  /// pt-BR message when the first page failed.
   final String? error;
 
   final int? payingId;

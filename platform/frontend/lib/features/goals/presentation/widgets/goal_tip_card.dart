@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// The "Dica" note under the create-goal form.
 class GoalTipCard extends StatelessWidget {
   const GoalTipCard({super.key});
 

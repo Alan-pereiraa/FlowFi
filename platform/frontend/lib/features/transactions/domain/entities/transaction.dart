@@ -23,7 +23,6 @@ class Transaction {
 
   final int id;
 
-  /// Null only for transfers.
   final int? categoryId;
   final int? goalId;
   final TransactionType type;
@@ -32,7 +31,6 @@ class Transaction {
   final Money totalAmount;
   final int installmentsCount;
 
-  /// `day` | `week` | `month` | `year`; null for a single installment.
   final String? periodUnit;
   final int? periodInterval;
 

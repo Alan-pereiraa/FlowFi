@@ -8,8 +8,6 @@ import '../../domain/entities/installment.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
 
-// GAP: the design's account ("Conta Corrente • ...") and time of day have no
-// backend field.
 class TransactionTile extends StatelessWidget {
   const TransactionTile({
     super.key,

@@ -12,7 +12,6 @@ class TransactionTypeToggle extends StatelessWidget {
 
   final TransactionType value;
 
-  /// Null disables the toggle.
   final ValueChanged<TransactionType>? onChanged;
 
   @override

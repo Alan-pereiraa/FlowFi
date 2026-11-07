@@ -1,7 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Full-width destructive action ("Remover", "Excluir") in the theme's error
-/// container colors, with a built-in loading state.
 class AppDangerButton extends StatelessWidget {
   const AppDangerButton({
     super.key,

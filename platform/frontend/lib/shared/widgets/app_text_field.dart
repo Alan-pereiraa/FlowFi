@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Filled text field with the label above it and an optional leading icon.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
@@ -37,12 +36,10 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
-  /// Replaces [icon] when the leading slot needs to be interactive.
   final Widget? prefix;
   final Widget? suffix;
   final bool enabled;
 
-  /// For fields filled by a picker ([onTap]) instead of the keyboard.
   final bool readOnly;
   final VoidCallback? onTap;
   final Iterable<String>? autofillHints;

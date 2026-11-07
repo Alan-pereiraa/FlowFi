@@ -11,7 +11,6 @@ import '../entities/transaction_update.dart';
 import '../entities/recurrence.dart';
 
 abstract interface class TransactionRepository {
-  /// Newest first.
   Future<Paginated<Transaction>> list({
     TransactionFilter filter = const TransactionFilter(),
     int page = 1,

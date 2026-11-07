@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-/// "Transação Recorrente" card with its switch.
 class RecurrenceCard extends StatelessWidget {
   const RecurrenceCard({
     super.key,
@@ -12,7 +11,6 @@ class RecurrenceCard extends StatelessWidget {
   final bool value;
   final String subtitle;
 
-  /// Null disables the switch.
   final ValueChanged<bool>? onChanged;
 
   @override

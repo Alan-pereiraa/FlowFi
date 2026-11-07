@@ -4,9 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/breakpoints.dart';
 
-/// Equal-height card grid whose column count follows the width it is given
-/// (1 on a phone, up to [maxColumns] on desktop). Rows size to their content,
-/// so large text scales never overflow a fixed tile height.
 class ResponsiveGrid extends StatelessWidget {
   const ResponsiveGrid({
     super.key,

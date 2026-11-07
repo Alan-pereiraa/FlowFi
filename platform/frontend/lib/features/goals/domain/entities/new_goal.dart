@@ -1,9 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-/// What the create-goal form collects.
-// GAP: the API has no "initial amount" on a goal. It is sent as a first
-// transfer into the goal right after the goal is created (see
-// `GoalRepositoryImpl.create`).
 @immutable
 class NewGoal {
   const NewGoal({
@@ -21,6 +17,5 @@ class NewGoal {
   final int targetCents;
   final DateTime? expiresAt;
 
-  /// Amount already saved; 0 when the field was left empty.
   final int initialCents;
 }

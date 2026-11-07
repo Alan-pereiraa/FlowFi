@@ -2,8 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app_colors.dart';
 
-/// The single source of colors, fonts and shapes. Widgets read everything
-/// through `Theme.of(context)`; never write a hex literal inside a widget.
 abstract final class AppTheme {
   static const _headingFont = 'Montserrat';
   static const _bodyFont = 'Inter';

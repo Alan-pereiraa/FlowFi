@@ -1,10 +1,8 @@
 import 'package:flutter/services.dart';
 
-/// Formats Brazilian phone digits as `(42) 99813-3757` / `(42) 3222-1111`.
 class PhoneInputFormatter extends TextInputFormatter {
   static const maxDigits = 11;
 
-  /// Formats raw digits for display (e.g. a stored `phone_number`).
   static String format(String digits) {
     final d = digits.replaceAll(RegExp(r'\D'), '');
     if (d.isEmpty) return '';
@@ -13,7 +11,6 @@ class PhoneInputFormatter extends TextInputFormatter {
     if (d.length <= 2) return buffer.toString();
     buffer.write(') ');
     final rest = d.substring(2);
-    // 9-digit mobile numbers split 5-4; landlines split 4-4.
     final splitAt = d.length == maxDigits ? 5 : 4;
     if (rest.length <= splitAt) {
       buffer.write(rest);

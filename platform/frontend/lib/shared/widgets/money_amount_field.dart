@@ -3,9 +3,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../money/money.dart';
 
-/// Large centered `R$ 0,00` input. Typing builds the value digit by digit
-/// as cents (`0,00` → `0,05` → `0,50`…); it never parses a `double`.
-/// With [step], −/+ buttons around the amount add or subtract it.
 class MoneyAmountField extends StatefulWidget {
   const MoneyAmountField({
     super.key,
@@ -22,13 +19,11 @@ class MoneyAmountField extends StatefulWidget {
   final ValueChanged<Money> onChanged;
   final String? label;
 
-  /// Amount and symbol color; defaults to `primary`.
   final Color? color;
   final Money? step;
   final bool enabled;
   final String? errorText;
 
-  /// API cap: `max:99999999.99`.
   static const maxDigits = 10;
 
   @override
@@ -159,8 +154,6 @@ class _MoneyAmountFieldState extends State<MoneyAmountField> {
   }
 }
 
-/// Keeps only digits, caps them, and re-renders as `1.234,56` with the
-/// cursor at the end.
 class _CentsInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

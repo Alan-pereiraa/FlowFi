@@ -14,9 +14,6 @@ import '../widgets/phone_input_formatter.dart';
 
 enum ProfileFormMode { complete, edit }
 
-/// Same form for the first login (`complete`) and for editing (`edit`).
-/// Only the fields the API has: first_name, last_name, phone_number, email.
-// GAP: the design's birth date, CPF and avatar fields don't exist on `users`.
 class ProfileFormPage extends ConsumerStatefulWidget {
   const ProfileFormPage({super.key, required this.mode});
 
@@ -108,7 +105,6 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
       _,
       saved,
     ) {
-      // Complete mode: the router moves on from the new session state.
       if (saved && _isEdit) context.pushReplacement(Routes.profileSuccess);
     });
     final state = ref.watch(profileFormControllerProvider);
@@ -214,7 +210,6 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                       loading: state.saving,
                       onPressed: state.busy ? null : () => _submit(user),
                     ),
-                    // Logout and deletion have no screen in the design.
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: state.busy
