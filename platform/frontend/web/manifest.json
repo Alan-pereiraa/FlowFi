@@ -1,6 +1,6 @@
 {
-    "name": "flowfi_app",
-    "short_name": "flowfi_app",
+    "name": "FlowFi",
+    "short_name": "FlowFi",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
