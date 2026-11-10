@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../money/money.dart';
+import '../utils/currency_input_formatter.dart';
 
 class MoneyAmountField extends StatefulWidget {
   const MoneyAmountField({
@@ -160,8 +161,7 @@ class _CentsInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    digits = digits.replaceFirst(RegExp(r'^0+'), '');
+    final digits = CurrencyInputFormatter.editedDigits(oldValue, newValue);
     if (digits.length > MoneyAmountField.maxDigits) return oldValue;
     final text = Money(digits.isEmpty ? 0 : int.parse(digits)).formatDigits();
     return TextEditingValue(
