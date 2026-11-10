@@ -142,12 +142,11 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateUserRequest',
     type: 'object',
-    description: 'Todos os campos são opcionais. `email` não pode ser null e deve ser único.',
+    description: 'Todos os campos são opcionais. O `email` não pode ser alterado: enviá-lo retorna 422.',
     properties: [
         new OA\Property(property: 'first_name', type: 'string', nullable: true, maxLength: 255),
         new OA\Property(property: 'last_name', type: 'string', nullable: true, maxLength: 255),
         new OA\Property(property: 'phone_number', type: 'string', nullable: true, maxLength: 20),
-        new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255),
     ],
 )]
 #[OA\Schema(

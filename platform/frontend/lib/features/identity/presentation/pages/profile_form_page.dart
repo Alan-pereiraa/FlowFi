@@ -7,7 +7,6 @@ import '../../../../shared/utils/validators.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../domain/entities/profile_update.dart';
-import '../../domain/entities/user.dart';
 import '../controllers/profile_form_controller.dart';
 import '../controllers/session_controller.dart';
 import '../widgets/phone_input_formatter.dart';
@@ -55,9 +54,8 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
 
   String? _orNull(String text) => text.trim().isEmpty ? null : text.trim();
 
-  void _submit(User? user) {
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    final email = _email.text.trim().toLowerCase();
     ref
         .read(profileFormControllerProvider.notifier)
         .save(
@@ -65,7 +63,6 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
             firstName: _firstName.text.trim(),
             lastName: _orNull(_lastName.text),
             phoneNumber: _orNull(PhoneInputFormatter.digitsOf(_phone.text)),
-            email: _isEdit && email != user?.email ? email : null,
           ),
         );
   }
@@ -108,7 +105,6 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
       if (saved && _isEdit) context.pushReplacement(Routes.profileSuccess);
     });
     final state = ref.watch(profileFormControllerProvider);
-    final user = ref.watch(sessionControllerProvider).user;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -175,9 +171,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                       icon: Icons.phone_outlined,
                       errorText: state.fieldErrors['phone_number'],
                       keyboardType: TextInputType.phone,
-                      textInputAction: _isEdit
-                          ? TextInputAction.next
-                          : TextInputAction.done,
+                      textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.telephoneNumber],
                       inputFormatters: [PhoneInputFormatter()],
                       validator: Validators.optionalPhone,
@@ -188,11 +182,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                         label: 'E-mail',
                         controller: _email,
                         icon: Icons.mail_outline,
-                        errorText: state.fieldErrors['email'],
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        autofillHints: const [AutofillHints.email],
-                        validator: Validators.email,
+                        enabled: false,
                       ),
                     ],
                     if (state.formError != null) ...[
@@ -208,7 +198,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                     AppButton(
                       label: _isEdit ? 'Atualizar Perfil' : 'Continuar',
                       loading: state.saving,
-                      onPressed: state.busy ? null : () => _submit(user),
+                      onPressed: state.busy ? null : _submit,
                     ),
                     const SizedBox(height: 16),
                     TextButton.icon(

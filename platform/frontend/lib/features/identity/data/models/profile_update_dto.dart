@@ -9,6 +9,5 @@ class ProfileUpdateDto {
     'first_name': data.firstName,
     'last_name': data.lastName,
     'phone_number': data.phoneNumber,
-    if (data.email != null) 'email': data.email,
   };
 }

@@ -4,7 +4,6 @@ namespace App\Domains\Identity\Requests;
 
 use App\Domains\Identity\Services\UserService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -21,14 +20,14 @@ class UpdateUserRequest extends FormRequest
             'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'last_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'phone_number' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($this->user()->id),
-            ],
+            'email' => ['prohibited'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.prohibited' => 'O e-mail não pode ser alterado.',
         ];
     }
 }
