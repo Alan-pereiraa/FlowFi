@@ -28,7 +28,6 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _target = TextEditingController();
-  final _initial = TextEditingController();
 
   DateTime? _expiresAt;
   String _icon = AppIcons.defaultGoal;
@@ -38,7 +37,6 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
   void dispose() {
     _name.dispose();
     _target.dispose();
-    _initial.dispose();
     super.dispose();
   }
 
@@ -66,7 +64,6 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
             color: _color,
             targetCents: CurrencyInputFormatter.centsOf(_target.text),
             expiresAt: _expiresAt,
-            initialCents: CurrencyInputFormatter.centsOf(_initial.text),
           ),
         );
   }
@@ -147,15 +144,6 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
                 onChanged: (date) => setState(() => _expiresAt = date),
                 helper: 'Opcional. Sem data, a meta fica contínua.',
                 errorText: state.fieldErrors['expires_at'],
-                enabled: !state.saving,
-              ),
-              const SizedBox(height: 20),
-              AppMoneyField(
-                label: 'Valor Inicial (opcional)',
-                controller: _initial,
-                helper: 'Quanto você já tem guardado para essa meta?',
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
                 enabled: !state.saving,
               ),
               const SizedBox(height: 24),

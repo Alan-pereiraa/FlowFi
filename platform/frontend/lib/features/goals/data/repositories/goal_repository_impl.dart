@@ -4,7 +4,6 @@ import '../../../../core/errors/failure.dart';
 import '../../../../shared/utils/date_labels.dart';
 import '../../../../shared/utils/money.dart';
 import '../../domain/entities/goal.dart';
-import '../../domain/entities/goal_creation.dart';
 import '../../domain/entities/goal_update.dart';
 import '../../domain/entities/new_goal.dart';
 import '../../domain/repositories/goal_repository.dart';
@@ -19,8 +18,6 @@ final goalRepositoryProvider = Provider<GoalRepository>(
 class GoalRepositoryImpl implements GoalRepository {
   GoalRepositoryImpl(this._api, {DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
-
-  static const initialDepositDescription = 'Valor inicial';
 
   static const depositDescription = 'Depósito na meta';
 
@@ -87,34 +84,8 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<GoalCreation> create(NewGoal data) async {
+  Future<Goal> create(NewGoal data) async {
     final dto = await guardApi(() => _api.createGoal(NewGoalDto(data)));
-    final goal = dto.toEntity();
-
-    if (data.initialCents <= 0) return GoalCreation(goal: goal);
-
-    try {
-      await guardApi(
-        () => _api.depositToGoal(
-          goalId: goal.id,
-          amount: Money.toApi(data.initialCents),
-          date: DateLabels.toApi(_clock()),
-          description: initialDepositDescription,
-        ),
-      );
-    } on UnauthorizedFailure {
-      rethrow;
-    } on Failure {
-      return GoalCreation(
-        goal: goal,
-        initialCents: data.initialCents,
-        initialDepositFailed: true,
-      );
-    }
-
-    return GoalCreation(
-      goal: goal.copyWith(currentCents: goal.currentCents + data.initialCents),
-      initialCents: data.initialCents,
-    );
+    return dto.toEntity();
   }
 }
