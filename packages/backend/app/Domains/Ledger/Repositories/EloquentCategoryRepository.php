@@ -45,14 +45,10 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             ->firstOrfail();
     }
 
-    public function hasTransactions(Category $category): bool
+    public function detachFromTransactions(Category $category): void
     {
-        return $category->transactions()->exists();
-    }
-
-    public function hasActiveRecurringTransactions(Category $category): bool
-    {
-        return $category->recurringTransactions()->whereNotNull('next_occurrence_on')->exists();
+        $category->transactions()->withTrashed()->update(['category_id' => null]);
+        $category->recurringTransactions()->withTrashed()->update(['category_id' => null]);
     }
 
     public function spentInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int

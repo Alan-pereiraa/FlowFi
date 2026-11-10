@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/error_messages.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../../transactions/presentation/controllers/transaction_list_controller.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/category_draft.dart';
@@ -55,6 +57,8 @@ class CategoryFormController extends Notifier<CategoryFormState> {
         outcome: () => CategoryOutcome.removed,
       );
       ref.invalidate(categoriesListControllerProvider);
+      ref.invalidate(transactionListControllerProvider);
+      ref.invalidate(dashboardControllerProvider);
     } on Failure catch (failure) {
       if (!ref.mounted) return;
       state = state.copyWith(
