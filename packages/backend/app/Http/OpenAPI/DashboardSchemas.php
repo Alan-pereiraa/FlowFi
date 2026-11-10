@@ -97,7 +97,7 @@ use OpenApi\Attributes as OA;
     schema: 'DashboardCategoryRef',
     type: 'object',
     nullable: true,
-    description: 'O necessário para desenhar a categoria, ou null quando não há categoria (transferências não têm). Uma categoria excluída depois mantém nome, ícone e cor.',
+    description: 'O necessário para desenhar a categoria, ou null quando a transação não tem categoria (transferências, resgates ou lançamentos sem categoria). Uma categoria excluída depois mantém nome, ícone e cor.',
     required: ['id', 'name', 'icon', 'color'],
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),

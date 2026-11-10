@@ -27,7 +27,7 @@ class UpdateRecurringTransactionRequest extends FormRequest
             'category_id' => [
                 'sometimes',
                 Rule::prohibitedIf($type === Transaction::TYPE_TRANSFER),
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)

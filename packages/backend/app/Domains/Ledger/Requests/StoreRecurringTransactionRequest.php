@@ -13,7 +13,6 @@ class StoreRecurringTransactionRequest extends FormRequest
         return [
             'category_id' => [
                 'nullable',
-                'required_unless:type,transfer',
                 'prohibited_if:type,transfer',
                 'integer',
                 Rule::exists('categories', 'id')

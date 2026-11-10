@@ -13,7 +13,7 @@ class SpendingByCategoryResource extends JsonResource
         return [
             'period' => $this->resource['period'],
             'categories' => array_map(fn (array $row): array => [
-                'category' => [
+                'category' => $row['category_id'] === null ? null : [
                     'id' => $row['category_id'],
                     'name' => $row['name'],
                     'icon' => $row['icon'],

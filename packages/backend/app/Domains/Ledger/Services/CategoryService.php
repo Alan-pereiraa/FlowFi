@@ -66,8 +66,12 @@ class CategoryService
         $this->categories->delete($category);
     }
 
-    public function ensureInMonthLimit(int $categoryId, array $installments, ?int $ignoreTransactionId = null): void
+    public function ensureInMonthLimit(?int $categoryId, array $installments, ?int $ignoreTransactionId = null): void
     {
+        if ($categoryId === null) {
+            return;
+        }
+
         $category = $this->categories->findForLimitCheck($categoryId);
 
         if ($category->limit_amount === null) {
@@ -96,8 +100,12 @@ class CategoryService
         }
     }
 
-    public function warnIfNearLimit(User $user, int $categoryId): void
+    public function warnIfNearLimit(User $user, ?int $categoryId): void
     {
+        if ($categoryId === null) {
+            return;
+        }
+
         $category = $this->categories->findForLimitCheck($categoryId);
 
         if ($category->limit_amount === null) {
