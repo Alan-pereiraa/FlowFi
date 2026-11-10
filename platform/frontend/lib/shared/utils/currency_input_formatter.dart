@@ -20,23 +20,37 @@ class CurrencyInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final oldDigits = _significantDigits(oldValue.text);
-    final newDigits = _significantDigits(newValue.text);
+    final oldText = oldValue.text;
+    final newText = newValue.text;
+    final oldDigits = _significantDigits(oldText);
+    final newDigits = _significantDigits(newText);
     final selection = oldValue.selection;
     if (!selection.isValid || !selection.isCollapsed) return newDigits;
 
-    final added = newValue.text.length - oldValue.text.length;
+    final added = newText.length - oldText.length;
     if (added > 0) {
-      final start = selection.start.clamp(0, newValue.text.length);
-      final end = (start + added).clamp(start, newValue.text.length);
+      final start = selection.start;
+      final insertedAtCaret =
+          start <= oldText.length &&
+          newText.startsWith(oldText.substring(0, start)) &&
+          newText.endsWith(oldText.substring(start));
+      if (!insertedAtCaret) return newDigits;
       return _significantDigits(
-        oldDigits + newValue.text.substring(start, end),
+        oldDigits + newText.substring(start, start + added),
       );
     }
 
+    if (added == 0) return newText == oldText ? oldDigits : newDigits;
+
+    var prefix = 0;
+    while (prefix < newText.length && newText[prefix] == oldText[prefix]) {
+      prefix++;
+    }
+    if (!oldText.endsWith(newText.substring(prefix))) return newDigits;
+
     final removed =
-        oldValue.text.replaceAll(RegExp(r'\D'), '').length -
-        newValue.text.replaceAll(RegExp(r'\D'), '').length;
+        oldText.replaceAll(RegExp(r'\D'), '').length -
+        newText.replaceAll(RegExp(r'\D'), '').length;
     if (removed <= 0) return oldDigits;
     return oldDigits.substring(
       0,
