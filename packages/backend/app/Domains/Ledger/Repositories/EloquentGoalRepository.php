@@ -47,9 +47,9 @@ class EloquentGoalRepository implements GoalRepositoryInterface
         return $query->increment('current_amount', $cents) > 0;
     }
 
-    public function hasTransactions(Goal $goal): bool
+    public function isDeleted(int $goalId): bool
     {
-        return $goal->transactions()->exists();
+        return Goal::onlyTrashed()->whereKey($goalId)->exists();
     }
 
     public function unreachedExpiringBetween(CarbonInterface $from, CarbonInterface $to): Collection

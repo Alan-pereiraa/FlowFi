@@ -54,9 +54,9 @@ class GoalService
 
     public function delete(Goal $goal): void
     {
-        if ($this->goals->hasTransactions($goal)) {
+        if (Money::toCents($goal->current_amount) > 0) {
             throw ValidationException::withMessages([
-                'goal' => 'Não é possível apagar uma meta que possui transações.',
+                'goal' => 'Resgate o saldo da meta antes de excluí-la.',
             ]);
         }
 
@@ -70,6 +70,12 @@ class GoalService
         }
 
         if (! $this->goals->adjustCurrentAmount($goalId, $cents)) {
+            if ($this->goals->isDeleted($goalId)) {
+                throw ValidationException::withMessages([
+                    'goal_id' => 'A meta desta transação foi excluída.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'goal_id' => 'A meta não tem saldo suficiente para esta transação.',
             ]);
