@@ -10,13 +10,13 @@ import '../../../../shared/widgets/app_icon_tile.dart';
 import '../../../../shared/widgets/app_progress_bar.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
-import '../../domain/entities/goal_creation.dart';
+import '../../domain/entities/goal.dart';
 import '../goal_routes.dart';
 
 class GoalCreatedPage extends StatelessWidget {
-  const GoalCreatedPage({super.key, required this.creation});
+  const GoalCreatedPage({super.key, required this.goal});
 
-  final GoalCreation creation;
+  final Goal goal;
 
   @override
   Widget build(BuildContext context) {
@@ -54,26 +54,7 @@ class GoalCreatedPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _SummaryCard(creation: creation),
-            if (creation.initialDepositFailed) ...[
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.error_outline, size: 18, color: scheme.error),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Não foi possível registrar o valor inicial. A meta '
-                      'foi criada com saldo zero.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            _SummaryCard(goal: goal),
             const SizedBox(height: 24),
             Text(
               'O que deseja fazer agora?',
@@ -113,15 +94,14 @@ class GoalCreatedPage extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.creation});
+  const _SummaryCard({required this.goal});
 
-  final GoalCreation creation;
+  final Goal goal;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final goal = creation.goal;
     final monthly = goal.monthlyContributionCents(DateTime.now());
     final saved = Money.format(goal.currentCents, dropZeroCents: true);
     final target = Money.format(goal.targetCents, dropZeroCents: true);
@@ -158,7 +138,6 @@ class _SummaryCard extends StatelessWidget {
                   ? 'Contínua'
                   : DateLabels.monthYear(goal.expiresAt!),
             ),
-            _SummaryRow(label: 'Valor Inicial', value: saved),
             if (monthly != null)
               _SummaryRow(
                 label: 'Contribuição Mensal',

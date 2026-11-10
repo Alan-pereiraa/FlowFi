@@ -61,7 +61,7 @@ class TransactionService
             $plan = $this->planner->planFromInput($data);
 
             if ($data['type'] === Transaction::TYPE_EXPENSE) {
-                $this->categories->ensureInMonthLimit($data['category_id'], $plan['rows'], null);
+                $this->categories->ensureInMonthLimit($data['category_id'] ?? null, $plan['rows'], null);
             }
 
             if ($data['type'] === Transaction::TYPE_TRANSFER) {

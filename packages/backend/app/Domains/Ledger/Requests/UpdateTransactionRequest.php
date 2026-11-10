@@ -32,7 +32,7 @@ class UpdateTransactionRequest extends FormRequest
             'category_id' => [
                 'sometimes',
                 Rule::prohibitedIf($movesGoal),
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)

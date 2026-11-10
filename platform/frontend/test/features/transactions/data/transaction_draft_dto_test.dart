@@ -70,9 +70,8 @@ void main() {
     }).toEntity();
 
     expect(draft.missingAmount, isTrue);
-    expect(draft.missingCategory, isTrue);
     expect(draft.missingGoal, isFalse);
-    expect(draft.missingCount, 2);
+    expect(draft.missingCount, 1);
   });
 
   test('WavEncoder writes a 44-byte PCM header', () {

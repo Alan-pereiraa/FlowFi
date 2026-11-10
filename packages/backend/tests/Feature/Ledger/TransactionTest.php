@@ -332,6 +332,47 @@ class TransactionTest extends TestCase
         }
     }
 
+    public function test_category_is_optional_for_income_and_expense(): void
+    {
+        [, $token] = $this->authenticated();
+
+        $this->withToken($token)->postJson('/api/v1/transactions', [
+            'type' => 'income',
+            'date' => '2026-09-01',
+            'total_amount' => '3000.00',
+        ])->assertCreated()->assertJsonPath('data.category_id', null);
+
+        $this->withToken($token)->postJson('/api/v1/transactions', [
+            'type' => 'expense',
+            'date' => '2026-09-13',
+            'total_amount' => '150.00',
+        ])->assertCreated()
+            ->assertJsonPath('data.category_id', null)
+            ->assertJsonCount(1, 'data.installments');
+
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_category_can_be_removed_from_an_expense(): void
+    {
+        [$user, $token] = $this->authenticated();
+        $category = Category::factory()->for($user)->create(['limit_amount' => '100.00']);
+
+        $transactionId = $this->withToken($token)->postJson('/api/v1/transactions', [
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'date' => '2026-09-13',
+            'total_amount' => '90.00',
+        ])->json('data.id');
+
+        $this->withToken($token)->patchJson("/api/v1/transactions/{$transactionId}", [
+            'category_id' => null,
+            'total_amount' => '500.00',
+        ])->assertOk()
+            ->assertJsonPath('data.category_id', null)
+            ->assertJsonPath('data.total_amount', '500.00');
+    }
+
     public function test_guest_cannot_access_transactions(): void
     {
         $this->getJson('/api/v1/transactions')->assertUnauthorized();

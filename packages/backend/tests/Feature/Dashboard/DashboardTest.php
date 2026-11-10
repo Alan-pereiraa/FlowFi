@@ -248,6 +248,23 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.categories.0.total', '80.00');
     }
 
+    public function test_spending_groups_uncategorized_expenses_under_a_null_category(): void
+    {
+        [$user, $token] = $this->authenticated();
+
+        $this->transaction($user, 'expense', [['40.00', '2026-09-03', 'paid']], false);
+        $this->transaction($user, 'expense', [['60.00', '2026-09-20']], false);
+
+        $this->withToken($token)->getJson('/api/v1/dashboard/spending-by-category?month=2026-09')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.categories')
+            ->assertJsonPath('data.categories.0.category', null)
+            ->assertJsonPath('data.categories.0.paid', '40.00')
+            ->assertJsonPath('data.categories.0.pending', '60.00')
+            ->assertJsonPath('data.categories.0.total', '100.00')
+            ->assertJsonPath('data.categories.0.limit_amount', null);
+    }
+
     public function test_upcoming_installments_lists_overdue_first_and_skips_paid_and_far_ones(): void
     {
         [$user, $token] = $this->authenticated();

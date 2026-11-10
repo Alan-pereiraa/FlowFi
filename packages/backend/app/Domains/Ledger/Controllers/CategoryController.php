@@ -151,7 +151,7 @@ class CategoryController extends Controller
         operationId: 'deleteCategory',
         tags: ['Categorias'],
         summary: 'Apagar categoria',
-        description: 'Recusado (422) enquanto a categoria tiver transações ou uma transação recorrente ativa; encerre a transação recorrente antes.',
+        description: 'As transações e transações recorrentes da categoria ficam sem categoria.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),

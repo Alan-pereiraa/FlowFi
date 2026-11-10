@@ -21,9 +21,7 @@ interface CategoryRepositoryInterface
 
     public function findForLimitCheck(int $categoryId): Category;
 
-    public function hasTransactions(Category $category): bool;
-
-    public function hasActiveRecurringTransactions(Category $category): bool;
+    public function detachFromTransactions(Category $category): void;
 
     public function spentInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int;
 }

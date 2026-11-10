@@ -99,7 +99,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->toBase()
             ->get()
             ->map(fn ($row) => [
-                'category_id' => (int) $row->category_id,
+                'category_id' => $row->category_id === null ? null : (int) $row->category_id,
                 'name' => $row->name,
                 'icon' => $row->icon,
                 'color' => $row->color,

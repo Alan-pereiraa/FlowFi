@@ -142,12 +142,11 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateUserRequest',
     type: 'object',
-    description: 'Todos os campos são opcionais. `email` não pode ser null e deve ser único.',
+    description: 'Todos os campos são opcionais. O `email` não pode ser alterado: enviá-lo retorna 422.',
     properties: [
         new OA\Property(property: 'first_name', type: 'string', nullable: true, maxLength: 255),
         new OA\Property(property: 'last_name', type: 'string', nullable: true, maxLength: 255),
         new OA\Property(property: 'phone_number', type: 'string', nullable: true, maxLength: 20),
-        new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255),
     ],
 )]
 #[OA\Schema(
@@ -312,7 +311,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'Transaction',
     type: 'object',
-    description: 'Uma movimentação de dinheiro com seu cronograma de pagamento. `category_id` é null em transferências e resgates.',
+    description: 'Uma movimentação de dinheiro com seu cronograma de pagamento. `category_id` é null em transferências, resgates e transações sem categoria.',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'category_id', type: 'integer', nullable: true, example: 5),
@@ -366,7 +365,7 @@ use OpenApi\Attributes as OA;
     schema: 'StoreTransactionRequest',
     type: 'object',
     required: ['type', 'date', 'total_amount'],
-    description: 'As regras dependem de `type`. expense: `category_id` obrigatório, `goal_id` opcional. income: `category_id` obrigatório; `goal_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). Em expense, envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422. withdrawal (resgate): `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; o valor não pode passar do que está guardado na meta.',
+    description: 'As regras dependem de `type`. expense: `category_id` e `goal_id` opcionais. income: `category_id` opcional; `goal_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). transfer: `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; não pode ser parcelada e não gera parcelas (`installments_count` deve ser 1). Em expense, envie `installments` (cronograma personalizado) ou `installments_count` + `period_*` (divisão igual); misturar os dois retorna 422. withdrawal (resgate): `goal_id` obrigatório; `category_id`, `installments`, `period_unit` e `period_interval` proibidos; o valor não pode passar do que está guardado na meta.',
     properties: [
         new OA\Property(
             property: 'type',
@@ -378,7 +377,7 @@ use OpenApi\Attributes as OA;
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Obrigatório, exceto quando type=transfer ou withdrawal; proibido nesses dois',
+            description: 'Opcional; proibido quando type=transfer ou withdrawal',
             example: 5,
         ),
         new OA\Property(
@@ -463,7 +462,7 @@ use OpenApi\Attributes as OA;
     type: 'object',
     description: 'Todos os campos são opcionais. `type` não pode ser alterado (enviá-lo retorna 422). `category_id` é proibido em transferências e `goal_id` é proibido em receitas (obrigatório em transferências). Em receitas e transferências, `installments`, `period_unit` e `period_interval` são proibidos e `installments_count` deve ser 1. Em saídas, enviar qualquer campo do cronograma (total_amount, installments, installments_count, period_unit, period_interval) ou mudar `date` gera o cronograma inteiro de novo e reaplica a regra de status pela data. Cronogramas personalizados não são recriados quando só `date` muda.',
     properties: [
-        new OA\Property(property: 'category_id', type: 'integer', example: 5),
+        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
         new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000),
         new OA\Property(property: 'date', type: 'string', format: 'date'),
@@ -559,7 +558,7 @@ use OpenApi\Attributes as OA;
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Obrigatório, exceto quando type=transfer; proibido em transfer',
+            description: 'Opcional; proibido quando type=transfer',
             example: 5,
         ),
         new OA\Property(
@@ -622,7 +621,7 @@ use OpenApi\Attributes as OA;
     type: 'object',
     description: 'Todos os campos são opcionais; só as próximas ocorrências recebem a alteração. `type`, `period_unit`, `period_interval`, `start_date`, `end_date` e `occurrences` não podem ser alterados (422): encerre esta e crie outra.',
     properties: [
-        new OA\Property(property: 'category_id', type: 'integer', example: 5),
+        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
         new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000),
         new OA\Property(property: 'amount', type: 'string', format: 'decimal', example: '5500.00'),

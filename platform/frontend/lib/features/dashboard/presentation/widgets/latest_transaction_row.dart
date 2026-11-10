@@ -1,10 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../shared/appearance/app_icons.dart';
-import '../../../../shared/appearance/hex_color.dart';
-import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../../transactions/domain/entities/transaction_type.dart';
+import '../../../transactions/presentation/transaction_type_style.dart';
 import '../../domain/entities/recent_transaction.dart';
 
 class LatestTransactionRow extends StatelessWidget {
@@ -21,20 +20,11 @@ class LatestTransactionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final success = theme.extension<AppColors>()!.success;
     final type = transaction.type;
-    final movesGoal = type.movesGoal;
-    final tag = movesGoal ? transaction.goal : transaction.category;
+    final tag = type.movesGoal ? transaction.goal : transaction.category;
 
-    final accent = HexColor.parse(
-      tag?.color,
-      fallback: movesGoal ? scheme.primary : scheme.onSurfaceVariant,
-    );
-    final icon = tag == null && movesGoal
-        ? (type == TransactionType.withdrawal
-              ? Icons.account_balance_wallet
-              : Icons.savings)
-        : AppIcons.resolve(tag?.icon);
+    final accent = type.color(theme);
+    final icon = tag == null ? type.icon : AppIcons.resolve(tag.icon);
     final description = transaction.description?.trim() ?? '';
     final title = description.isNotEmpty
         ? description
@@ -42,13 +32,18 @@ class LatestTransactionRow extends StatelessWidget {
               switch (type) {
                 TransactionType.transfer => 'Transferência para meta',
                 TransactionType.withdrawal => 'Resgate da meta',
-                _ => 'Transação',
+                _ => type.label,
               };
+    final detail = [
+      type.label,
+      if (!type.movesGoal) transaction.category?.name ?? 'Sem categoria',
+      Dates.shortDay(transaction.date, today: today),
+    ].join(' • ');
 
     final amount = transaction.totalAmount.format();
     final (signed, amountColor) = switch (type) {
-      TransactionType.expense => ('- $amount', scheme.error),
-      TransactionType.income => ('+ $amount', success),
+      TransactionType.expense => ('- $amount', accent),
+      TransactionType.income => ('+ $amount', accent),
       TransactionType.transfer ||
       TransactionType.withdrawal => (amount, scheme.onSurfaceVariant),
     };
@@ -78,7 +73,9 @@ class LatestTransactionRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                Dates.shortDay(transaction.date, today: today),
+                detail,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,

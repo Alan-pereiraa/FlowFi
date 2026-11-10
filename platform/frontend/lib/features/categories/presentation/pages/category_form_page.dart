@@ -114,8 +114,8 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
       builder: (context) => AlertDialog(
         title: const Text('Remover categoria?'),
         content: const Text(
-          'A categoria deixa de aparecer na lista. Esta ação não pode ser '
-          'desfeita.',
+          'A categoria deixa de aparecer na lista e as transações dela '
+          'ficam sem categoria. Esta ação não pode ser desfeita.',
         ),
         actions: [
           TextButton(

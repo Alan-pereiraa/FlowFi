@@ -38,7 +38,6 @@ void main() {
     icon: 'flight',
     color: '#00530C',
     targetCents: 500000,
-    initialCents: 350000,
   );
 
   test('GoalDto reads the API decimals and the date', () {
@@ -58,7 +57,7 @@ void main() {
     expect(goal.percent, 15);
   });
 
-  test('the create body carries no initial amount and omits an empty date', () {
+  test('the create body omits an empty date', () {
     final json = NewGoalDto(draft).toJson();
 
     expect(json, {
@@ -69,88 +68,13 @@ void main() {
     });
   });
 
-  test('without an initial amount only the goal is created', () async {
+  test('creating a goal returns it as the API saved it', () async {
     when(() => api.createGoal(any())).thenAnswer((_) async => created);
-
-    final result = await repository.create(
-      const NewGoal(
-        name: 'Viagem Férias',
-        icon: 'flight',
-        color: '#00530C',
-        targetCents: 500000,
-      ),
-    );
-
-    expect(result.goal.currentCents, 0);
-    expect(result.initialDepositFailed, isFalse);
-    verifyNever(
-      () => api.depositToGoal(
-        goalId: any(named: 'goalId'),
-        amount: any(named: 'amount'),
-        date: any(named: 'date'),
-        description: any(named: 'description'),
-      ),
-    );
-  });
-
-  test(
-    'the initial amount is deposited as a transfer into the new goal',
-    () async {
-      when(() => api.createGoal(any())).thenAnswer((_) async => created);
-      when(
-        () => api.depositToGoal(
-          goalId: any(named: 'goalId'),
-          amount: any(named: 'amount'),
-          date: any(named: 'date'),
-          description: any(named: 'description'),
-        ),
-      ).thenAnswer((_) async {});
-
-      final result = await repository.create(draft);
-
-      verify(
-        () => api.depositToGoal(
-          goalId: 7,
-          amount: '3500.00',
-          date: '2026-10-16',
-          description: 'Valor inicial',
-        ),
-      ).called(1);
-      expect(result.goal.currentCents, 350000);
-      expect(result.initialDepositFailed, isFalse);
-    },
-  );
-
-  test('a failed deposit keeps the goal and says so', () async {
-    when(() => api.createGoal(any())).thenAnswer((_) async => created);
-    when(
-      () => api.depositToGoal(
-        goalId: any(named: 'goalId'),
-        amount: any(named: 'amount'),
-        date: any(named: 'date'),
-        description: any(named: 'description'),
-      ),
-    ).thenThrow(const ApiException(statusCode: 422));
 
     final result = await repository.create(draft);
 
-    expect(result.goal.id, 7);
-    expect(result.goal.currentCents, 0);
-    expect(result.initialDepositFailed, isTrue);
-  });
-
-  test('an expired session during the deposit is not swallowed', () {
-    when(() => api.createGoal(any())).thenAnswer((_) async => created);
-    when(
-      () => api.depositToGoal(
-        goalId: any(named: 'goalId'),
-        amount: any(named: 'amount'),
-        date: any(named: 'date'),
-        description: any(named: 'description'),
-      ),
-    ).thenThrow(const ApiException(statusCode: 401));
-
-    expect(repository.create(draft), throwsA(isA<UnauthorizedFailure>()));
+    expect(result.id, 7);
+    expect(result.currentCents, 0);
   });
 
   test('a 422 on the goal itself is a ValidationFailure', () {

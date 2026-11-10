@@ -21,7 +21,7 @@ interface GoalRepositoryInterface
 
     public function adjustCurrentAmount(int $goalId, int $cents): bool;
 
-    public function hasTransactions(Goal $goal): bool;
+    public function isDeleted(int $goalId): bool;
 
     public function unreachedExpiringBetween(CarbonInterface $from, CarbonInterface $to): Collection;
 }

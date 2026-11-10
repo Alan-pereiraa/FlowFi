@@ -17,7 +17,6 @@ class StoreTransactionRequest extends FormRequest
         return [
             'category_id' => [
                 'nullable',
-                'required_unless:type,transfer,withdrawal',
                 'prohibited_if:type,transfer,withdrawal',
                 'integer',
                 Rule::exists('categories', 'id')
@@ -73,7 +72,6 @@ class StoreTransactionRequest extends FormRequest
             'installments.prohibited_if' => $onlyExpenses,
             'period_unit.prohibited_if' => $onlyExpenses,
             'period_interval.prohibited_if' => $onlyExpenses,
-            'category_id.required_unless' => 'Informe a categoria.',
             'category_id.prohibited_if' => 'Transferências e resgates não usam categoria.',
             'goal_id.required_if' => 'Informe a meta.',
             'goal_id.prohibited_if' => 'Entradas não podem ter meta.',

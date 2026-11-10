@@ -24,10 +24,6 @@ class UserService
 
     public function update(User $user, array $data): User
     {
-        if (array_key_exists('email', $data) && $data['email'] !== $user->email) {
-            $data['email_verified_at'] = null;
-        }
-
         return $this->users->update($user, $data);
     }
 

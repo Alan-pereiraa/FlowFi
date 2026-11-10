@@ -8,7 +8,6 @@ class NewGoal {
     required this.color,
     required this.targetCents,
     this.expiresAt,
-    this.initialCents = 0,
   });
 
   final String name;
@@ -16,6 +15,4 @@ class NewGoal {
   final String color;
   final int targetCents;
   final DateTime? expiresAt;
-
-  final int initialCents;
 }

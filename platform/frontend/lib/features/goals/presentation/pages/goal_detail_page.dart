@@ -125,12 +125,35 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
   }
 
   Future<void> _confirmRemove() async {
+    final goal = ref.read(goalDetailControllerProvider).goal ?? widget.initial;
+    if (goal != null && goal.currentCents > 0) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Resgate o saldo primeiro'),
+          content: Text(
+            'Esta meta ainda tem ${Money.format(goal.currentCents)} '
+            'guardados. Resgate o valor para o seu saldo antes de '
+            'excluí-la.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Entendi'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir meta?'),
         content: const Text(
-          'A meta deixa de aparecer na lista. Esta ação não pode ser '
+          'A meta deixa de aparecer na lista. As transferências e '
+          'resgates dela continuam no extrato. Esta ação não pode ser '
           'desfeita.',
         ),
         actions: [

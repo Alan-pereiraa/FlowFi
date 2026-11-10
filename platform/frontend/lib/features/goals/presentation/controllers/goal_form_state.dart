@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/entities/goal_creation.dart';
+import '../../domain/entities/goal.dart';
 
 @immutable
 class GoalFormState {
@@ -13,7 +13,7 @@ class GoalFormState {
 
   final bool saving;
 
-  final GoalCreation? created;
+  final Goal? created;
 
   final Map<String, String> fieldErrors;
   final String? formError;

@@ -1,5 +1,4 @@
 import '../entities/goal.dart';
-import '../entities/goal_creation.dart';
 import '../entities/goal_update.dart';
 import '../entities/new_goal.dart';
 
@@ -8,7 +7,7 @@ abstract interface class GoalRepository {
 
   Future<Goal> show(int id);
 
-  Future<GoalCreation> create(NewGoal data);
+  Future<Goal> create(NewGoal data);
 
   Future<Goal> update(int id, GoalUpdate data);
 

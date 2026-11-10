@@ -13,7 +13,7 @@ final profileFormControllerProvider =
     );
 
 class ProfileFormController extends Notifier<ProfileFormState> {
-  static const _fields = ['first_name', 'last_name', 'phone_number', 'email'];
+  static const _fields = ['first_name', 'last_name', 'phone_number'];
 
   @override
   ProfileFormState build() => const ProfileFormState();

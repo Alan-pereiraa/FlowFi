@@ -151,6 +151,7 @@ class GoalController extends Controller
         operationId: 'deleteGoal',
         tags: ['Metas'],
         summary: 'Apagar meta',
+        description: 'Só apaga metas com saldo zero (422 caso contrário). As transferências e resgates da meta continuam no extrato, mas não podem mais ser editados nem apagados.',
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/IdPath'),
