@@ -74,7 +74,8 @@ class CategoriesApi {
         .cast<Map<String, dynamic>>();
     final totals = <int, String>{};
     for (final row in rows) {
-      final category = row['category'] as Map<String, dynamic>;
+      final category = row['category'] as Map<String, dynamic>?;
+      if (category == null) continue;
       totals[category['id'] as int] = row['total'].toString();
     }
     return totals;
