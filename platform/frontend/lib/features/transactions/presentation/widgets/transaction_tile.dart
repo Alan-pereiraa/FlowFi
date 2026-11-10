@@ -1,12 +1,11 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../shared/appearance/app_icons.dart';
-import '../../../../shared/appearance/hex_color.dart';
-import '../../../../shared/theme/app_colors.dart';
 import '../../../categories/domain/entities/category.dart';
 import '../../domain/entities/installment.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/transaction_type.dart';
+import '../transaction_type_style.dart';
 
 class TransactionTile extends StatelessWidget {
   const TransactionTile({
@@ -32,26 +31,19 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final success = theme.extension<AppColors>()!.success;
     final type = transaction.type;
 
-    final accent = switch (type) {
-      TransactionType.transfer => scheme.primary,
-      TransactionType.withdrawal => scheme.tertiary,
-      _ => HexColor.parse(category?.color, fallback: scheme.onSurfaceVariant),
-    };
-    final icon = switch (type) {
-      TransactionType.transfer => Icons.savings,
-      TransactionType.withdrawal => Icons.account_balance_wallet,
-      _ => AppIcons.resolve(category?.icon),
-    };
+    final accent = type.color(theme);
+    final icon = type.movesGoal || category == null
+        ? type.icon
+        : AppIcons.resolve(category!.icon);
     final overdue =
         today != null && (installment?.isOverdueOn(today!) ?? false);
     final subtitle = [
       switch (type) {
         TransactionType.transfer => 'Transferência para meta',
         TransactionType.withdrawal => 'Resgate da meta',
-        _ => category?.name,
+        _ => '${type.label} • ${category?.name ?? 'Sem categoria'}',
       },
       if (installment != null && transaction.installmentsCount > 1)
         '${installment!.step}/${transaction.installmentsCount}',
@@ -63,11 +55,8 @@ class TransactionTile extends StatelessWidget {
 
     final amount = (installment?.amount ?? transaction.totalAmount).format();
     final (signed, amountColor) = switch (type) {
-      TransactionType.expense => (
-        '- $amount',
-        overdue ? scheme.error : scheme.onSurface,
-      ),
-      TransactionType.income => ('+ $amount', success),
+      TransactionType.expense => ('- $amount', accent),
+      TransactionType.income => ('+ $amount', accent),
       TransactionType.transfer ||
       TransactionType.withdrawal => (amount, scheme.onSurfaceVariant),
     };
@@ -107,7 +96,7 @@ class TransactionTile extends StatelessWidget {
                               : switch (type) {
                                   TransactionType.transfer => 'Transferência',
                                   TransactionType.withdrawal => 'Resgate',
-                                  _ => category?.name ?? 'Transação',
+                                  _ => category?.name ?? type.label,
                                 },
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

@@ -39,10 +39,7 @@ class TransactionDraft {
 
   bool get missingAmount => amount == null || amount!.isZero;
 
-  bool get missingCategory => !movesGoal && categoryId == null;
-
   bool get missingGoal => movesGoal && goalId == null;
 
-  int get missingCount =>
-      [missingAmount, missingCategory, missingGoal].where((m) => m).length;
+  int get missingCount => [missingAmount, missingGoal].where((m) => m).length;
 }

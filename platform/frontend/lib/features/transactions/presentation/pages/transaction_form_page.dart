@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../app/routes.dart';
 import '../../../../core/clock.dart';
 import '../../../../shared/money/money.dart';
-import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/utils/dates.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -23,6 +22,7 @@ import '../../domain/entities/recurrence.dart';
 import '../controllers/transaction_form_controller.dart';
 import '../controllers/transaction_form_state.dart';
 import '../controllers/voice_draft_controller.dart';
+import '../transaction_type_style.dart';
 import '../widgets/category_chips.dart';
 import '../widgets/choice_row.dart';
 import '../widgets/first_installment_notice.dart';
@@ -63,7 +63,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   int _periodInterval = 1;
 
   String? _amountMissing;
-  String? _categoryMissing;
   String? _goalMissing;
   String? _endDateMissing;
 
@@ -159,19 +158,13 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     final created = await context.push<Category>(Routes.newCategory);
     if (created == null || !mounted) return;
     _controller.categoryCreated(created);
-    setState(() {
-      _categoryId = created.id;
-      _categoryMissing = null;
-    });
+    setState(() => _categoryId = created.id);
   }
 
   void _submit() {
     final creatingRecurrence = !_isEdit && _recurring && !_isSplit;
     setState(() {
       _amountMissing = _amount.isZero ? 'Informe um valor.' : null;
-      _categoryMissing = !_movesGoal && _categoryId == null
-          ? 'Escolha uma categoria.'
-          : null;
       _goalMissing = _movesGoal && _goalId == null ? _goalMissingMessage : null;
       _endDateMissing =
           creatingRecurrence &&
@@ -181,7 +174,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
           : null;
     });
     if (_amountMissing != null ||
-        _categoryMissing != null ||
         _goalMissing != null ||
         _endDateMissing != null) {
       return;
@@ -255,9 +247,6 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
             : RecurrenceEnd.occurrences;
       }
       _amountMissing = draft.missingAmount ? 'Informe um valor.' : null;
-      _categoryMissing = draft.missingCategory
-          ? 'Escolha uma categoria.'
-          : null;
       _goalMissing = draft.missingGoal ? 'Escolha a meta de destino.' : null;
       _endDateMissing = null;
     });
@@ -449,12 +438,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final amountColor = switch (_type) {
-      TransactionType.expense => scheme.error,
-      TransactionType.income => theme.extension<AppColors>()!.success,
-      TransactionType.transfer => scheme.primary,
-      TransactionType.withdrawal => scheme.tertiary,
-    };
+    final amountColor = _type.color(theme);
     final original = state.original;
     final recurrenceOn = _isEdit ? state.recurrenceActive : _recurring;
     final splitBlocked = recurrenceOn || (original?.isRecurring ?? false);
@@ -599,7 +583,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   const SizedBox(height: 16),
                 ],
                 Text(
-                  'Categoria',
+                  'Categoria (opcional)',
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: scheme.onSurface,
                   ),
@@ -609,13 +593,11 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                   categories: state.categories,
                   selectedId: _categoryId,
                   onCreate: _createCategory,
-                  onSelected: (id) => setState(() {
-                    _categoryId = id;
-                    _categoryMissing = null;
-                  }),
+                  onSelected: (id) => setState(
+                    () => _categoryId = id == _categoryId ? null : id,
+                  ),
                 ),
-                if ((_categoryMissing ?? state.fieldErrors['category_id'])
-                    case final message?)
+                if (state.fieldErrors['category_id'] case final message?)
                   error(message),
               ],
               if (!_isWithdrawal) ...[
