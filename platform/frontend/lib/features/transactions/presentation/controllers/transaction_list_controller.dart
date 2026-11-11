@@ -65,6 +65,7 @@ class TransactionListController extends Notifier<TransactionListState> {
         loading: false,
         loadingMore: false,
       );
+      _keepLoadingWhileSearching();
     } on ParallelWaitError<dynamic, dynamic> catch (e) {
       _failed(generation, _firstFailure(e));
     } on Failure catch (failure) {
@@ -87,6 +88,7 @@ class TransactionListController extends Notifier<TransactionListState> {
         hasMore: page.hasMore,
         loadingMore: false,
       );
+      _keepLoadingWhileSearching();
     } on Failure {
       if (!ref.mounted || generation != _generation) return;
       state = state.copyWith(loadingMore: false);
@@ -148,6 +150,12 @@ class TransactionListController extends Notifier<TransactionListState> {
 
   void setSearch(String text) {
     state = state.copyWith(search: text);
+    _keepLoadingWhileSearching();
+  }
+
+  void _keepLoadingWhileSearching() {
+    if (state.search.trim().isEmpty || !state.hasMore) return;
+    Future.microtask(loadMore);
   }
 
   void _failed(int generation, Failure failure) {

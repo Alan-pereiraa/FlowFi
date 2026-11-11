@@ -191,6 +191,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       ];
     }
+    if (byDay.isEmpty &&
+        state.search.trim().isNotEmpty &&
+        (state.hasMore || state.loadingMore)) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
+    }
     if (byDay.isEmpty) {
       return const [
         SliverFillRemaining(
@@ -198,7 +208,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           child: EmptyState(
             icon: Icons.search_off,
             title: 'Nada encontrado',
-            message: 'Nenhuma transação carregada combina com a busca.',
+            message: 'Nenhuma transação combina com a busca.',
           ),
         ),
       ];
