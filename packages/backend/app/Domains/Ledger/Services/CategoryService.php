@@ -51,6 +51,10 @@ class CategoryService
                 $this->categories->update($category, $rest);
             }
 
+            if (array_key_exists('limit_amount', $data)) {
+                $this->warnIfNearLimit($category->user, $category->id);
+            }
+
             return $category;
         });
     }
@@ -113,10 +117,14 @@ class CategoryService
         $spent = $this->categories->spentInMonthCents($category, CarbonImmutable::now());
 
         if ($spent * 100 >= $limit * 80) {
+            $over = $spent > $limit;
+
             $this->notifications->notifyOnce(
                 $user,
-                'Limite da categoria quase atingido',
-                "Você já gastou mais de 80% do limite da categoria \"{$category->name}\".",
+                $over ? 'Limite da categoria ultrapassado' : 'Limite da categoria quase atingido',
+                $over
+                    ? "Você já ultrapassou o limite da categoria \"{$category->name}\"."
+                    : "Você já gastou mais de 80% do limite da categoria \"{$category->name}\".",
                 NotificationType::Warning,
                 'category_limit_warning',
                 $category->id,
