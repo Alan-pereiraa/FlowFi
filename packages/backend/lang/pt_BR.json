@@ -1,4 +1,5 @@
 {
     "(and :count more error)": "(e mais :count erro)",
-    "(and :count more errors)": "(e mais :count erros)"
+    "(and :count more errors)": "(e mais :count erros)",
+    "All rights reserved.": "Todos os direitos reservados."
 }

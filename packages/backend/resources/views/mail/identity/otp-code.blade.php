@@ -1,15 +1,15 @@
 <x-mail::message>
-# Your sign-in code
+# Seu código de acesso
 
-Use this code to sign in to {{ config('app.name') }}:
+Use este código para entrar no {{ config('app.name') }}:
 
 <x-mail::panel>
 <strong style="font-size: 28px; letter-spacing: 6px;">{{ $code }}</strong>
 </x-mail::panel>
 
-The code expires in {{ $expiresInMinutes }} minutes and can be used only once.
-If you did not request it, you can ignore this email.
+O código expira em {{ $expiresInMinutes }} minutos e só pode ser usado uma vez.
+Se você não pediu este código, pode ignorar este e-mail.
 
-Thanks,<br>
+Obrigado,<br>
 {{ config('app.name') }}
 </x-mail::message>

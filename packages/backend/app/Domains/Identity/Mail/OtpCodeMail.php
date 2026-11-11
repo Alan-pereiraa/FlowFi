@@ -16,7 +16,7 @@ class OtpCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your FlowFi sign-in code',
+            subject: 'Seu código de acesso ao FlowFi',
         );
     }
 
