@@ -77,6 +77,16 @@ class GoalDetailController extends Notifier<GoalDetailState> {
     }
   }
 
+  void clearDepositError() {
+    if (state.depositError == null) return;
+    state = state.copyWith(depositError: () => null);
+  }
+
+  void clearWithdrawError() {
+    if (state.withdrawError == null) return;
+    state = state.copyWith(withdrawError: () => null);
+  }
+
   Future<void> deposit(Goal goal, int cents) async {
     if (state.busy) return;
     state = state.copyWith(depositing: true, depositError: () => null);

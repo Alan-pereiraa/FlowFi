@@ -316,6 +316,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
         title: 'Adicionar valor',
         subtitle: 'Quanto você guardou para essa meta agora?',
         error: state.depositError,
+        onChanged: ref
+            .read(goalDetailControllerProvider.notifier)
+            .clearDepositError,
         enabled: !state.busy,
         loading: state.depositing,
         buttonIcon: Icons.add,
@@ -335,6 +338,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           ? 'O valor volta para o seu saldo. Disponível na meta: $saved.'
           : 'Não há valor guardado nesta meta para resgatar.',
       error: state.withdrawError,
+      onChanged: ref
+          .read(goalDetailControllerProvider.notifier)
+          .clearWithdrawError,
       enabled: !state.busy && hasMoney,
       loading: state.withdrawing,
       buttonIcon: Icons.remove,
@@ -356,6 +362,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     required String title,
     required String subtitle,
     required String? error,
+    required VoidCallback onChanged,
     required bool enabled,
     required bool loading,
     required IconData buttonIcon,
@@ -387,6 +394,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                 errorText: error,
                 enabled: enabled,
                 textInputAction: TextInputAction.done,
+                onChanged: (_) => onChanged(),
                 onSubmitted: (_) => onSubmit(),
                 validator: (v) =>
                     validator(CurrencyInputFormatter.centsOf(v ?? '')),
