@@ -4,8 +4,10 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../categories/data/repositories/category_repository_impl.dart';
 import '../../../categories/domain/entities/category.dart';
+import '../../../categories/presentation/controllers/categories_list_controller.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../goals/data/repositories/goal_repository_impl.dart';
+import '../../../goals/presentation/controllers/goals_list_controller.dart';
 import '../../data/repositories/transaction_repository_impl.dart';
 import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
@@ -187,6 +189,7 @@ class TransactionFormController extends Notifier<TransactionFormState> {
       await ref.read(transactionRepositoryProvider).delete(original.id);
       if (!ref.mounted) return;
       state = state.copyWith(deleting: false, deleted: true);
+      _refreshTotals();
     } on Failure catch (failure) {
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -207,6 +210,7 @@ class TransactionFormController extends Notifier<TransactionFormState> {
       await request();
       if (!ref.mounted) return;
       state = state.copyWith(saving: false, saved: true);
+      _refreshTotals();
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;
       final fieldErrors = {
@@ -228,5 +232,11 @@ class TransactionFormController extends Notifier<TransactionFormState> {
         formError: () => ErrorMessages.general(failure),
       );
     }
+  }
+
+  void _refreshTotals() {
+    ref.invalidate(dashboardControllerProvider);
+    ref.invalidate(categoriesListControllerProvider);
+    ref.invalidate(goalsListControllerProvider);
   }
 }
