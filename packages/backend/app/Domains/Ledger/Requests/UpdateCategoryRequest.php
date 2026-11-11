@@ -4,6 +4,7 @@ namespace App\Domains\Ledger\Requests;
 
 use App\Domains\Ledger\Services\CategoryService;
 use App\Domains\Shared\Constants\IconCatalog;
+use App\Domains\Shared\Rules\UniqueIgnoringCase;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,10 +25,12 @@ class UpdateCategoryRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')
-                    ->where('user_id', $this->user()->id)
-                    ->whereNull('deleted_at')
-                    ->ignore((int) $this->route('id')),
+                new UniqueIgnoringCase(
+                    $this->user()->categories(),
+                    'name',
+                    'Já existe uma categoria com esse nome.',
+                    (int) $this->route('id'),
+                ),
             ],
             'icon' => ['sometimes', 'required', 'string', Rule::in(IconCatalog::names())],
             'color' => ['sometimes', 'required', 'string', 'hex_color', 'size:7'],
