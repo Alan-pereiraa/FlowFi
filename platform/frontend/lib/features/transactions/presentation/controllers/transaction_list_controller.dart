@@ -34,6 +34,7 @@ class TransactionListController extends Notifier<TransactionListState> {
     return TransactionFilter(
       type: state.type,
       categoryId: state.categoryId,
+      uncategorized: state.uncategorized,
       dateFrom: state.thisMonth ? DateTime(now.year, now.month) : null,
       dateTo: state.thisMonth ? DateTime(now.year, now.month + 1, 0) : null,
       overdue: state.overdueOnly,
@@ -142,9 +143,15 @@ class TransactionListController extends Notifier<TransactionListState> {
     refresh();
   }
 
-  void setCategory(int? categoryId) {
-    if (categoryId == state.categoryId) return;
-    state = state.copyWith(categoryId: () => categoryId);
+  void setCategory(int? categoryId, {bool uncategorized = false}) {
+    if (categoryId == state.categoryId &&
+        uncategorized == state.uncategorized) {
+      return;
+    }
+    state = state.copyWith(
+      categoryId: () => uncategorized ? null : categoryId,
+      uncategorized: uncategorized,
+    );
     refresh();
   }
 

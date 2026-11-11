@@ -366,10 +366,11 @@ class _FilterChips extends ConsumerWidget {
           const SizedBox(width: 8),
           Builder(
             builder: (chipContext) => chip(
-              label:
-                  state.categories[state.categoryId]?.name ??
-                  'Todas as Categorias',
-              selected: state.categoryId != null,
+              label: state.uncategorized
+                  ? 'Sem categoria'
+                  : state.categories[state.categoryId]?.name ??
+                        'Todas as Categorias',
+              selected: state.categoryId != null || state.uncategorized,
               trailing: Icons.arrow_drop_down,
               onTap: () async {
                 final box = chipContext.findRenderObject()! as RenderBox;
@@ -387,6 +388,10 @@ class _FilterChips extends ConsumerWidget {
                       value: _CategoryChoice(null),
                       child: Text('Todas as Categorias'),
                     ),
+                    const PopupMenuItem(
+                      value: _CategoryChoice(null, uncategorized: true),
+                      child: Text('Sem categoria'),
+                    ),
                     for (final category in state.categories.values)
                       PopupMenuItem(
                         value: _CategoryChoice(category.id),
@@ -394,7 +399,12 @@ class _FilterChips extends ConsumerWidget {
                       ),
                   ],
                 );
-                if (picked != null) controller.setCategory(picked.id);
+                if (picked != null) {
+                  controller.setCategory(
+                    picked.id,
+                    uncategorized: picked.uncategorized,
+                  );
+                }
               },
             ),
           ),
@@ -411,7 +421,9 @@ class _TypeChoice {
 }
 
 class _CategoryChoice {
-  const _CategoryChoice(this.id);
+  const _CategoryChoice(this.id, {this.uncategorized = false});
 
   final int? id;
+
+  final bool uncategorized;
 }
