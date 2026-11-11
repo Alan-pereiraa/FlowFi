@@ -22,7 +22,16 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         return $user->transactions()
             ->with('installments')
             ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
-            ->when($filters['category_id'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
+            ->when(
+                $filters['uncategorized'] ?? false,
+                fn ($query) => $query
+                    ->whereNull('category_id')
+                    ->whereIn('type', [Transaction::TYPE_INCOME, Transaction::TYPE_EXPENSE]),
+                fn ($query) => $query->when(
+                    $filters['category_id'] ?? null,
+                    fn ($query, $categoryId) => $query->where('category_id', $categoryId),
+                ),
+            )
             ->when(
                 $from || $to,
                 fn ($query) => $this->whereDatedInside($query, $from, $to),

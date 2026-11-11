@@ -10,6 +10,7 @@ class TransactionFilter {
     this.dateFrom,
     this.dateTo,
     this.overdue = false,
+    this.uncategorized = false,
   });
 
   final TransactionType? type;
@@ -20,6 +21,8 @@ class TransactionFilter {
   final DateTime? dateTo;
   final bool overdue;
 
+  final bool uncategorized;
+
   @override
   bool operator ==(Object other) =>
       other is TransactionFilter &&
@@ -27,8 +30,10 @@ class TransactionFilter {
       other.categoryId == categoryId &&
       other.dateFrom == dateFrom &&
       other.dateTo == dateTo &&
-      other.overdue == overdue;
+      other.overdue == overdue &&
+      other.uncategorized == uncategorized;
 
   @override
-  int get hashCode => Object.hash(type, categoryId, dateFrom, dateTo, overdue);
+  int get hashCode =>
+      Object.hash(type, categoryId, dateFrom, dateTo, overdue, uncategorized);
 }

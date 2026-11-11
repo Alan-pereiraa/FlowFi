@@ -34,6 +34,7 @@ class TransactionListController extends Notifier<TransactionListState> {
     return TransactionFilter(
       type: state.type,
       categoryId: state.categoryId,
+      uncategorized: state.uncategorized,
       dateFrom: state.thisMonth ? DateTime(now.year, now.month) : null,
       dateTo: state.thisMonth ? DateTime(now.year, now.month + 1, 0) : null,
       overdue: state.overdueOnly,
@@ -65,6 +66,7 @@ class TransactionListController extends Notifier<TransactionListState> {
         loading: false,
         loadingMore: false,
       );
+      _keepLoadingWhileSearching();
     } on ParallelWaitError<dynamic, dynamic> catch (e) {
       _failed(generation, _firstFailure(e));
     } on Failure catch (failure) {
@@ -87,6 +89,7 @@ class TransactionListController extends Notifier<TransactionListState> {
         hasMore: page.hasMore,
         loadingMore: false,
       );
+      _keepLoadingWhileSearching();
     } on Failure {
       if (!ref.mounted || generation != _generation) return;
       state = state.copyWith(loadingMore: false);
@@ -140,14 +143,26 @@ class TransactionListController extends Notifier<TransactionListState> {
     refresh();
   }
 
-  void setCategory(int? categoryId) {
-    if (categoryId == state.categoryId) return;
-    state = state.copyWith(categoryId: () => categoryId);
+  void setCategory(int? categoryId, {bool uncategorized = false}) {
+    if (categoryId == state.categoryId &&
+        uncategorized == state.uncategorized) {
+      return;
+    }
+    state = state.copyWith(
+      categoryId: () => uncategorized ? null : categoryId,
+      uncategorized: uncategorized,
+    );
     refresh();
   }
 
   void setSearch(String text) {
     state = state.copyWith(search: text);
+    _keepLoadingWhileSearching();
+  }
+
+  void _keepLoadingWhileSearching() {
+    if (state.search.trim().isEmpty || !state.hasMore) return;
+    Future.microtask(loadMore);
   }
 
   void _failed(int generation, Failure failure) {

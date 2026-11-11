@@ -20,7 +20,8 @@ class MonthSummary {
   int? get incomeUsedPercent {
     final income = this.income.total.cents;
     if (income <= 0) return null;
-    return (expense.total.cents * 100) ~/ income;
+    final committed = income - projectedBalance.cents;
+    return committed <= 0 ? 0 : (committed * 100) ~/ income;
   }
 
   @override

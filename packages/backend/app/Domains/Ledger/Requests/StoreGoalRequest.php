@@ -3,6 +3,7 @@
 namespace App\Domains\Ledger\Requests;
 
 use App\Domains\Shared\Constants\IconCatalog;
+use App\Domains\Shared\Rules\UniqueIgnoringCase;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,9 +16,12 @@ class StoreGoalRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('goals', 'name')
-                    ->where('user_id', $this->user()->id)
-                    ->whereNull('deleted_at'),
+                new UniqueIgnoringCase(
+                    $this->user()->goals(),
+                    'name',
+                    'Já existe uma meta com esse nome.',
+                    null,
+                ),
             ],
             'icon' => ['required', 'string', Rule::in(IconCatalog::names())],
             'color' => ['required', 'string', 'hex_color', 'size:7'],

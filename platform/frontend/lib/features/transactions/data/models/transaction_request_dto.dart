@@ -61,6 +61,7 @@ abstract final class TransactionRequestDto {
     if (filter.dateFrom != null) 'date_from': Dates.toApi(filter.dateFrom!),
     if (filter.dateTo != null) 'date_to': Dates.toApi(filter.dateTo!),
     if (filter.overdue) 'overdue': 1,
+    if (filter.uncategorized) 'uncategorized': 1,
   };
 
   static Map<String, dynamic> _schedule(TransactionSchedule schedule) => {

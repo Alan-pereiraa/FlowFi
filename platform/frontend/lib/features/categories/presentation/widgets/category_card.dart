@@ -28,7 +28,9 @@ class CategoryCard extends StatelessWidget {
 
     final spent = spentCents;
     final nearLimit = spent != null && category.isNearLimit(spent);
+    final overLimit = spent != null && category.isOverLimit(spent);
     final accent = color;
+    final usageColor = overLimit ? scheme.error : accent;
     final limitText = category.limitCents == null
         ? 'Sem limite'
         : Money.format(category.limitCents!);
@@ -116,7 +118,7 @@ class CategoryCard extends StatelessWidget {
                           ? '--'
                           : '${category.usedPercent(spent)}%',
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: accent,
+                        color: usageColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -125,7 +127,7 @@ class CategoryCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 AppProgressBar(
                   value: (category.usedPercent(spent) ?? 0) / 100,
-                  color: accent,
+                  color: usageColor,
                 ),
                 if (nearLimit) ...[
                   const SizedBox(height: 8),
@@ -138,7 +140,7 @@ class CategoryCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Próximo do limite',
+                        overLimit ? 'Limite ultrapassado' : 'Próximo do limite',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: scheme.error,
                         ),

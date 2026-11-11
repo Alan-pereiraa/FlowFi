@@ -14,6 +14,7 @@ class TransactionListState {
     this.thisMonth = true,
     this.type,
     this.categoryId,
+    this.uncategorized = false,
     this.search = '',
     this.loading = false,
     this.loadingMore = false,
@@ -35,6 +36,8 @@ class TransactionListState {
   final TransactionType? type;
 
   final int? categoryId;
+
+  final bool uncategorized;
 
   final String search;
 
@@ -105,6 +108,7 @@ class TransactionListState {
     bool? thisMonth,
     TransactionType? Function()? type,
     int? Function()? categoryId,
+    bool? uncategorized,
     String? search,
     bool? loading,
     bool? loadingMore,
@@ -122,6 +126,7 @@ class TransactionListState {
       thisMonth: thisMonth ?? this.thisMonth,
       type: type == null ? this.type : type(),
       categoryId: categoryId == null ? this.categoryId : categoryId(),
+      uncategorized: uncategorized ?? this.uncategorized,
       search: search ?? this.search,
       loading: loading ?? this.loading,
       loadingMore: loadingMore ?? this.loadingMore,

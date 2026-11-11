@@ -11,7 +11,7 @@ class OtpCodeMailTest extends TestCase
     {
         $mail = new OtpCodeMail(code: '123456', expiresInMinutes: 10);
 
-        $mail->assertHasSubject('Your FlowFi sign-in code');
+        $mail->assertHasSubject('Seu código de acesso ao FlowFi');
     }
 
     public function test_o_email_mostra_o_codigo(): void
@@ -26,7 +26,7 @@ class OtpCodeMailTest extends TestCase
     {
         $mail = new OtpCodeMail(code: '123456', expiresInMinutes: 15);
 
-        $mail->assertSeeInHtml('expires in 15 minutes');
+        $mail->assertSeeInHtml('expira em 15 minutos');
     }
 
     public function test_o_email_mostra_o_nome_do_app(): void

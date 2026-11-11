@@ -32,6 +32,11 @@ class Category {
 
   bool isNearLimit(int spentCents) => (usedPercent(spentCents) ?? 0) >= 80;
 
+  bool isOverLimit(int spentCents) {
+    final limit = limitCents;
+    return limit != null && limit > 0 && spentCents > limit;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is Category &&
