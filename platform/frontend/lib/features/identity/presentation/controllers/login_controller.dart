@@ -32,6 +32,7 @@ class LoginController extends Notifier<LoginState> {
     if (emailError != null) {
       state = state.copyWith(
         emailError: () => emailError,
+        codeError: () => null,
         formError: () => null,
       );
       return;
@@ -122,6 +123,16 @@ class LoginController extends Notifier<LoginState> {
         formError: () => ErrorMessages.general(failure),
       );
     }
+  }
+
+  void clearEmailError() {
+    if (state.emailError == null) return;
+    state = state.copyWith(emailError: () => null);
+  }
+
+  void clearCodeError() {
+    if (state.codeError == null) return;
+    state = state.copyWith(codeError: () => null);
   }
 
   String _normalize(String email) => email.trim().toLowerCase();

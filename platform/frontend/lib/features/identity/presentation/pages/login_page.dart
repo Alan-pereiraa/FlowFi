@@ -79,6 +79,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.send,
                           autofillHints: const [AutofillHints.email],
+                          onChanged: (_) => _controller.clearEmailError(),
                           onSubmitted: (_) => _sendCode(),
                           suffix: _SendCodeButton(
                             state: state,
@@ -106,6 +107,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(6),
                           ],
+                          onChanged: (_) => _controller.clearCodeError(),
                           onSubmitted: (_) => _verify(),
                         ),
                         if (state.formError != null) ...[
