@@ -21,8 +21,8 @@ class GoalCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final color = AppPalette.parse(goal.color);
 
-    final saved = Money.format(goal.currentCents, dropZeroCents: true);
-    final target = Money.format(goal.targetCents, dropZeroCents: true);
+    final saved = Money.format(goal.currentCents);
+    final target = Money.format(goal.targetCents);
     final deadline = goal.isOpenEnded
         ? 'Meta contínua.'
         : 'Prazo ${DateLabels.monthYear(goal.expiresAt!)}.';

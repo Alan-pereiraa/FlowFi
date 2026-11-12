@@ -547,8 +547,8 @@ class _SummaryCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final color = AppPalette.parse(goal.color);
 
-    final saved = Money.format(goal.currentCents, dropZeroCents: true);
-    final target = Money.format(goal.targetCents, dropZeroCents: true);
+    final saved = Money.format(goal.currentCents);
+    final target = Money.format(goal.targetCents);
     final monthly = goal.monthlyContributionCents(DateTime.now());
     final remaining = goal.targetCents - goal.currentCents;
 
@@ -624,7 +624,7 @@ class _SummaryCard extends StatelessWidget {
                 label: goal.reached ? 'Situação' : 'Falta guardar',
                 value: goal.reached
                     ? 'Meta alcançada'
-                    : Money.format(remaining, dropZeroCents: true),
+                    : Money.format(remaining),
               ),
               if (monthly != null)
                 _Line(label: 'Guardar por mês', value: Money.format(monthly)),

@@ -103,8 +103,8 @@ class _SummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final monthly = goal.monthlyContributionCents(DateTime.now());
-    final saved = Money.format(goal.currentCents, dropZeroCents: true);
-    final target = Money.format(goal.targetCents, dropZeroCents: true);
+    final saved = Money.format(goal.currentCents);
+    final target = Money.format(goal.targetCents);
 
     return Card(
       child: Padding(
