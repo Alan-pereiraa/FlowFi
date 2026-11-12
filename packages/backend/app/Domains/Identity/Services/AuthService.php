@@ -2,9 +2,11 @@
 
 namespace App\Domains\Identity\Services;
 
+use App\Domains\Identity\Mail\AccountDeactivatedMail;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Repositories\UserRepositoryInterface;
 use App\Domains\Notification\Service\NotificationService;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -18,6 +20,12 @@ class AuthService
 
     public function requestOtp(string $email): void
     {
+        if ($this->users->findByEmailWithTrashed($email)?->trashed()) {
+            Mail::to($email)->send(new AccountDeactivatedMail);
+
+            return;
+        }
+
         $this->otp->issue($email);
     }
 

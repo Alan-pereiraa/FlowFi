@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Domains\Identity;
 
+use App\Domains\Identity\Mail\AccountDeactivatedMail;
 use App\Domains\Identity\Mail\OtpCodeMail;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Repositories\UserRepositoryInterface;
@@ -107,15 +108,14 @@ class AuthEndpointsTest extends TestCase
             ->assertJsonValidationErrors(['email', 'code']);
     }
 
-    public function test_verificar_com_conta_desativada_devolve_422_no_campo_email(): void
+    public function test_pedir_codigo_para_conta_desativada_nao_envia_codigo_e_avisa_por_email(): void
     {
         $this->createUser(self::EMAIL)->delete();
-        $code = $this->requestCode(self::EMAIL);
 
-        $this->postJson(self::VERIFY_OTP_URL, ['email' => self::EMAIL, 'code' => $code])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['email'])
-            ->assertJsonMissingPath('token');
+        $this->postJson(self::REQUEST_OTP_URL, ['email' => self::EMAIL])->assertStatus(202);
+
+        Mail::assertNotSent(OtpCodeMail::class);
+        Mail::assertSent(AccountDeactivatedMail::class, fn ($mail) => $mail->hasTo(self::EMAIL));
     }
 
     public function test_o_token_recebido_da_acesso_a_uma_rota_protegida(): void
