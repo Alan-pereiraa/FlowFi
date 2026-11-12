@@ -333,7 +333,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Voltar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             style: TextButton.styleFrom(
