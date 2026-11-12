@@ -1,8 +1,10 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../app/routes.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/validators.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -109,7 +111,11 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: _isEdit,
+        automaticallyImplyLeading: false,
+        leadingWidth: _isEdit ? 64 : null,
+        leading: _isEdit
+            ? const AppBackButton(fallbackRoute: Routes.dashboard)
+            : null,
         title: Text(_isEdit ? 'Editar Perfil' : 'Complete seu Perfil'),
       ),
       body: SafeArea(
@@ -140,6 +146,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                     const SizedBox(height: 24),
                     AppTextField(
                       label: 'Nome',
+                      inputFormatters: [LengthLimitingTextInputFormatter(255)],
                       hint: 'Ex: Alex',
                       controller: _firstName,
                       icon: Icons.badge_outlined,
@@ -155,6 +162,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                     const SizedBox(height: 16),
                     AppTextField(
                       label: 'Sobrenome',
+                      inputFormatters: [LengthLimitingTextInputFormatter(255)],
                       hint: 'Ex: Junior',
                       controller: _lastName,
                       icon: Icons.badge_outlined,

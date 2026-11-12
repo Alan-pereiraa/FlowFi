@@ -59,13 +59,31 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   Future<void> _pay(Transaction item, Installment installment) async {
-    final error = await ref
-        .read(transactionListControllerProvider.notifier)
-        .payInstallment(item, installment);
-    if (error != null && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+    final controller = ref.read(transactionListControllerProvider.notifier);
+    final error = await controller.payInstallment(item, installment);
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (error != null) {
+      messenger.showSnackBar(SnackBar(content: Text(error)));
+      return;
     }
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text('Parcela paga.'),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () async {
+            final undoError = await controller.unpayInstallment(
+              item,
+              installment,
+            );
+            if (undoError != null) {
+              messenger.showSnackBar(SnackBar(content: Text(undoError)));
+            }
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -75,6 +93,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        heroTag: 'transactions-new-transaction',
         tooltip: 'Nova transação',
         onPressed: () => _openForm(Routes.newTransaction),
         child: const Icon(Icons.add),

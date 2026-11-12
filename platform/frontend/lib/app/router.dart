@@ -38,11 +38,25 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
   ref.listen(sessionControllerProvider, (_, next) => session.value = next);
 
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+  String? pendingLocation;
+
   final router = GoRouter(
     initialLocation: Routes.splash,
     refreshListenable: session,
-    redirect: (context, state) =>
-        redirectFor(session.value, state.matchedLocation),
+    redirect: (context, state) {
+      final location = state.matchedLocation;
+      final target = redirectFor(session.value, location);
+      if (target == Routes.splash && location != Routes.login) {
+        pendingLocation = state.uri.toString();
+      }
+      if (location == Routes.splash && target == Routes.dashboard) {
+        final pending = pendingLocation;
+        pendingLocation = null;
+        if (pending != null) return pending;
+      }
+      return target;
+    },
     routes: [
       GoRoute(path: Routes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -316,6 +317,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
         title: 'Adicionar valor',
         subtitle: 'Quanto você guardou para essa meta agora?',
         error: state.depositError,
+        onChanged: ref
+            .read(goalDetailControllerProvider.notifier)
+            .clearDepositError,
         enabled: !state.busy,
         loading: state.depositing,
         buttonIcon: Icons.add,
@@ -335,6 +339,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           ? 'O valor volta para o seu saldo. Disponível na meta: $saved.'
           : 'Não há valor guardado nesta meta para resgatar.',
       error: state.withdrawError,
+      onChanged: ref
+          .read(goalDetailControllerProvider.notifier)
+          .clearWithdrawError,
       enabled: !state.busy && hasMoney,
       loading: state.withdrawing,
       buttonIcon: Icons.remove,
@@ -356,6 +363,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     required String title,
     required String subtitle,
     required String? error,
+    required VoidCallback onChanged,
     required bool enabled,
     required bool loading,
     required IconData buttonIcon,
@@ -387,6 +395,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                 errorText: error,
                 enabled: enabled,
                 textInputAction: TextInputAction.done,
+                onChanged: (_) => onChanged(),
                 onSubmitted: (_) => onSubmit(),
                 validator: (v) =>
                     validator(CurrencyInputFormatter.centsOf(v ?? '')),
@@ -420,6 +429,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
               const SizedBox(height: 16),
               AppTextField(
                 label: 'Nome da Meta',
+                inputFormatters: [LengthLimitingTextInputFormatter(255)],
                 hint: 'Ex: Viagem de Férias',
                 controller: _name,
                 icon: Icons.edit_note,
@@ -539,8 +549,8 @@ class _SummaryCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final color = AppPalette.parse(goal.color);
 
-    final saved = Money.format(goal.currentCents, dropZeroCents: true);
-    final target = Money.format(goal.targetCents, dropZeroCents: true);
+    final saved = Money.format(goal.currentCents);
+    final target = Money.format(goal.targetCents);
     final monthly = goal.monthlyContributionCents(DateTime.now());
     final remaining = goal.targetCents - goal.currentCents;
 
@@ -616,7 +626,7 @@ class _SummaryCard extends StatelessWidget {
                 label: goal.reached ? 'Situação' : 'Falta guardar',
                 value: goal.reached
                     ? 'Meta alcançada'
-                    : Money.format(remaining, dropZeroCents: true),
+                    : Money.format(remaining),
               ),
               if (monthly != null)
                 _Line(label: 'Guardar por mês', value: Money.format(monthly)),

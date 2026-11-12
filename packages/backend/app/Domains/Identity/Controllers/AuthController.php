@@ -10,6 +10,7 @@ use App\Domains\Identity\Services\AuthService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
+
 class AuthController extends Controller
 {
     public function __construct(
@@ -91,7 +92,6 @@ class AuthController extends Controller
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
         ],
     )]
-
     public function logout(LogoutRequest $request): JsonResponse
     {
         $this->auth->logout($request->user(), $request->validated('device_token'));

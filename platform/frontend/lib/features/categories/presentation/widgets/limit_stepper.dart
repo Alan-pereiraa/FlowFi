@@ -10,7 +10,6 @@ class LimitStepper extends StatefulWidget {
     required this.cents,
     required this.onChanged,
     required this.caption,
-    this.captionBelow = false,
     this.errorText,
     this.step = 5000,
     this.enabled = true,
@@ -21,7 +20,6 @@ class LimitStepper extends StatefulWidget {
 
   final String caption;
 
-  final bool captionBelow;
   final String? errorText;
 
   final int step;
@@ -98,7 +96,8 @@ class _LimitStepperState extends State<LimitStepper> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!widget.captionBelow) ...[caption, const SizedBox(height: 16)],
+        caption,
+        const SizedBox(height: 16),
         Row(
           children: [
             Text(
@@ -152,7 +151,6 @@ class _LimitStepperState extends State<LimitStepper> {
             ),
           ],
         ),
-        if (widget.captionBelow) ...[const SizedBox(height: 4), caption],
         const SizedBox(height: 8),
         _limitSlider(context),
         if (widget.errorText != null) ...[

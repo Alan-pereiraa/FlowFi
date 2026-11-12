@@ -235,7 +235,6 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                       caption: widget.isEdit
                           ? 'Editar Limite'
                           : 'Adicionar Limite',
-                      captionBelow: widget.isEdit,
                       errorText: state.fieldErrors['limit_amount'],
                       enabled: !state.busy,
                       onChanged: (cents) => setState(() => _limitCents = cents),

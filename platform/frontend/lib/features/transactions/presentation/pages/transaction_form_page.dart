@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -333,7 +334,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Voltar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             style: TextButton.styleFrom(
@@ -493,6 +494,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
               const SizedBox(height: 32),
               AppTextField(
                 label: 'Descrição',
+                inputFormatters: [LengthLimitingTextInputFormatter(1000)],
                 hint: 'Ex: Mercado',
                 controller: _description,
                 icon: Icons.edit_note,
@@ -628,7 +630,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 const SizedBox(height: 16),
                 ChoiceRow(
                   title: 'Repetir',
-                  subtitle: 'Selecione as parcelas',
+                  subtitle: 'Um número de vezes',
                   selected: _recurrenceEnd == RecurrenceEnd.occurrences,
                   onTap: () => setState(
                     () => _recurrenceEnd = RecurrenceEnd.occurrences,
