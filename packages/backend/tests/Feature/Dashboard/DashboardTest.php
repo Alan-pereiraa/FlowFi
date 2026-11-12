@@ -8,6 +8,7 @@ use App\Domains\Ledger\Models\Goal;
 use App\Domains\Ledger\Models\Installment;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Notification\Models\Notification;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -62,7 +63,9 @@ class DashboardTest extends TestCase
                 'amount' => $row[0],
                 'date' => $row[1],
                 'status' => $row[2] ?? Installment::STATUS_PENDING,
-                'paid_at' => ($row[2] ?? null) === Installment::STATUS_PAID ? now() : null,
+                'paid_at' => ($row[2] ?? null) === Installment::STATUS_PAID
+                    ? CarbonImmutable::parse($row[1], 'America/Sao_Paulo')->setTimezone(config('app.timezone'))
+                    : null,
             ]);
         }
 

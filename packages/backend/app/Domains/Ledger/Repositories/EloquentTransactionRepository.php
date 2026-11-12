@@ -93,11 +93,11 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
         return $transaction->installments()->find($installmentId);
     }
 
-    public function markInstallmentPaid(Installment $installment): Installment
+    public function markInstallmentPaid(Installment $installment, ?CarbonInterface $paidAt = null): Installment
     {
         $installment->forceFill([
             'status' => Installment::STATUS_PAID,
-            'paid_at' => now(),
+            'paid_at' => $paidAt ?? now(),
         ])->save();
 
         return $installment;

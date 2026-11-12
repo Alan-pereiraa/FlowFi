@@ -25,7 +25,7 @@ interface TransactionRepositoryInterface
 
     public function findInstallmentFor(Transaction $transaction, int $installmentId): ?Installment;
 
-    public function markInstallmentPaid(Installment $installment): Installment;
+    public function markInstallmentPaid(Installment $installment, ?CarbonInterface $paidAt = null): Installment;
 
     public function markInstallmentPending(Installment $installment): Installment;
 

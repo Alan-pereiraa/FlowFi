@@ -11,12 +11,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EloquentDashboardRepository implements DashboardRepositoryInterface
 {
+    private const string TIMEZONE = 'America/Sao_Paulo';
+
     public function installmentTotals(User $user, ?CarbonImmutable $from, ?CarbonImmutable $to): array
     {
         return $this->installmentsOf($user)
             ->where('transactions.type', Transaction::TYPE_EXPENSE)
-            ->when($from, fn ($query) => $query->whereDate('installments.date', '>=', $from->toDateString()))
-            ->when($to, fn ($query) => $query->whereDate('installments.date', '<=', $to->toDateString()))
+            ->when($from || $to, fn ($query) => $query->where(fn ($query) => $query
+                ->where(fn ($query) => $query
+                    ->where('installments.status', Installment::STATUS_PAID)
+                    ->when($from, fn ($query) => $query->where('installments.paid_at', '>=', $this->startOfDayInAppTimezone($from)))
+                    ->when($to, fn ($query) => $query->where('installments.paid_at', '<', $this->startOfDayInAppTimezone($to->addDay()))))
+                ->orWhere(fn ($query) => $query
+                    ->where('installments.status', Installment::STATUS_PENDING)
+                    ->when($from, fn ($query) => $query->whereDate('installments.date', '>=', $from->toDateString()))
+                    ->when($to, fn ($query) => $query->whereDate('installments.date', '<=', $to->toDateString())))))
             ->selectRaw('transactions.type as type, installments.status as status, SUM(installments.amount) as total, COUNT(*) as count')
             ->groupBy('transactions.type', 'installments.status')
             ->toBase()
@@ -159,5 +168,12 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
         return $user->transactions()
             ->join('installments', 'installments.transaction_id', '=', 'transactions.id')
             ->whereNull('installments.deleted_at');
+    }
+
+    private function startOfDayInAppTimezone(CarbonImmutable $day): string
+    {
+        return CarbonImmutable::parse($day->toDateString(), self::TIMEZONE)
+            ->setTimezone(config('app.timezone'))
+            ->format('Y-m-d H:i:s');
     }
 }
