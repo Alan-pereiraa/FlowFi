@@ -59,6 +59,7 @@ class DashboardPage extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        heroTag: 'dashboard-new-transaction',
         tooltip: 'Nova transação',
         onPressed: newTransaction,
         child: const Icon(Icons.add),

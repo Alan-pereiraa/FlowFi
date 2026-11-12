@@ -93,6 +93,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        heroTag: 'transactions-new-transaction',
         tooltip: 'Nova transação',
         onPressed: () => _openForm(Routes.newTransaction),
         child: const Icon(Icons.add),
