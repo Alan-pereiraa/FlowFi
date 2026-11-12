@@ -628,7 +628,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 const SizedBox(height: 16),
                 ChoiceRow(
                   title: 'Repetir',
-                  subtitle: 'Selecione as parcelas',
+                  subtitle: 'Um número de vezes',
                   selected: _recurrenceEnd == RecurrenceEnd.occurrences,
                   onTap: () => setState(
                     () => _recurrenceEnd = RecurrenceEnd.occurrences,
