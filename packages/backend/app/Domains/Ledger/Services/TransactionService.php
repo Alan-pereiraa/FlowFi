@@ -270,8 +270,13 @@ class TransactionService
         $today = CarbonImmutable::today(self::TIMEZONE)->toDateString();
 
         foreach ($installments as $installment) {
-            if ($installment->date->toDateString() <= $today) {
-                $this->transactions->markInstallmentPaid($installment);
+            $dueOn = $installment->date->toDateString();
+
+            if ($dueOn <= $today) {
+                $this->transactions->markInstallmentPaid(
+                    $installment,
+                    CarbonImmutable::parse($dueOn, self::TIMEZONE)->setTimezone(config('app.timezone')),
+                );
             }
         }
     }

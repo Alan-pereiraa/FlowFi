@@ -33,9 +33,14 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 
 ## How the numbers are counted
 
-- **Expenses move through installments.** An expense counts in the month its installments are due: a 3x
-  purchase adds one third to each of three months. Income and transfers have no installments and count in
-  the month of their `date`.
+- **Expenses move through installments.** A *pending* installment counts in the month it is due: a 3x
+  purchase adds one third to each of three months. A *paid* installment counts in the month it was paid
+  (`paid_at`, in `America/Sao_Paulo`), so paying next month's installment early moves it into the current
+  month and out of next month, and the month card agrees with the available balance. An installment born
+  paid (due today or earlier when the expense is saved) gets `paid_at` = its due date at midnight in
+  `America/Sao_Paulo`, so a backdated expense still lands in its own month; paying through the `pay` route
+  stamps the moment of payment. Income and transfers have no installments and count in the month of their
+  `date`. `spending-by-category` and the category limits stay on the due date (see below).
 - **`paid` vs `pending`.** For expenses, only `paid` installments are real money. An installment due today
   or earlier in `America/Sao_Paulo` is born `paid` and a future one is born `pending`; the user can change
   either through the `pay` and `unpay` routes. Income has no status: dated today or earlier it counts as
@@ -67,7 +72,8 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 ### Category limits
 
 `limit_amount` is a monthly cap, as Ledger already enforces it (`CategoryService::ensureInMonthLimit()`).
-`limit_used_percent` uses the same sum: expense installments of the category due in the month, paid or not,
+`limit_used_percent` uses the same sum: expense installments of the category due in the month, paid or not
+(by due date, not by payment date, because the limit is a budget for what falls in the month),
 over `limit_amount`. It can go past 100.
 
 ## Example
