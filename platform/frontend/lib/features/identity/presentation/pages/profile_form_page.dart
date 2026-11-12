@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -140,6 +141,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                     const SizedBox(height: 24),
                     AppTextField(
                       label: 'Nome',
+                      inputFormatters: [LengthLimitingTextInputFormatter(255)],
                       hint: 'Ex: Alex',
                       controller: _firstName,
                       icon: Icons.badge_outlined,
@@ -155,6 +157,7 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
                     const SizedBox(height: 16),
                     AppTextField(
                       label: 'Sobrenome',
+                      inputFormatters: [LengthLimitingTextInputFormatter(255)],
                       hint: 'Ex: Junior',
                       controller: _lastName,
                       icon: Icons.badge_outlined,

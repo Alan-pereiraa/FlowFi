@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -428,6 +429,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
               const SizedBox(height: 16),
               AppTextField(
                 label: 'Nome da Meta',
+                inputFormatters: [LengthLimitingTextInputFormatter(255)],
                 hint: 'Ex: Viagem de Férias',
                 controller: _name,
                 icon: Icons.edit_note,

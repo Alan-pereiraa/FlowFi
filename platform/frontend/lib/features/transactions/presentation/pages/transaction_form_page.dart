@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -493,6 +494,7 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
               const SizedBox(height: 32),
               AppTextField(
                 label: 'Descrição',
+                inputFormatters: [LengthLimitingTextInputFormatter(1000)],
                 hint: 'Ex: Mercado',
                 controller: _description,
                 icon: Icons.edit_note,

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../shared/appearance/app_icons.dart';
@@ -48,6 +49,7 @@ class CategoryNameField extends StatelessWidget {
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
+          inputFormatters: [LengthLimitingTextInputFormatter(255)],
           enabled: enabled,
           validator: validator,
           onFieldSubmitted: onSubmitted,
