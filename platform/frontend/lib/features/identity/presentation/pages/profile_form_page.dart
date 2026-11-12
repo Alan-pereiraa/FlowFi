@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../app/routes.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/utils/validators.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -110,7 +111,11 @@ class _ProfileFormPageState extends ConsumerState<ProfileFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: _isEdit,
+        automaticallyImplyLeading: false,
+        leadingWidth: _isEdit ? 64 : null,
+        leading: _isEdit
+            ? const AppBackButton(fallbackRoute: Routes.dashboard)
+            : null,
         title: Text(_isEdit ? 'Editar Perfil' : 'Complete seu Perfil'),
       ),
       body: SafeArea(
