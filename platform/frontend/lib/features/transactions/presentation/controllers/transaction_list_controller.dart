@@ -99,13 +99,25 @@ class TransactionListController extends Notifier<TransactionListState> {
   Future<String?> payInstallment(
     Transaction transaction,
     Installment installment,
-  ) async {
+  ) => _setInstallmentPaid(transaction, installment, paid: true);
+
+  Future<String?> unpayInstallment(
+    Transaction transaction,
+    Installment installment,
+  ) => _setInstallmentPaid(transaction, installment, paid: false);
+
+  Future<String?> _setInstallmentPaid(
+    Transaction transaction,
+    Installment installment, {
+    required bool paid,
+  }) async {
     if (state.payingId != null) return null;
     state = state.copyWith(payingId: () => installment.id);
     try {
-      final updated = await ref
-          .read(transactionRepositoryProvider)
-          .payInstallment(transaction.id, installment.id);
+      final repository = ref.read(transactionRepositoryProvider);
+      final updated = paid
+          ? await repository.payInstallment(transaction.id, installment.id)
+          : await repository.unpayInstallment(transaction.id, installment.id);
       if (!ref.mounted) return null;
       state = state.copyWith(
         payingId: () => null,
