@@ -258,6 +258,8 @@ test('edits a description from the row, then deletes the transaction after confi
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
   await expect(page.getByText('Editar Transação')).toBeVisible();
   const description = page.getByRole('textbox').nth(DESCRIPTION);
+  // The engine writes the DOM value only while the field has focus.
+  await description.click();
   await expect(description).toHaveValue('Freela');
   await fillField(description, 'Freela do site');
   await save(page);

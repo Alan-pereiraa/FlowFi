@@ -87,8 +87,9 @@ test('creating an open-ended goal with a custom appearance shows it as "Contínu
 
   await expect(page.getByText('Meta criada com sucesso!')).toBeVisible();
   await expect(page).toHaveURL(/#\/goals\/success/);
-  await expect(page.getByText('Viagem', { exact: true })).toBeVisible();
-  await expect(page.getByText('Contínua', { exact: true })).toBeVisible();
+  // The summary Card has no button or field, so its texts merge into one DOM text: never use exact here.
+  await expect(page.getByText('Viagem')).toBeVisible();
+  await expect(page.getByText('Contínua')).toBeVisible();
   await expect(page.getByText('R$ 1.200,00').first()).toBeVisible();
   await expect(page.getByText('Contribuição Mensal')).toHaveCount(0);
 
@@ -119,8 +120,8 @@ test('creating a goal with a target date shows the monthly contribution', async 
 
   await expect(page.getByText('Meta criada com sucesso!')).toBeVisible();
   await expect(page.getByText('Contribuição Mensal')).toBeVisible();
-  await expect(page.getByText(monthYear(today()), { exact: true })).toBeVisible();
-  await expect(page.getByText('Contínua', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(monthYear(today()))).toBeVisible();
+  await expect(page.getByText('Contínua')).toHaveCount(0);
 });
 
 test('"Adicionar valor" saves the amount and updates the progress', async ({ page }) => {
@@ -137,8 +138,8 @@ test('"Adicionar valor" saves the amount and updates the progress', async ({ pag
 
   await expect(page.getByText('Valor adicionado.')).toBeVisible();
   await expect(page.getByText('R$ 250,00 / R$ 1.000,00')).toBeVisible();
-  await expect(page.getByText('25%', { exact: true })).toBeVisible();
-  await expect(page.getByText('R$ 750,00', { exact: true })).toBeVisible();
+  await expect(page.getByText('25%')).toBeVisible();
+  await expect(page.getByText('R$ 750,00')).toBeVisible();
   await expect(page.getByText('O valor volta para o seu saldo. Disponível na meta: R$ 250,00.')).toBeVisible();
 });
 
@@ -234,7 +235,9 @@ test('reloading /goals/:id loads the goal from the API', async ({ page }) => {
 
   await expect(page).toHaveURL(new RegExp(`#/goals/${goalId}$`));
   await expect(page.getByText('Editar meta')).toBeVisible();
-  await expect(page.getByText('Bicicleta', { exact: true })).toBeVisible();
+  await expect(page.getByText('Bicicleta')).toBeVisible();
   await expect(page.getByText('R$ 0,00 / R$ 1.000,00')).toBeVisible();
+  // The engine writes the DOM value only while the field has focus.
+  await page.getByRole('textbox').nth(EDIT_NAME).click();
   await expect(page.getByRole('textbox').nth(EDIT_NAME)).toHaveValue('Bicicleta');
 });
