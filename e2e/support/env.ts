@@ -32,6 +32,9 @@ export const apiEnv: Record<string, string> = {
   APP_CONFIG_CACHE: path.join(TMP_DIR, 'no-config-cache.php'),
   APP_ROUTES_CACHE: path.join(TMP_DIR, 'no-routes-cache.php'),
   APP_EVENTS_CACHE: path.join(TMP_DIR, 'no-events-cache.php'),
+  // Laravel regenerates these two; keep them out of packages/backend/bootstrap/cache.
+  APP_SERVICES_CACHE: path.join(TMP_DIR, 'services.php'),
+  APP_PACKAGES_CACHE: path.join(TMP_DIR, 'packages.php'),
   LARAVEL_STORAGE_PATH: STORAGE_DIR,
   DB_CONNECTION: 'sqlite',
   DB_DATABASE: DB_FILE,
