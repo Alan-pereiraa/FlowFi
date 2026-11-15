@@ -38,8 +38,9 @@ test('a new user sees zeros, then the month totals once income and an expense ex
   const { email, token } = await api.signUp({ firstName: 'Vera' });
   await signInThroughUi(page, { email, firstName: 'Vera' });
 
-  await expect(shown(page, summaryLabel(0, 0), true)).toBeVisible();
-  expect(summaryLabel(0, 0)).toContain('Sem entradas no mês. R$ 0,00 restantes.');
+  // Literal labels here, so the card's own math is checked, not summaryLabel's.
+  const empty = 'Total gasto no mês: R$ 0,00. Valor total de entradas: R$ 0,00. Sem entradas no mês. R$ 0,00 restantes.';
+  await expect(shown(page, empty, true)).toBeVisible();
   await expect(shown(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
   await expect(shown(page, 'Saídas do mês: R$ 0,00', true)).toBeVisible();
   await expect(shown(page, 'Você ainda não tem metas.')).toBeVisible();
@@ -50,8 +51,8 @@ test('a new user sees zeros, then the month totals once income and an expense ex
   await reloadDashboard(page);
 
   // 400 of 1500 is 26.67%: the card floors it to 26.
-  expect(summaryLabel(150_000, 40_000)).toContain('26% de uso. R$ 1.100,00 restantes.');
-  await expect(shown(page, summaryLabel(150_000, 40_000), true)).toBeVisible();
+  const totals = 'Total gasto no mês: R$ 400,00. Valor total de entradas: R$ 1.500,00. 26% de uso. R$ 1.100,00 restantes.';
+  await expect(shown(page, totals, true)).toBeVisible();
   await expect(shown(page, 'Entradas do mês: R$ 1.500,00', true)).toBeVisible();
   await expect(shown(page, 'Saídas do mês: R$ 400,00', true)).toBeVisible();
 });
