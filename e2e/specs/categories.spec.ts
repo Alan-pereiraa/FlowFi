@@ -1,10 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { enableSemantics, fillField, signInThroughUi } from '../support/ui';
+import { enableSemantics, fillField, shown, signInThroughUi } from '../support/ui';
 
 // Category form inputs, in widget order: the limit field (LimitStepper), then the name (CategoryNameField).
 const limitField = (page: Page) => page.getByRole('textbox').nth(0);
 const nameField = (page: Page) => page.getByRole('textbox').nth(1);
+
+// CategoryCard holds the "Editar" button, so its texts merge into the card's aria-label (role=group).
+// With the newlines collapsed: "<name> <spent> / <limit> <percent>[ <warning>]".
+const categoryCard = (page: Page, label: string) => page.getByRole('group', { name: label, exact: true });
 
 // The device month and the backend month agree because the config pins the browser to America/Sao_Paulo.
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
@@ -46,6 +50,8 @@ test('creates a category with an icon, a colour and a limit set with the stepper
 
   await page.getByRole('button', { name: 'Aumentar limite' }).click();
   await page.getByRole('button', { name: 'Aumentar limite' }).click();
+  // The engine writes the DOM value only while the field has focus.
+  await limitField(page).click();
   await expect(limitField(page)).toHaveValue('100,00');
 
   await fillField(nameField(page), 'Mercado');
@@ -65,9 +71,7 @@ test('creates a category with an icon, a colour and a limit set with the stepper
 
   await expect(page.getByText('Categoria criada.')).toBeVisible();
   await expect(page).toHaveURL(/#\/categories$/);
-  await expect(page.getByText('Mercado')).toBeVisible();
-  await expect(page.getByText('R$ 0,00 / R$ 100,00')).toBeVisible();
-  await expect(page.getByText('0%', { exact: true })).toBeVisible();
+  await expect(categoryCard(page, 'Mercado R$ 0,00 / R$ 100,00 0%')).toBeVisible();
 
   // The icon and colour have no text on the card, so check what the sheets saved.
   const { data } = await api.get(token, '/categories');
@@ -86,9 +90,7 @@ test('creates a category without a limit', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar' }).click();
 
   await expect(page.getByText('Categoria criada.')).toBeVisible();
-  await expect(page.getByText('Assinaturas')).toBeVisible();
-  await expect(page.getByText('R$ 0,00 / Sem limite')).toBeVisible();
-  await expect(page.getByText('--', { exact: true })).toBeVisible();
+  await expect(categoryCard(page, 'Assinaturas R$ 0,00 / Sem limite --')).toBeVisible();
 });
 
 test('a duplicate name shows the backend error', async ({ page }) => {
@@ -111,12 +113,14 @@ test('editing the name and limit updates the card', async ({ page }) => {
   const { id } = await seedCategory(token, { name: 'Cinema', limit_amount: 200 });
   await signInThroughUi(page, { email, firstName });
   await openCategories(page);
-  await expect(page.getByText('R$ 0,00 / R$ 200,00')).toBeVisible();
+  await expect(categoryCard(page, 'Cinema R$ 0,00 / R$ 200,00 0%')).toBeVisible();
 
   await page.getByRole('button', { name: 'Editar', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`#/categories/${id}/edit`));
   await expect(page.getByText('Editar Categoria')).toBeVisible();
+  await nameField(page).click();
   await expect(nameField(page)).toHaveValue('Cinema');
+  await limitField(page).click();
   await expect(limitField(page)).toHaveValue('200,00');
 
   await fillField(nameField(page), 'Streaming');
@@ -127,9 +131,8 @@ test('editing the name and limit updates the card', async ({ page }) => {
 
   await expect(page.getByText('Categoria atualizada.')).toBeVisible();
   await expect(page).toHaveURL(/#\/categories$/);
-  await expect(page.getByText('Streaming')).toBeVisible();
-  await expect(page.getByText('R$ 0,00 / R$ 350,00')).toBeVisible();
-  await expect(page.getByText('Cinema')).toBeHidden();
+  await expect(categoryCard(page, 'Streaming R$ 0,00 / R$ 350,00 0%')).toBeVisible();
+  await expect(shown(page, 'Cinema')).toBeHidden();
 });
 
 test('removing a category after the confirm dialog removes its card', async ({ page }) => {
@@ -148,13 +151,14 @@ test('removing a category after the confirm dialog removes its card', async ({ p
   await expect(page.getByText('Categoria removida.')).toBeVisible();
   await expect(page).toHaveURL(/#\/categories$/);
   await expect(page.getByText('Nenhuma categoria ainda')).toBeVisible();
-  await expect(page.getByText('Academia')).toBeHidden();
+  await expect(shown(page, 'Academia')).toBeHidden();
 });
 
 test("a card shows this month's spend, the percent and the limit warnings", async ({ page }) => {
   const { email, token, firstName } = await seedUser('Kika');
   const near = await seedCategory(token, { name: 'Restaurantes', limit_amount: 1000 });
-  const over = await seedCategory(token, { name: 'Viagens', limit_amount: 100 });
+  // An expense over the limit is rejected (422), but lowering the limit afterwards is not checked.
+  const over = await seedCategory(token, { name: 'Viagens', limit_amount: 1000 });
   for (const [category, amount] of [[near, 850], [over, 150]] as const) {
     await api.post(token, '/transactions', {
       type: 'expense',
@@ -164,16 +168,12 @@ test("a card shows this month's spend, the percent and the limit warnings", asyn
       description: 'Gasto e2e',
     });
   }
+  await api.patch(token, `/categories/${over.id}`, { limit_amount: 100 });
   await signInThroughUi(page, { email, firstName });
   await openCategories(page);
 
-  await expect(page.getByText('R$ 850,00 / R$ 1.000,00')).toBeVisible();
-  await expect(page.getByText('85%', { exact: true })).toBeVisible();
-  await expect(page.getByText('Próximo do limite')).toBeVisible();
-
-  await expect(page.getByText('R$ 150,00 / R$ 100,00')).toBeVisible();
-  await expect(page.getByText('150%', { exact: true })).toBeVisible();
-  await expect(page.getByText('Limite ultrapassado')).toBeVisible();
+  await expect(categoryCard(page, 'Restaurantes R$ 850,00 / R$ 1.000,00 85% Próximo do limite')).toBeVisible();
+  await expect(categoryCard(page, 'Viagens R$ 150,00 / R$ 100,00 150% Limite ultrapassado')).toBeVisible();
 });
 
 test('reloading the edit page loads the category by id', async ({ page }) => {
@@ -190,7 +190,9 @@ test('reloading the edit page loads the category by id', async ({ page }) => {
 
   await expect(page).toHaveURL(new RegExp(`#/categories/${id}/edit`));
   await expect(page.getByText('Editar Categoria')).toBeVisible();
+  await nameField(page).click();
   await expect(nameField(page)).toHaveValue('Farmácia');
+  await limitField(page).click();
   await expect(limitField(page)).toHaveValue('1.500,00');
   await expect(page.getByRole('button', { name: 'Remover', exact: true })).toBeVisible();
 });
@@ -201,7 +203,7 @@ test.fixme('the edit form shows the saved category, not the copy from the list',
   const { id } = await seedCategory(token, { name: 'Padaria' });
   await signInThroughUi(page, { email, firstName });
   await openCategories(page);
-  await expect(page.getByText('Padaria')).toBeVisible();
+  await expect(categoryCard(page, 'Padaria R$ 0,00 / Sem limite --')).toBeVisible();
 
   await api.patch(token, `/categories/${id}`, { name: 'Confeitaria' });
   await page.getByRole('button', { name: 'Editar', exact: true }).click();
