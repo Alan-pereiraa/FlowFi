@@ -4,10 +4,10 @@ Playwright drives the Flutter web build against a throwaway Laravel API. Each te
 
 | Piece | Where |
 |---|---|
-| API | `php -S 127.0.0.1:8100` with Laravel's router script, env from `support/env.ts` |
+| API | `php -d variables_order=EGPCS -S 127.0.0.1:8100` with Laravel's router script, env from `support/env.ts` |
 | Web app | `python3 -m http.server 5100` serving `.tmp/web` |
 | Database | `.tmp/db.sqlite`, recreated and migrated before every run |
-| Laravel storage (log, compiled views) | `.tmp/storage` (via `LARAVEL_STORAGE_PATH`) |
+| Laravel storage (log, compiled views) | `.tmp/storage` (via `LARAVEL_STORAGE_PATH`); package and service caches in `.tmp` |
 | OTP mails | `.tmp/storage/logs/laravel.log` (mailer `log`), or Mailpit with `E2E_MAIL=mailpit` |
 
 ## Prerequisites
@@ -16,6 +16,7 @@ Playwright drives the Flutter web build against a throwaway Laravel API. Each te
 - Flutter, for the web build.
 - Node 22, then in this folder: `npm install` and `npx playwright install chromium`.
 - Python 3, to serve the web build.
+- Network access at run time: the web build loads Firebase JS and CanvasKit from gstatic.
 
 ## Run
 
@@ -26,14 +27,14 @@ npm test              # all specs, headless, one worker
 npm run test:auth     # one spec group
 npm run test:headed   # watch the browser
 npx playwright test specs/auth.spec.ts -g "wrong code"   # one test
-E2E_WORKERS=2 npm test                                   # more workers
 npm run report        # open the HTML report
 ```
 
 - Videos: `recordings/<test>/video.webm`, one for every test, whether it passed or failed. Failed tests also keep a screenshot and a trace.
 - HTML report: `playwright-report/`, with the videos embedded.
 - Both folders are wiped at the start of each run.
-- If something already listens on 8100 or 5100, Playwright reuses it.
+- One worker is the supported default. `E2E_WORKERS=2` may hit "database is locked" in SQLite.
+- If something already listens on 8100 or 5100, the run fails. `E2E_REUSE_SERVERS=1` reuses it, with whatever env it started with.
 - `ledger:send-reminders` and `ledger:generate-recurring` do not run on a schedule here. Call `artisan('ledger:send-reminders')` from a spec.
 
 ### Mailpit instead of the log
@@ -49,6 +50,7 @@ E2E_MAIL=mailpit npm test    # Mailpit on 127.0.0.1:1025 (SMTP) and :8025 (API);
 openApp(page, path = '/'): Promise<void>          // goto /#<path>, then enableSemantics
 enableSemantics(page): Promise<void>              // call again after page.reload()
 fillField(locator, value): Promise<void>          // click, then fill (Flutter needs focus first)
+shown(page, text, exact = false): Locator        // text as DOM text or as aria-label (see the Card rule)
 signInThroughUi(page, { firstName?, email? }): Promise<{ email }>
 
 // api.ts
@@ -77,19 +79,27 @@ artisan(command): string                          // php artisan <command> with 
 - Prefer `page.getByRole('button', { name })`, then `getByLabel`, then `getByText`. Add `exact: true` when a name is a prefix of another, as with "Entrar".
 - Don't use CSS on Flutter internals. The only exception is `flt-semantics-placeholder`, which is handled in `enableSemantics`.
 - Text fields: `AppTextField` draws its `label` as a separate `Text` above the input, so the input's accessible name does not come from it. Pick inputs by position on the screen, `page.getByRole('textbox').nth(i)`, and fill them with `fillField`.
+- Card rule: text inside a `Card` merges into the card's node.
+  - Card with no button or field inside: one DOM text with all its texts. `getByText('x')` works; `exact: true` never matches.
+  - Card with a button or field inside: `role=group` named by `aria-label`. `getByText` finds nothing; use `shown()` or `getByRole('group', { name })`.
+- An input's DOM `value` is written only while it has focus. Call `field.click()` before `toHaveValue`.
 - Routes are hash URLs: `/#/dashboard`. Assert with `expect(page).toHaveURL(/#\/dashboard/)`.
 - Use a fresh user per test (`uniqueEmail`, `api.signUp`). Never rely on another test's data.
 
 ## First run checklist
 
-This scaffold was written and type-checked, but it has never run end to end. On the first run, check these in order:
+This scaffold was written and type-checked, but it has never run end to end. Run `npm run test:auth` first, then one spec file at a time. Check these in order:
 
-1. **Env passthrough.** `curl http://127.0.0.1:8100/up` answers 200, and after one login `.tmp/storage/logs/laravel.log` exists. If the log is in `packages/backend/storage/logs` instead, `php -S` is not passing env vars to Laravel.
-   - Confirmed so far: `artisan` CLI honours `LARAVEL_STORAGE_PATH` and the other variables.
-   - The earlier spike also saw `php -S` write compiled views to its own storage folder.
+1. **Env passthrough.** `curl http://127.0.0.1:8100/up` answers 200. After the auth run, `.tmp/storage/logs/laravel.log` exists and `packages/backend/storage/logs/laravel.log` is unchanged. If not, Laravel is not seeing the env: it reads `LARAVEL_STORAGE_PATH` from `$_ENV`, which `php -S` fills only with `variables_order=EGPCS`.
 2. **CORS.** `FRONTEND_URL=http://127.0.0.1:5100` must match the page origin, or every API call from the browser fails as a network error ("Sem conexão…").
 3. **Semantics placeholder.** `enableSemantics` waits up to 60 s for `flt-semantics-placeholder`, then clicks it through `evaluate` because it is hidden. If the tree never appears, run `npm run test:headed` and inspect the page.
 4. **Input order and names.** Check that `getByRole('textbox')` returns Email first and the code second on `/login`, and Nome first on the profile form. If Flutter names inputs after their hint text (for example "Insira seu código temporário"), switch to names; they are steadier than positions.
 5. **OTP log format.** Checked against a mail rendered with the real log mailer: the code is inside `<strong …>` in the HTML part. If `readOtp` times out, read the log and adjust `CODE` in `support/mail.ts`.
 6. **Button names.** The avatar button's name is its tooltip "Perfil", plus perhaps the initials. "Enviar Código" changes to "Reenviar em Ns" after a send.
 7. **Throttles.** `CACHE_STORE=array` lives for one request, so the OTP limits (3/min per email) never trigger. If you see 429s, the env is not reaching the server (see 1).
+8. **Not settled without a run.** Fix these only if they fail:
+   - `fillField`: `fill` right after `click` may run before the engine attaches its input listeners. If typed text is lost, wait a frame after the click.
+   - Clicking the date field to open the picker (`goals.spec.ts`, `transactions.spec.ts`), and clicking a button inside a text field.
+   - The swipe in `notifications.spec.ts` ("swiping a card left…").
+   - "Sair da conta" calls `FirebaseMessaging.getToken()` on web.
+9. **Month end.** On the last day of a month the backend probably skips the category 80% warning (UTC `now()` against dates stored as `Y-m-d 00:00:00`). The `notifications.spec.ts` tests that seed that warning then fail. This is app behaviour; the tests leave it alone.
