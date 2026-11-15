@@ -1,15 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { enableSemantics, fillField, signInThroughUi } from '../support/ui';
+import { enableSemantics, fillField, shown, signInThroughUi } from '../support/ui';
 
 function todayIso(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
-}
-
-// Dashboard cards use Semantics(label, excludeSemantics: true). Flutter web renders a leaf label
-// as DOM text and a label on a node with children (the section Cards) as aria-label.
-function semantics(page: Page, text: string | RegExp, exact = false) {
-  return page.getByText(text, { exact }).or(page.getByLabel(text, { exact })).first();
 }
 
 // money_flow / Money.format: "R$ 1.500,00".
@@ -44,12 +38,12 @@ test('a new user sees zeros, then the month totals once income and an expense ex
   const { email, token } = await api.signUp({ firstName: 'Vera' });
   await signInThroughUi(page, { email, firstName: 'Vera' });
 
-  await expect(semantics(page, summaryLabel(0, 0), true)).toBeVisible();
+  await expect(shown(page, summaryLabel(0, 0), true)).toBeVisible();
   expect(summaryLabel(0, 0)).toContain('Sem entradas no mês. R$ 0,00 restantes.');
-  await expect(semantics(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
-  await expect(semantics(page, 'Saídas do mês: R$ 0,00', true)).toBeVisible();
-  await expect(semantics(page, 'Você ainda não tem metas.')).toBeVisible();
-  await expect(semantics(page, 'Nenhuma transação registrada.')).toBeVisible();
+  await expect(shown(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
+  await expect(shown(page, 'Saídas do mês: R$ 0,00', true)).toBeVisible();
+  await expect(shown(page, 'Você ainda não tem metas.')).toBeVisible();
+  await expect(shown(page, 'Nenhuma transação registrada.')).toBeVisible();
 
   await seedTransaction(token, { type: 'income', total_amount: '1500.00', description: 'Salario' });
   await seedTransaction(token, { type: 'expense', total_amount: '400.00', description: 'Mercado' });
@@ -57,9 +51,9 @@ test('a new user sees zeros, then the month totals once income and an expense ex
 
   // 400 of 1500 is 26.67%: the card floors it to 26.
   expect(summaryLabel(150_000, 40_000)).toContain('26% de uso. R$ 1.100,00 restantes.');
-  await expect(semantics(page, summaryLabel(150_000, 40_000), true)).toBeVisible();
-  await expect(semantics(page, 'Entradas do mês: R$ 1.500,00', true)).toBeVisible();
-  await expect(semantics(page, 'Saídas do mês: R$ 400,00', true)).toBeVisible();
+  await expect(shown(page, summaryLabel(150_000, 40_000), true)).toBeVisible();
+  await expect(shown(page, 'Entradas do mês: R$ 1.500,00', true)).toBeVisible();
+  await expect(shown(page, 'Saídas do mês: R$ 400,00', true)).toBeVisible();
 });
 
 test('"Últimas Transações" shows the 3 newest and "Ver todas" opens the list', async ({ page }) => {
@@ -70,8 +64,8 @@ test('"Últimas Transações" shows the 3 newest and "Ver todas" opens the list'
   }
   await signInThroughUi(page, { email, firstName: 'Wagner' });
 
-  await expect(semantics(page, /Compra 4[\s\S]*Compra 3[\s\S]*Compra 2/)).toBeVisible();
-  await expect(semantics(page, 'Compra 1')).toHaveCount(0);
+  await expect(shown(page, /Compra 4[\s\S]*Compra 3[\s\S]*Compra 2/)).toBeVisible();
+  await expect(shown(page, 'Compra 1')).toHaveCount(0);
 
   // Two "Ver todas": Metas Recentes comes first, then Últimas Transações (dashboard_page.dart:156-177).
   await page.getByRole('button', { name: 'Ver todas', exact: true }).nth(1).click();
@@ -100,7 +94,7 @@ test('"Metas Recentes" shows the 2 newest goals and opens the one tapped', async
 
 test('the "+" button opens the form, and saving returns to updated totals', async ({ page }) => {
   await signInThroughUi(page, { firstName: 'Yuri' });
-  await expect(semantics(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
+  await expect(shown(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
 
   await page.getByRole('button', { name: 'Nova transação' }).click();
   await expect(page).toHaveURL(/#\/dashboard\/new-transaction/);
@@ -113,9 +107,9 @@ test('the "+" button opens the form, and saving returns to updated totals', asyn
   await page.getByRole('button', { name: 'Salvar Transação' }).click();
 
   await expect(page).toHaveURL(/#\/dashboard$/);
-  await expect(semantics(page, 'Entradas do mês: R$ 500,00', true)).toBeVisible();
-  await expect(semantics(page, summaryLabel(50_000, 0), true)).toBeVisible();
-  await expect(semantics(page, 'Freela')).toBeVisible();
+  await expect(shown(page, 'Entradas do mês: R$ 500,00', true)).toBeVisible();
+  await expect(shown(page, summaryLabel(50_000, 0), true)).toBeVisible();
+  await expect(shown(page, 'Freela')).toBeVisible();
 });
 
 test('the tab bar moves between all four tabs', async ({ page }) => {
@@ -123,15 +117,15 @@ test('the tab bar moves between all four tabs', async ({ page }) => {
 
   await page.getByRole('tab', { name: 'Transações' }).click();
   await expect(page).toHaveURL(/#\/transactions$/);
-  await expect(semantics(page, 'Toque em + para registrar a primeira.')).toBeVisible();
+  await expect(shown(page, 'Toque em + para registrar a primeira.')).toBeVisible();
 
   await page.getByRole('tab', { name: 'Metas' }).click();
   await expect(page).toHaveURL(/#\/goals$/);
-  await expect(semantics(page, 'Acompanhe seus objetivos financeiros e celebre o progresso.')).toBeVisible();
+  await expect(shown(page, 'Acompanhe seus objetivos financeiros e celebre o progresso.')).toBeVisible();
 
   await page.getByRole('tab', { name: 'Categorias' }).click();
   await expect(page).toHaveURL(/#\/categories$/);
-  await expect(semantics(page, 'Organize seus gastos e defina limites mensais.')).toBeVisible();
+  await expect(shown(page, 'Organize seus gastos e defina limites mensais.')).toBeVisible();
 
   await page.getByRole('tab', { name: 'Dashboard' }).click();
   await expect(page).toHaveURL(/#\/dashboard$/);
@@ -153,12 +147,12 @@ test('an installment paid early counts in this month\'s SAÍDAS (#32)', async ({
   expect(second.status).toBe('pending');
 
   await signInThroughUi(page, { email, firstName: 'Alice' });
-  await expect(semantics(page, 'Saídas do mês: R$ 100,00', true)).toBeVisible();
+  await expect(shown(page, 'Saídas do mês: R$ 100,00', true)).toBeVisible();
 
   await api.patch(token, `/transactions/${expense.id}/installments/${second.id}/pay`);
   await reloadDashboard(page);
-  await expect(semantics(page, 'Saídas do mês: R$ 200,00', true)).toBeVisible();
-  await expect(semantics(page, summaryLabel(0, 20_000), true)).toBeVisible();
+  await expect(shown(page, 'Saídas do mês: R$ 200,00', true)).toBeVisible();
+  await expect(shown(page, summaryLabel(0, 20_000), true)).toBeVisible();
 });
 
 test.fixme(
@@ -179,7 +173,7 @@ test.fixme(
     await api.patch(token, `/transactions/${expense.id}/installments/${second.id}/pay`);
 
     await signInThroughUi(page, { email, firstName: 'Bruno' });
-    await expect(semantics(page, 'Saídas do mês: R$ 200,00', true)).toBeVisible();
+    await expect(shown(page, 'Saídas do mês: R$ 200,00', true)).toBeVisible();
     await page.getByRole('tab', { name: 'Transações' }).click();
     await expect(page.getByRole('button', { name: /Notebook[\s\S]*2\/2/ })).toBeVisible();
   },

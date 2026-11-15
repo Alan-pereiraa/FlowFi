@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { api, uniqueEmail } from '../support/api';
 import { mailCursor, readOtp } from '../support/mail';
-import { enableSemantics, fillField, openApp, signInThroughUi } from '../support/ui';
+import { enableSemantics, fillField, openApp, shown, signInThroughUi } from '../support/ui';
 
 test('a new user logs in, completes the profile and lands on the dashboard', async ({ page }) => {
   await signInThroughUi(page, { firstName: 'Ana' });
@@ -26,7 +26,7 @@ test('"Sair da conta" on the profile page returns to login', async ({ page }) =>
   await expect(page.getByText('Editar Perfil').first()).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
 
-  await expect(page.getByText('Bem-Vindo!')).toBeVisible();
+  await expect(shown(page, 'Bem-Vindo!')).toBeVisible();
   await expect(page).toHaveURL(/#\/login/);
 });
 
@@ -37,7 +37,7 @@ test('a wrong code shows the error message', async ({ page }) => {
   await fillField(page.getByRole('textbox').nth(0), email);
   const since = mailCursor();
   await page.getByRole('button', { name: 'Enviar Código' }).click();
-  await expect(page.getByText('Enviamos um código para o seu e-mail.')).toBeVisible();
+  await expect(shown(page, 'Enviamos um código para o seu e-mail.')).toBeVisible();
   const code = await readOtp(email, since);
   const wrong = String((Number(code) + 1) % 1_000_000).padStart(6, '0');
 

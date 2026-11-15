@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { artisan } from '../support/env';
-import { signInThroughUi } from '../support/ui';
+import { shown, signInThroughUi } from '../support/ui';
 
 // No device tokens in e2e, so NotificationService::notify stores the row and queues no push job.
 
@@ -25,10 +25,7 @@ const noBadge = (page: Page) => page.getByRole('button', { name: /não lidas/ })
 // Unread cards are buttons; read cards are plain labelled nodes.
 const unreadCard = (page: Page, title: string, message: string) =>
   page.getByRole('button', { name: `Não lida. ${title}. ${message}`, exact: true });
-function readCard(page: Page, title: string, message: string) {
-  const label = `${title}. ${message}`;
-  return page.getByText(label, { exact: true }).or(page.getByLabel(label, { exact: true }));
-}
+const readCard = (page: Page, title: string, message: string) => shown(page, `${title}. ${message}`, true);
 
 // FilterChip may be exposed as a button or as a checkbox, depending on the Flutter version.
 const chip = (page: Page, label: 'Todas' | 'Não lidas' | 'Lidas') =>

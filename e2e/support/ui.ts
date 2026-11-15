@@ -17,6 +17,12 @@ export async function openApp(page: Page, path = '/'): Promise<void> {
   await enableSemantics(page);
 }
 
+// Text merged into a node that has child nodes (a Card holding a button or field, a SnackBar with an
+// action) lands in aria-label, which getByText does not read. Leaf nodes keep it as DOM text.
+export function shown(page: Page, text: string | RegExp, exact = false): Locator {
+  return page.getByText(text, { exact }).or(page.getByLabel(text, { exact })).first();
+}
+
 // Flutter only wires the <input> to its text field once it has focus.
 export async function fillField(field: Locator, value: string): Promise<void> {
   await field.click();
@@ -28,13 +34,13 @@ export async function signInThroughUi(
   { firstName, email = uniqueEmail('ui') }: { firstName?: string; email?: string } = {},
 ): Promise<{ email: string }> {
   await openApp(page, '/login');
-  await expect(page.getByText('Bem-Vindo!')).toBeVisible();
+  await expect(shown(page, 'Bem-Vindo!')).toBeVisible();
 
   // AppTextField's label is a sibling Text, not the input's accessible name: pick inputs by position.
   await fillField(page.getByRole('textbox').nth(0), email);
   const since = mailCursor();
   await page.getByRole('button', { name: 'Enviar Código' }).click();
-  await expect(page.getByText('Enviamos um código para o seu e-mail.')).toBeVisible();
+  await expect(shown(page, 'Enviamos um código para o seu e-mail.')).toBeVisible();
 
   await fillField(page.getByRole('textbox').nth(1), await readOtp(email, since));
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { fillField, signInThroughUi } from '../support/ui';
+import { fillField, shown, signInThroughUi } from '../support/ui';
 
 // Form inputs, in widget order (transaction_form_page.dart): MoneyAmountField, then Descrição, then Data.
 // VoiceFillCard, shown above them on create, has no text field.
@@ -35,10 +35,6 @@ function row(page: Page, ...texts: string[]): Locator {
   const name = new RegExp(texts.map(escape).join('.*'));
   return page.getByRole('button', { name }).or(page.getByRole('group', { name }));
 }
-
-// Text merged into a parent node (MoneyAmountField's Semantics label, SnackBar) lands in aria-label,
-// which getByText does not read. Leaf Text nodes keep it as DOM text.
-const shows = (page: Page, text: string) => page.getByText(text).or(page.getByLabel(text)).first();
 
 async function openTransactions(page: Page) {
   await page.getByRole('tab', { name: 'Transações' }).click();
@@ -168,7 +164,7 @@ test('"Pagar" marks an installment paid and "Desfazer" turns it back to pending'
   await expect(second).toBeVisible();
   await second.getByRole('button', { name: 'Pagar' }).click();
 
-  await expect(shows(page, 'Parcela paga.')).toBeVisible();
+  await expect(shown(page, 'Parcela paga.')).toBeVisible();
   await expect(row(page, 'Sofá', '2/3 • Paga')).toBeVisible();
   await expect(row(page, 'Sofá', '3/3 • Pendente')).toBeVisible();
 
@@ -272,8 +268,8 @@ test('edits a description from the row, then deletes the transaction after confi
   await row(page, 'Freela do site').click();
   await expect(page.getByText('Editar Transação')).toBeVisible();
   await page.getByRole('button', { name: 'Excluir transação' }).click();
-  await expect(shows(page, 'Excluir transação?')).toBeVisible();
-  await expect(shows(page, 'A transação e todas as suas parcelas serão removidas.')).toBeVisible();
+  await expect(shown(page, 'Excluir transação?')).toBeVisible();
+  await expect(shown(page, 'A transação e todas as suas parcelas serão removidas.')).toBeVisible();
   await page.getByRole('button', { name: 'Excluir', exact: true }).click();
 
   await expect(page).toHaveURL(/#\/transactions$/);
@@ -293,7 +289,7 @@ test('an expense above the category limit is blocked under the amount', async ({
 
   const [y, m] = parts(sp());
   const month = `${String(m).padStart(2, '0')}/${y}`;
-  await expect(shows(page, `Esta transação ultrapassa o limite da categoria em ${month}.`)).toBeVisible();
+  await expect(shown(page, `Esta transação ultrapassa o limite da categoria em ${month}.`)).toBeVisible();
   await expect(page).toHaveURL(/#\/transactions\/new/);
 });
 
@@ -311,7 +307,7 @@ test('a transfer to a goal with no income shows the insufficient-balance error',
   await typeAmount(page, '5000', '50,00');
   await save(page);
 
-  await expect(shows(page, 'Saldo insuficiente para fazer esta transferência.')).toBeVisible();
+  await expect(shown(page, 'Saldo insuficiente para fazer esta transferência.')).toBeVisible();
   await expect(page).toHaveURL(/#\/transactions\/new/);
 });
 
@@ -343,7 +339,7 @@ test.describe('withdrawal', () => {
     await expect(amount).toHaveValue('80,00');
     await page.getByRole('button', { name: 'Resgatar valor' }).click();
 
-    await expect(shows(page, 'O resgate não pode ser maior que o valor guardado na meta (R$ 40,00).')).toBeVisible();
+    await expect(shown(page, 'O resgate não pode ser maior que o valor guardado na meta (R$ 40,00).')).toBeVisible();
   });
 });
 
@@ -399,7 +395,7 @@ test.fixme(
     // Expected: a plain withdrawal is saved. Today POST /recurring-transactions answers 422 type.in, and
     // "type" is not a mapped field, so the form shows it as a general error.
     await expect(
-      shows(page, 'Escolha entrada, saída ou transferência. Resgates não podem ser recorrentes.'),
+      shown(page, 'Escolha entrada, saída ou transferência. Resgates não podem ser recorrentes.'),
     ).toHaveCount(0);
     await expect(page).toHaveURL(/#\/transactions$/);
   },
