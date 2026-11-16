@@ -27,7 +27,8 @@ const todayHeader = () => {
   return `Hoje, ${d} de ${month[0].toUpperCase()}${month.slice(1)}`;
 };
 
-const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Spaces become \s: Money.format puts a no-break space after R$.
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s');
 
 // A TransactionTile is a Card, so its texts merge into one node. With a "Pagar" button inside it
 // becomes role=group named by aria-label; without one it is a plain button. Match either by its texts.
@@ -49,9 +50,7 @@ async function openNewForm(page: Page) {
 }
 
 async function typeAmount(page: Page, digits: string, formatted: string) {
-  const amount = page.getByRole('textbox').nth(AMOUNT);
-  await fillField(amount, digits);
-  await expect(amount).toHaveValue(formatted);
+  await fillField(page.getByRole('textbox').nth(AMOUNT), digits, formatted);
 }
 
 async function save(page: Page) {
@@ -337,8 +336,7 @@ test.describe('withdrawal', () => {
     await seedTransaction(user.token, { type: 'withdrawal', goal_id: goalId, total_amount: 60 });
 
     const amount = page.getByRole('textbox').nth(WITHDRAW);
-    await fillField(amount, '8000');
-    await expect(amount).toHaveValue('80,00');
+    await fillField(amount, '8000', '80,00');
     await tap(page.getByRole('button', { name: 'Resgatar valor' }));
 
     await expect(shown(page, 'O resgate não pode ser maior que o valor guardado na meta (R$ 40,00).')).toBeVisible();
