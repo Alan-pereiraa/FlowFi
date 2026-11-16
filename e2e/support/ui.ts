@@ -23,10 +23,16 @@ export function shown(page: Page, text: string | RegExp, exact = false): Locator
   return page.getByText(text, { exact }).or(page.getByLabel(text, { exact })).first();
 }
 
-// Flutter only wires the <input> to its text field once it has focus.
+// Flutter only wires the <input> to its text field a moment after it gets focus. A fill sent before
+// that lands in the DOM, then the engine resets it to the empty model value: retry until it sticks.
 export async function fillField(field: Locator, value: string): Promise<void> {
-  await field.click();
-  await field.fill(value);
+  await expect(async () => {
+    await field.click();
+    await expect(field).toBeFocused({ timeout: 2_000 });
+    await field.fill(value);
+    await field.page().waitForTimeout(300);
+    await expect(field).toHaveValue(value, { timeout: 1 });
+  }).toPass({ timeout: 15_000 });
 }
 
 export async function signInThroughUi(
@@ -44,7 +50,8 @@ export async function signInThroughUi(
 
   await fillField(page.getByRole('textbox').nth(1), await readOtp(email, since));
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await page.waitForURL((url) => /^#\/(complete-profile|dashboard)/.test(url.hash));
+  // Hash routes never fire a load event, so waitForURL would hang.
+  await expect(page).toHaveURL(/#\/(complete-profile|dashboard)/);
 
   if (!firstName) return { email };
 
