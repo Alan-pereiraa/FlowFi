@@ -50,7 +50,7 @@ async function seedCategoryWarning(token: string, name: string) {
 async function openNotifications(page: Page) {
   await tap(bell(page));
   await expect(page).toHaveURL(/#\/notifications/);
-  await expect(page.getByText('Notificações', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Notificações' })).toBeVisible();
 }
 
 async function notificationsOf(token: string) {
