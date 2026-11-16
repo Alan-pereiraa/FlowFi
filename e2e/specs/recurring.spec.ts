@@ -76,7 +76,7 @@ test('a recurring income repeated 3 times shows "1 de 3 vezes" and the next date
   await expect(page).toHaveURL(/#\/transactions$/);
   const tile = page.getByRole('button', { name: /Salario mensal/ });
   await expect(tile).toHaveCount(1);
-  await expect(tile).toHaveAccessibleName(/\+ R\$ 1\.500,00/);
+  await expect(tile).toHaveAccessibleName(/\+ R\$\s1\.500,00/);
 
   await tap(tile);
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
