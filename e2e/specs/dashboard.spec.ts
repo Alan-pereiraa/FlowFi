@@ -103,7 +103,7 @@ test('the "+" button opens the form, and saving returns to updated totals', asyn
 
   await tap(page.getByRole('button', { name: 'Entrada', exact: true }));
   // Inputs on the form, in order: amount, Descrição, Data (read-only).
-  await fillField(page.getByRole('textbox').nth(0), '50000');
+  await fillField(page.getByRole('textbox').nth(0), '50000', '500,00');
   await fillField(page.getByRole('textbox').nth(1), 'Freela');
   await tap(page.getByRole('button', { name: 'Salvar Transação' }));
 
