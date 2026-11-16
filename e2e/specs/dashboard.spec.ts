@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { enableSemantics, fillField, shown, signInThroughUi } from '../support/ui';
+import { enableSemantics, fillField, shown, signInThroughUi, tap } from '../support/ui';
 
 function todayIso(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
@@ -69,7 +69,7 @@ test('"Últimas Transações" shows the 3 newest and "Ver todas" opens the list'
   await expect(shown(page, 'Compra 1')).toHaveCount(0);
 
   // Two "Ver todas": Metas Recentes comes first, then Últimas Transações (dashboard_page.dart:156-177).
-  await page.getByRole('button', { name: 'Ver todas', exact: true }).nth(1).click();
+  await tap(page.getByRole('button', { name: 'Ver todas', exact: true }).nth(1));
   await expect(page).toHaveURL(/#\/transactions$/);
 });
 
@@ -87,7 +87,7 @@ test('"Metas Recentes" shows the 2 newest goals and opens the one tapped', async
   await expect(row('Carro')).toBeVisible();
   await expect(row('Viagem')).toHaveCount(0);
 
-  await row('Reserva').click();
+  await tap(row('Reserva'));
   await expect(page).toHaveURL(new RegExp(`#/goals/${goals[2].id}$`));
   await expect(page.getByRole('button', { name: 'Minhas metas' })).toBeVisible();
   await expect(page.getByText('Editar meta', { exact: true })).toBeVisible();
@@ -97,15 +97,15 @@ test('the "+" button opens the form, and saving returns to updated totals', asyn
   await signInThroughUi(page, { firstName: 'Yuri' });
   await expect(shown(page, 'Entradas do mês: R$ 0,00', true)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Nova transação' }).click();
+  await tap(page.getByRole('button', { name: 'Nova transação' }));
   await expect(page).toHaveURL(/#\/dashboard\/new-transaction/);
   await expect(page.getByText('Nova Transação', { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Entrada', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Entrada', exact: true }));
   // Inputs on the form, in order: amount, Descrição, Data (read-only).
   await fillField(page.getByRole('textbox').nth(0), '50000');
   await fillField(page.getByRole('textbox').nth(1), 'Freela');
-  await page.getByRole('button', { name: 'Salvar Transação' }).click();
+  await tap(page.getByRole('button', { name: 'Salvar Transação' }));
 
   await expect(page).toHaveURL(/#\/dashboard$/);
   await expect(shown(page, 'Entradas do mês: R$ 500,00', true)).toBeVisible();
@@ -116,19 +116,19 @@ test('the "+" button opens the form, and saving returns to updated totals', asyn
 test('the tab bar moves between all four tabs', async ({ page }) => {
   await signInThroughUi(page, { firstName: 'Zeca' });
 
-  await page.getByRole('tab', { name: 'Transações' }).click();
+  await tap(page.getByRole('tab', { name: 'Transações' }));
   await expect(page).toHaveURL(/#\/transactions$/);
   await expect(shown(page, 'Toque em + para registrar a primeira.')).toBeVisible();
 
-  await page.getByRole('tab', { name: 'Metas' }).click();
+  await tap(page.getByRole('tab', { name: 'Metas' }));
   await expect(page).toHaveURL(/#\/goals$/);
   await expect(shown(page, 'Acompanhe seus objetivos financeiros e celebre o progresso.')).toBeVisible();
 
-  await page.getByRole('tab', { name: 'Categorias' }).click();
+  await tap(page.getByRole('tab', { name: 'Categorias' }));
   await expect(page).toHaveURL(/#\/categories$/);
   await expect(shown(page, 'Organize seus gastos e defina limites mensais.')).toBeVisible();
 
-  await page.getByRole('tab', { name: 'Dashboard' }).click();
+  await tap(page.getByRole('tab', { name: 'Dashboard' }));
   await expect(page).toHaveURL(/#\/dashboard$/);
   await expect(page.getByText('Olá, Zeca')).toBeVisible();
 });
@@ -175,7 +175,7 @@ test.fixme(
 
     await signInThroughUi(page, { email, firstName: 'Bruno' });
     await expect(shown(page, 'Saídas do mês: R$ 200,00', true)).toBeVisible();
-    await page.getByRole('tab', { name: 'Transações' }).click();
+    await tap(page.getByRole('tab', { name: 'Transações' }));
     await expect(page.getByRole('button', { name: /Notebook[\s\S]*2\/2/ })).toBeVisible();
   },
 );

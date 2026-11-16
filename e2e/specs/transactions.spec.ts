@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { fillField, shown, signInThroughUi } from '../support/ui';
+import { fillField, shown, signInThroughUi, tap } from '../support/ui';
 
 // Form inputs, in widget order (transaction_form_page.dart): MoneyAmountField, then Descrição, then Data.
 // VoiceFillCard, shown above them on create, has no text field.
@@ -37,13 +37,13 @@ function row(page: Page, ...texts: string[]): Locator {
 }
 
 async function openTransactions(page: Page) {
-  await page.getByRole('tab', { name: 'Transações' }).click();
+  await tap(page.getByRole('tab', { name: 'Transações' }));
   await expect(page).toHaveURL(/#\/transactions/);
   await expect(page.getByRole('button', { name: 'Nova transação' })).toBeVisible();
 }
 
 async function openNewForm(page: Page) {
-  await page.getByRole('button', { name: 'Nova transação' }).click();
+  await tap(page.getByRole('button', { name: 'Nova transação' }));
   await expect(page).toHaveURL(/#\/transactions\/new/);
   await expect(page.getByText('Nova Transação', { exact: true })).toBeVisible();
 }
@@ -55,10 +55,10 @@ async function typeAmount(page: Page, digits: string, formatted: string) {
 }
 
 async function save(page: Page) {
-  await page.getByRole('button', { name: 'Salvar Transação' }).click();
+  await tap(page.getByRole('button', { name: 'Salvar Transação' }));
 }
 
-const turnOffThisMonth = (page: Page) => page.getByRole('checkbox', { name: 'Este Mês' }).click();
+const turnOffThisMonth = (page: Page) => tap(page.getByRole('checkbox', { name: 'Este Mês' }));
 
 async function seedUser(page: Page, firstName: string) {
   const user = await api.signUp({ firstName });
@@ -101,18 +101,18 @@ test('creates an income and an expense with a category; both show under today', 
   await expect(page.getByText('Nenhuma transação', { exact: true })).toBeVisible();
 
   await openNewForm(page);
-  await page.getByRole('button', { name: 'Entrada', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Entrada', exact: true }));
   await typeAmount(page, '150000', '1.500,00');
   await fillField(page.getByRole('textbox').nth(DESCRIPTION), 'Freela');
-  await page.getByRole('checkbox', { name: 'Salário' }).click();
+  await tap(page.getByRole('checkbox', { name: 'Salário' }));
   await save(page);
   await expect(page).toHaveURL(/#\/transactions$/);
 
   await openNewForm(page);
-  await page.getByRole('button', { name: 'Saída', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Saída', exact: true }));
   await typeAmount(page, '5000', '50,00');
   await fillField(page.getByRole('textbox').nth(DESCRIPTION), 'Feira');
-  await page.getByRole('checkbox', { name: 'Mercado' }).click();
+  await tap(page.getByRole('checkbox', { name: 'Mercado' }));
   await save(page);
   await expect(page).toHaveURL(/#\/transactions$/);
 
@@ -129,9 +129,9 @@ test('a 3x split expense lists 1/3 paid today and the next two pending', async (
 
   await typeAmount(page, '9000', '90,00');
   await fillField(page.getByRole('textbox').nth(DESCRIPTION), 'Geladeira');
-  await page.getByRole('button', { name: 'Transação Parcelada' }).click();
-  await page.getByRole('button', { name: 'Número de parcelas' }).click();
-  await page.getByRole('menuitem', { name: '3x', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Transação Parcelada' }));
+  await tap(page.getByRole('button', { name: 'Número de parcelas' }));
+  await tap(page.getByRole('menuitem', { name: '3x', exact: true }));
   await expect(page.getByText('O valor total é dividido em 3 parcelas mensais.')).toBeVisible();
 
   const [y, m] = parts(sp());
@@ -162,13 +162,13 @@ test('"Pagar" marks an installment paid and "Desfazer" turns it back to pending'
 
   const second = row(page, 'Sofá', '2/3 • Pendente');
   await expect(second).toBeVisible();
-  await second.getByRole('button', { name: 'Pagar' }).click();
+  await tap(second.getByRole('button', { name: 'Pagar' }));
 
   await expect(shown(page, 'Parcela paga.')).toBeVisible();
   await expect(row(page, 'Sofá', '2/3 • Paga')).toBeVisible();
   await expect(row(page, 'Sofá', '3/3 • Pendente')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Desfazer' }).click();
+  await tap(page.getByRole('button', { name: 'Desfazer' }));
   await expect(row(page, 'Sofá', '2/3 • Pendente')).toBeVisible();
   await expect(row(page, 'Sofá', '2/3 • Paga')).toHaveCount(0);
 });
@@ -181,8 +181,8 @@ test('the type menu shows only "Entradas"', async ({ page }) => {
   await openTransactions(page);
   await expect(row(page, 'Padaria')).toBeVisible();
 
-  await page.getByRole('checkbox', { name: 'Todos os Tipos' }).click();
-  await page.getByRole('menuitem', { name: 'Entradas', exact: true }).click();
+  await tap(page.getByRole('checkbox', { name: 'Todos os Tipos' }));
+  await tap(page.getByRole('menuitem', { name: 'Entradas', exact: true }));
 
   await expect(page.getByRole('checkbox', { name: 'Entradas' })).toBeVisible();
   await expect(row(page, 'Salário do mês', '+ R$ 3.000,00')).toBeVisible();
@@ -199,8 +199,8 @@ test('the category menu shows only that category', async ({ page }) => {
   await openTransactions(page);
   await expect(row(page, 'Cinema')).toBeVisible();
 
-  await page.getByRole('checkbox', { name: 'Todas as Categorias' }).click();
-  await page.getByRole('menuitem', { name: 'Mercado', exact: true }).click();
+  await tap(page.getByRole('checkbox', { name: 'Todas as Categorias' }));
+  await tap(page.getByRole('menuitem', { name: 'Mercado', exact: true }));
 
   await expect(row(page, 'Hortifruti', 'Saída • Mercado')).toBeVisible();
   await expect(row(page, 'Cinema')).toHaveCount(0);
@@ -221,7 +221,7 @@ test('"Vencidas" shows only past-due pending installments', async ({ page }) => 
   await openTransactions(page);
   await expect(row(page, 'Café')).toBeVisible();
 
-  await page.getByRole('checkbox', { name: 'Vencidas' }).click();
+  await tap(page.getByRole('checkbox', { name: 'Vencidas' }));
 
   await expect(row(page, 'Conta de luz', 'Vencida', '- R$ 120,00')).toBeVisible();
   await expect(row(page, 'Café')).toHaveCount(0);
@@ -237,14 +237,14 @@ test('search filters by description, ignoring accents', async ({ page }) => {
   await openTransactions(page);
   await expect(row(page, 'Uber')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Buscar' }).click();
+  await tap(page.getByRole('button', { name: 'Buscar' }));
   // The search field is the only text field on the list page.
   await fillField(page.getByRole('textbox').nth(0), 'acai');
 
   await expect(row(page, 'Açaí da praia')).toBeVisible();
   await expect(row(page, 'Uber')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Fechar busca' }).click();
+  await tap(page.getByRole('button', { name: 'Fechar busca' }));
   await expect(row(page, 'Uber')).toBeVisible();
 });
 
@@ -254,12 +254,12 @@ test('edits a description from the row, then deletes the transaction after confi
   await user.signIn();
   await openTransactions(page);
 
-  await row(page, 'Freela', '+ R$ 200,00').click();
+  await tap(row(page, 'Freela', '+ R$ 200,00'));
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
   await expect(page.getByText('Editar Transação')).toBeVisible();
   const description = page.getByRole('textbox').nth(DESCRIPTION);
   // The engine writes the DOM value only while the field has focus.
-  await description.click();
+  await tap(description);
   await expect(description).toHaveValue('Freela');
   await fillField(description, 'Freela do site');
   await save(page);
@@ -267,12 +267,12 @@ test('edits a description from the row, then deletes the transaction after confi
   await expect(page).toHaveURL(/#\/transactions$/);
   await expect(row(page, 'Freela do site', '+ R$ 200,00')).toBeVisible();
 
-  await row(page, 'Freela do site').click();
+  await tap(row(page, 'Freela do site'));
   await expect(page.getByText('Editar Transação')).toBeVisible();
-  await page.getByRole('button', { name: 'Excluir transação' }).click();
+  await tap(page.getByRole('button', { name: 'Excluir transação' }));
   await expect(shown(page, 'Excluir transação?')).toBeVisible();
   await expect(shown(page, 'A transação e todas as suas parcelas serão removidas.')).toBeVisible();
-  await page.getByRole('button', { name: 'Excluir', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Excluir', exact: true }));
 
   await expect(page).toHaveURL(/#\/transactions$/);
   await expect(page.getByText('Nenhuma transação', { exact: true })).toBeVisible();
@@ -286,7 +286,7 @@ test('an expense above the category limit is blocked under the amount', async ({
   await openNewForm(page);
 
   await typeAmount(page, '15000', '150,00');
-  await page.getByRole('checkbox', { name: 'Lazer' }).click();
+  await tap(page.getByRole('checkbox', { name: 'Lazer' }));
   await save(page);
 
   const [y, m] = parts(sp());
@@ -302,10 +302,10 @@ test('a transfer to a goal with no income shows the insufficient-balance error',
   await openTransactions(page);
   await openNewForm(page);
 
-  await page.getByRole('button', { name: 'Transferência', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Transferência', exact: true }));
   await expect(page.getByText('Meta de destino', { exact: false }).first()).toBeVisible();
   // _GoalOption merges its texts: "Reserva 0% R$ 0,00 de R$ 1.000,00".
-  await page.getByRole('button', { name: /^Reserva/ }).click();
+  await tap(page.getByRole('button', { name: /^Reserva/ }));
   await typeAmount(page, '5000', '50,00');
   await save(page);
 
@@ -329,9 +329,9 @@ test.describe('withdrawal', () => {
     await seedTransaction(user.token, { type: 'transfer', goal_id: goalId, total_amount: 100 });
     await user.signIn();
 
-    await page.getByRole('tab', { name: 'Metas' }).click();
+    await tap(page.getByRole('tab', { name: 'Metas' }));
     // GoalCard's name is "<name>. <saved> de <target>. …".
-    await page.getByRole('button', { name: /^Viagem\./ }).click();
+    await tap(page.getByRole('button', { name: /^Viagem\./ }));
     await expect(page.getByText('O valor volta para o seu saldo. Disponível na meta: R$ 100,00.')).toBeVisible();
 
     await seedTransaction(user.token, { type: 'withdrawal', goal_id: goalId, total_amount: 60 });
@@ -339,7 +339,7 @@ test.describe('withdrawal', () => {
     const amount = page.getByRole('textbox').nth(WITHDRAW);
     await fillField(amount, '8000');
     await expect(amount).toHaveValue('80,00');
-    await page.getByRole('button', { name: 'Resgatar valor' }).click();
+    await tap(page.getByRole('button', { name: 'Resgatar valor' }));
 
     await expect(shown(page, 'O resgate não pode ser maior que o valor guardado na meta (R$ 40,00).')).toBeVisible();
   });
@@ -355,16 +355,16 @@ test.fixme(
     await user.signIn();
     await openTransactions(page);
 
-    await row(page, 'Notebook', '1/3').click();
+    await tap(row(page, 'Notebook', '1/3'));
     await expect(page.getByText('Editar Transação')).toBeVisible();
     await expect(page.getByText(/• Paga$/)).toHaveCount(2);
 
     // Move the date one day within the same month. Material day buttons are named "<day>, <full date>".
     const [, , d] = parts(sp());
     const newDay = d > 1 ? d - 1 : d + 1;
-    await page.getByRole('textbox').nth(DATE).click();
-    await page.getByRole('button', { name: new RegExp(`^${newDay},`) }).click();
-    await page.getByRole('button', { name: 'OK', exact: true }).click();
+    await tap(page.getByRole('textbox').nth(DATE));
+    await tap(page.getByRole('button', { name: new RegExp(`^${newDay},`) }));
+    await tap(page.getByRole('button', { name: 'OK', exact: true }));
     await save(page);
     await expect(page).toHaveURL(/#\/transactions$/);
 
@@ -387,10 +387,10 @@ test.fixme(
     await openTransactions(page);
     await openNewForm(page);
 
-    await page.getByRole('switch', { name: /Transação Recorrente/ }).click();
-    await page.getByRole('button', { name: 'Resgate', exact: true }).click();
+    await tap(page.getByRole('switch', { name: /Transação Recorrente/ }));
+    await tap(page.getByRole('button', { name: 'Resgate', exact: true }));
     await expect(page.getByRole('switch', { name: /Transação Recorrente/ })).toHaveCount(0);
-    await page.getByRole('button', { name: /^Reserva/ }).click();
+    await tap(page.getByRole('button', { name: /^Reserva/ }));
     await typeAmount(page, '1000', '10,00');
     await save(page);
 

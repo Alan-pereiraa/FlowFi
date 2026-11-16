@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
-import { enableSemantics, fillField, signInThroughUi } from '../support/ui';
+import { enableSemantics, fillField, signInThroughUi, tap } from '../support/ui';
 
 // Detail page at 1280 px is two columns: deposit and withdraw on the left, edit on the right.
 const DEPOSIT = 0;
@@ -38,7 +38,7 @@ const seedDeposit = (token: string, goalId: number, amount: number) =>
   });
 
 async function openGoals(page: Page): Promise<void> {
-  await page.getByRole('tab', { name: 'Metas' }).click();
+  await tap(page.getByRole('tab', { name: 'Metas' }));
   await expect(page.getByText('Minhas Metas', { exact: true })).toBeVisible();
 }
 
@@ -47,7 +47,7 @@ const goalCard = (page: Page, name: string) => page.getByRole('button', { name: 
 
 async function openGoal(page: Page, name: string): Promise<void> {
   await openGoals(page);
-  await goalCard(page, name).click();
+  await tap(goalCard(page, name));
   await expect(page.getByText('Editar meta')).toBeVisible();
 }
 
@@ -69,21 +69,21 @@ test('creating an open-ended goal with a custom appearance shows it as "Contínu
   const { token } = await signUpAndSignIn(page, 'Gael');
   await openGoals(page);
 
-  await page.getByRole('button', { name: 'Criar Nova Meta' }).click();
+  await tap(page.getByRole('button', { name: 'Criar Nova Meta' }));
   await expect(page.getByText('Nova Meta', { exact: true })).toBeVisible();
 
   await fillField(page.getByRole('textbox').nth(0), 'Viagem');
-  await page.getByRole('button', { name: 'Escolher ícone e cor' }).click();
+  await tap(page.getByRole('button', { name: 'Escolher ícone e cor' }));
   await expect(page.getByText('Aparência')).toBeVisible();
-  await page.getByRole('button', { name: 'Ícone flight', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Ícone flight', exact: true }));
   // Swatches are all named "Cor"; index 5 is #42A5F5 in AppPalette.hexes.
-  await page.getByRole('button', { name: 'Cor', exact: true }).nth(5).click();
-  await page.getByRole('button', { name: 'Concluir' }).click();
+  await tap(page.getByRole('button', { name: 'Cor', exact: true }).nth(5));
+  await tap(page.getByRole('button', { name: 'Concluir' }));
 
   const target = page.getByRole('textbox').nth(1);
   await fillField(target, '120000');
   await expect(target).toHaveValue('1.200,00');
-  await page.getByRole('button', { name: 'Criar Meta', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Criar Meta', exact: true }));
 
   await expect(page.getByText('Meta criada com sucesso!')).toBeVisible();
   await expect(page).toHaveURL(/#\/goals\/success/);
@@ -97,7 +97,7 @@ test('creating an open-ended goal with a custom appearance shows it as "Contínu
   expect(goals).toHaveLength(1);
   expect(goals[0]).toMatchObject({ name: 'Viagem', icon: 'flight', color: '#42A5F5', expires_at: null });
 
-  await page.getByText('Ver minhas metas').click();
+  await tap(page.getByText('Ver minhas metas'));
   await expect(page).toHaveURL(/#\/goals$/);
   // The "Contínuo" pill is inside GoalCard's excluded semantics; the card's label says "Meta contínua." instead.
   await expect(goalCard(page, 'Viagem')).toHaveAccessibleName(
@@ -108,15 +108,15 @@ test('creating an open-ended goal with a custom appearance shows it as "Contínu
 test('creating a goal with a target date shows the monthly contribution', async ({ page }) => {
   await signUpAndSignIn(page, 'Hugo');
   await openGoals(page);
-  await page.getByRole('button', { name: 'Criar Nova Meta' }).click();
+  await tap(page.getByRole('button', { name: 'Criar Nova Meta' }));
 
   await fillField(page.getByRole('textbox').nth(0), 'Carro');
   await fillField(page.getByRole('textbox').nth(1), '500000');
 
   // The picker opens on today, already selected: accepting it avoids naming calendar cells.
-  await page.getByRole('textbox').nth(2).click();
-  await page.getByRole('button', { name: 'OK', exact: true }).click();
-  await page.getByRole('button', { name: 'Criar Meta', exact: true }).click();
+  await tap(page.getByRole('textbox').nth(2));
+  await tap(page.getByRole('button', { name: 'OK', exact: true }));
+  await tap(page.getByRole('button', { name: 'Criar Meta', exact: true }));
 
   await expect(page.getByText('Meta criada com sucesso!')).toBeVisible();
   await expect(page.getByText('Contribuição Mensal')).toBeVisible();
@@ -134,7 +134,7 @@ test('"Adicionar valor" saves the amount and updates the progress', async ({ pag
   const amount = page.getByRole('textbox').nth(DEPOSIT);
   await fillField(amount, '25000');
   await expect(amount).toHaveValue('250,00');
-  await page.getByRole('button', { name: 'Adicionar valor' }).click();
+  await tap(page.getByRole('button', { name: 'Adicionar valor' }));
 
   await expect(page.getByText('Valor adicionado.')).toBeVisible();
   await expect(page.getByText('R$ 250,00 / R$ 1.000,00')).toBeVisible();
@@ -153,12 +153,12 @@ test('"Resgatar valor" rejects more than the balance, then withdraws a valid amo
 
   const amount = page.getByRole('textbox').nth(WITHDRAW);
   await fillField(amount, '30000');
-  await page.getByRole('button', { name: 'Resgatar valor' }).click();
+  await tap(page.getByRole('button', { name: 'Resgatar valor' }));
   await expect(page.getByText('O resgate não pode ser maior que R$ 200,00.')).toBeVisible();
 
   await fillField(amount, '5000');
   await expect(amount).toHaveValue('50,00');
-  await page.getByRole('button', { name: 'Resgatar valor' }).click();
+  await tap(page.getByRole('button', { name: 'Resgatar valor' }));
 
   await expect(page.getByText('Valor resgatado.')).toBeVisible();
   await expect(page.getByText('R$ 150,00 / R$ 1.000,00')).toBeVisible();
@@ -173,22 +173,22 @@ test('a goal with a balance cannot be deleted until it is withdrawn', async ({ p
   await signInThroughUi(page, { email, firstName: 'Kai' });
   await openGoal(page, 'Moto');
 
-  await page.getByRole('button', { name: 'Excluir meta' }).click();
+  await tap(page.getByRole('button', { name: 'Excluir meta' }));
   await expect(page.getByText('Resgate o saldo primeiro')).toBeVisible();
   await expect(page.getByText(/Esta meta ainda tem R\$ 100,00 guardados\./)).toBeVisible();
-  await page.getByRole('button', { name: 'Entendi' }).click();
+  await tap(page.getByRole('button', { name: 'Entendi' }));
   await expect(page.getByText('Resgate o saldo primeiro')).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`#/goals/${goalId}$`));
   expect((await api.get(token, `/goals/${goalId}`)).data.id).toBe(goalId);
 
   await fillField(page.getByRole('textbox').nth(WITHDRAW), '10000');
-  await page.getByRole('button', { name: 'Resgatar valor' }).click();
+  await tap(page.getByRole('button', { name: 'Resgatar valor' }));
   await expect(page.getByText('Valor resgatado.')).toBeVisible();
   await expect(page.getByText('Não há valor guardado nesta meta para resgatar.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Excluir meta' }).click();
+  await tap(page.getByRole('button', { name: 'Excluir meta' }));
   await expect(page.getByText('Excluir meta?')).toBeVisible();
-  await page.getByRole('button', { name: 'Excluir', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Excluir', exact: true }));
 
   await expect(page.getByText('Meta excluída.')).toBeVisible();
   await expect(page.getByText('Nenhuma meta ainda')).toBeVisible();
@@ -202,7 +202,7 @@ test('"Salvar alterações" renames the goal and closes the page', async ({ page
   await openGoal(page, 'Casa');
 
   await fillField(page.getByRole('textbox').nth(EDIT_NAME), 'Casa nova');
-  await page.getByRole('button', { name: 'Salvar alterações' }).click();
+  await tap(page.getByRole('button', { name: 'Salvar alterações' }));
 
   // Current behavior: saving pops back to the list instead of staying on the detail.
   await expect(page.getByText('Meta atualizada.')).toBeVisible();
@@ -217,7 +217,7 @@ test('a deposit without income shows the insufficient-balance error', async ({ p
   await openGoal(page, 'Estudos');
 
   await fillField(page.getByRole('textbox').nth(DEPOSIT), '1000');
-  await page.getByRole('button', { name: 'Adicionar valor' }).click();
+  await tap(page.getByRole('button', { name: 'Adicionar valor' }));
 
   await expect(page.getByText('Saldo insuficiente para fazer esta transferência.')).toBeVisible();
   await expect(page.getByText('Valor adicionado.')).toHaveCount(0);
@@ -238,6 +238,6 @@ test('reloading /goals/:id loads the goal from the API', async ({ page }) => {
   await expect(page.getByText('Bicicleta')).toBeVisible();
   await expect(page.getByText('R$ 0,00 / R$ 1.000,00')).toBeVisible();
   // The engine writes the DOM value only while the field has focus.
-  await page.getByRole('textbox').nth(EDIT_NAME).click();
+  await tap(page.getByRole('textbox').nth(EDIT_NAME));
   await expect(page.getByRole('textbox').nth(EDIT_NAME)).toHaveValue('Bicicleta');
 });

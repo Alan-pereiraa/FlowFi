@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { artisan } from '../support/env';
-import { fillField, signInThroughUi } from '../support/ui';
+import { fillField, signInThroughUi, tap } from '../support/ui';
 
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -46,7 +46,7 @@ async function transactionsOf(token: string, recurringId: number) {
 }
 
 async function openTransactions(page: Page) {
-  await page.getByRole('tab', { name: 'Transações' }).click();
+  await tap(page.getByRole('tab', { name: 'Transações' }));
   await expect(page).toHaveURL(/#\/transactions$/);
 }
 
@@ -59,26 +59,26 @@ test('a recurring income repeated 3 times shows "1 de 3 vezes" and the next date
   await signInThroughUi(page, { email, firstName: 'Rita' });
 
   await openTransactions(page);
-  await page.getByRole('button', { name: 'Nova transação' }).click();
+  await tap(page.getByRole('button', { name: 'Nova transação' }));
   await expect(page).toHaveURL(/#\/transactions\/new/);
 
-  await page.getByRole('button', { name: 'Entrada', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Entrada', exact: true }));
   // Inputs on the form, in order: amount, Descrição, Data (read-only).
   await fillField(page.getByRole('textbox').nth(0), '150000');
   await fillField(page.getByRole('textbox').nth(1), 'Salario mensal');
-  await recurrenceSwitch(page, /Repetir mais vezes/).click();
+  await tap(recurrenceSwitch(page, /Repetir mais vezes/));
 
   // "Repetir / Um número de vezes" is selected by default with 2x; pick 3x.
-  await page.getByRole('button', { name: /Quantas vezes repetir/ }).click();
-  await page.getByRole('menuitem', { name: '3x', exact: true }).click();
-  await page.getByRole('button', { name: 'Salvar Transação' }).click();
+  await tap(page.getByRole('button', { name: /Quantas vezes repetir/ }));
+  await tap(page.getByRole('menuitem', { name: '3x', exact: true }));
+  await tap(page.getByRole('button', { name: 'Salvar Transação' }));
 
   await expect(page).toHaveURL(/#\/transactions$/);
   const tile = page.getByRole('button', { name: /Salario mensal/ });
   await expect(tile).toHaveCount(1);
   await expect(tile).toHaveAccessibleName(/\+ R\$ 1\.500,00/);
 
-  await tile.click();
+  await tap(tile);
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
   const next = br(addMonths(todayIso(), 1));
   const card = recurrenceSwitch(page, new RegExp(`Repete todo mês, 1 de 3 vezes\\.\\s+Próxima: ${next}`));
@@ -110,7 +110,7 @@ test('a recurrence that started two months ago backfills the past months', async
   // "Este Mês" is on by default and hides the older ones.
   await expect(tiles).toHaveCount(1);
 
-  await page.getByRole('checkbox', { name: 'Este Mês' }).click();
+  await tap(page.getByRole('checkbox', { name: 'Este Mês' }));
   await expect(tiles).toHaveCount(3);
   for (const date of dates) {
     await expect(page.getByText(dayHeader(date), { exact: true })).toBeVisible();
@@ -124,7 +124,7 @@ test('ending a recurrence from a generated transaction shows "Encerrada"', async
 
   await signInThroughUi(page, { email, firstName: 'Tiago' });
   await openTransactions(page);
-  await page.getByRole('button', { name: /Mesada/ }).click();
+  await tap(page.getByRole('button', { name: /Mesada/ }));
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
 
   const active = recurrenceSwitch(
@@ -132,14 +132,14 @@ test('ending a recurrence from a generated transaction shows "Encerrada"', async
     new RegExp(`Repete todo mês, sem data para terminar\\.\\s+Próxima: ${br(addMonths(today, 1))}`),
   );
   await expect(active).toBeChecked();
-  await active.click();
+  await tap(active);
 
   await expect(page.getByText('Cancelar transação recorrente?')).toBeVisible();
-  await page.getByRole('button', { name: 'Cancelar recorrência', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Cancelar recorrência', exact: true }));
   await expect(page.getByText('Recorrência cancelada.')).toBeVisible();
   await expect(page).toHaveURL(/#\/transactions$/);
 
-  await page.getByRole('button', { name: /Mesada/ }).click();
+  await tap(page.getByRole('button', { name: /Mesada/ }));
   const ended = recurrenceSwitch(page, /Encerrada\. Repetia todo mês\./);
   await expect(ended).toBeVisible();
   await expect(ended).not.toBeChecked();

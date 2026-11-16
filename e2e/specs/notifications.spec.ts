@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { artisan } from '../support/env';
-import { shown, signInThroughUi } from '../support/ui';
+import { shown, signInThroughUi, tap } from '../support/ui';
 
 // No device tokens in e2e, so NotificationService::notify stores the row and queues no push job.
 
@@ -48,7 +48,7 @@ async function seedCategoryWarning(token: string, name: string) {
 }
 
 async function openNotifications(page: Page) {
-  await bell(page).click();
+  await tap(bell(page));
   await expect(page).toHaveURL(/#\/notifications/);
   await expect(page.getByText('Notificações', { exact: true })).toBeVisible();
 }
@@ -168,28 +168,28 @@ test('filters, tapping a card to mark it read, and "Marcar todas como lidas"', a
   await expect(unreadCard(page, CATEGORY_WARNING, mercado)).toBeVisible();
   await expect(unreadCard(page, CATEGORY_WARNING, lazer)).toBeVisible();
 
-  await unreadCard(page, CATEGORY_WARNING, mercado).click();
+  await tap(unreadCard(page, CATEGORY_WARNING, mercado));
   await expect(readCard(page, CATEGORY_WARNING, mercado)).toBeVisible();
   await expect(unreadCard(page, CATEGORY_WARNING, mercado)).toHaveCount(0);
 
-  await chip(page, 'Não lidas').click();
+  await tap(chip(page, 'Não lidas'));
   await expect(unreadCard(page, CATEGORY_WARNING, lazer)).toBeVisible();
   await expect(readCard(page, CATEGORY_WARNING, mercado)).toHaveCount(0);
 
-  await chip(page, 'Lidas').click();
+  await tap(chip(page, 'Lidas'));
   await expect(readCard(page, CATEGORY_WARNING, mercado)).toBeVisible();
   await expect(unreadCard(page, CATEGORY_WARNING, lazer)).toHaveCount(0);
 
-  await chip(page, 'Todas').click();
-  await page.getByRole('button', { name: 'Marcar todas como lidas' }).click();
+  await tap(chip(page, 'Todas'));
+  await tap(page.getByRole('button', { name: 'Marcar todas como lidas' }));
   await expect(readCard(page, CATEGORY_WARNING, lazer)).toBeVisible();
   await expect(readCard(page, CATEGORY_WARNING, mercado)).toBeVisible();
 
-  await chip(page, 'Não lidas').click();
+  await tap(chip(page, 'Não lidas'));
   await expect(page.getByText('Tudo em dia')).toBeVisible();
   await expect(page.getByText('Você não tem notificações não lidas.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Voltar' }).click();
+  await tap(page.getByRole('button', { name: 'Voltar' }));
   await expect(page).toHaveURL(/#\/dashboard/);
   await expect(bell(page)).toBeVisible();
   await expect(noBadge(page)).toHaveCount(0);
@@ -215,7 +215,7 @@ test('swiping a card left and confirming deletes it', async ({ page }) => {
 
   await expect(page.getByText('Excluir notificação?')).toBeVisible();
   await expect(page.getByText('Ela deixa de aparecer na sua lista.')).toBeVisible();
-  await page.getByRole('button', { name: 'Excluir', exact: true }).click();
+  await tap(page.getByRole('button', { name: 'Excluir', exact: true }));
 
   await expect(page.getByText('Nenhuma notificação')).toBeVisible();
   await expect.poll(async () => (await notificationsOf(token)).total).toBe(0);
@@ -257,7 +257,7 @@ test.fixme('tapping a card does not open its subject', async ({ page }) => {
 
   await signInThroughUi(page, { email, firstName: 'Xavi' });
   await openNotifications(page);
-  await unreadCard(page, CATEGORY_WARNING, categoryWarning('Mercado')).click();
+  await tap(unreadCard(page, CATEGORY_WARNING, categoryWarning('Mercado')));
 
   await expect(page).toHaveURL(/#\/categories/);
 });
