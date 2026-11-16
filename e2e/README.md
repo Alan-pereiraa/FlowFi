@@ -49,8 +49,9 @@ E2E_MAIL=mailpit npm test    # Mailpit on 127.0.0.1:1025 (SMTP) and :8025 (API);
 // ui.ts
 openApp(page, path = '/'): Promise<void>          // goto /#<path>, then enableSemantics
 enableSemantics(page): Promise<void>              // call again after page.reload()
-fillField(locator, value): Promise<void>          // click, then fill (Flutter needs focus first)
-shown(page, text, exact = false): Locator        // text as DOM text or as aria-label (see the Card rule)
+tap(locator): Promise<void>                       // wait until it stops moving, then click through the shell overlay
+fillField(locator, value, shownAs = value): Promise<void>  // tap, fill, retry until the field shows shownAs
+shown(page, text, exact = false): Locator        // DOM text or aria-label in the semantics tree (skips aria-live copies)
 signInThroughUi(page, { firstName?, email? }): Promise<{ email }>
 
 // api.ts
@@ -75,31 +76,28 @@ artisan(command): string                          // php artisan <command> with 
 
 ## Locator conventions
 
+Verified on the first full run (Flutter 3.47.1 web, release build).
+
 - Use the exact strings from the Dart source. Copy them; don't retype accents.
 - Prefer `page.getByRole('button', { name })`, then `getByLabel`, then `getByText`. Add `exact: true` when a name is a prefix of another, as with "Entrar".
-- Don't use CSS on Flutter internals. The only exception is `flt-semantics-placeholder`, which is handled in `enableSemantics`.
-- Text fields: `AppTextField` draws its `label` as a separate `Text` above the input, so the input's accessible name does not come from it. Pick inputs by position on the screen, `page.getByRole('textbox').nth(i)`, and fill them with `fillField`.
+- Don't use CSS on Flutter internals. The exceptions are `flt-semantics-placeholder` (in `enableSemantics`) and `flt-semantics-host` (in `shown`).
+- Click with `tap(locator)`, not `locator.click()`. A route pushed inside the app shell leaves an empty full-screen semantics node on top, so Playwright's hit-target check never passes. `tap` waits until the target stops moving, then clicks through; Flutter still routes the pointer by position.
+- Type with `fillField`. A `fill` sent right after focus is dropped, so it retries until the value sticks. Money fields reformat what you type: pass the shown text, `fillField(amount, '35000', '350,00')`.
+- Text fields: the `AppTextField` label is not the input's name. An input is named after a wrapping `Semantics(label)` or its hint, and the hint name goes away once the field holds text. Pick inputs by position, `page.getByRole('textbox').nth(i)`.
+- aria-live copies: SnackBar texts, form validation errors and new route titles are also written to `flt-announcement-*`, so `page.getByText` finds them twice (strict mode error). Assert messages with `shown()`, titles with `getByRole('heading', { name })`.
+- Money: `Money.format` puts a no-break space after `R$`. String matching normalizes it; in a regex write `R\$\s100,00`.
 - Card rule: text inside a `Card` merges into the card's node.
   - Card with no button or field inside: one DOM text with all its texts. `getByText('x')` works; `exact: true` never matches.
   - Card with a button or field inside: `role=group` named by `aria-label`. `getByText` finds nothing; use `shown()` or `getByRole('group', { name })`.
-- An input's DOM `value` is written only while it has focus. Call `field.click()` before `toHaveValue`.
-- Routes are hash URLs: `/#/dashboard`. Assert with `expect(page).toHaveURL(/#\/dashboard/)`.
+- An input's DOM `value` is written only while it has focus. `tap` the field before `toHaveValue`.
+- Routes are hash URLs: `/#/dashboard`. Assert with `expect(page).toHaveURL(/#\/dashboard/)`. Don't use `waitForURL`: it waits for a load event that hash routes never fire.
 - Use a fresh user per test (`uniqueEmail`, `api.signUp`). Never rely on another test's data.
+- Playwright records video only for tests that use `page`. An API-only test should end with a UI check.
 
-## First run checklist
+## Notes from the first run
 
-This scaffold was written and type-checked, but it has never run end to end. Run `npm run test:auth` first, then one spec file at a time. Check these in order:
-
-1. **Env passthrough.** `curl http://127.0.0.1:8100/up` answers 200. After the auth run, `.tmp/storage/logs/laravel.log` exists and `packages/backend/storage/logs/laravel.log` is unchanged. If not, Laravel is not seeing the env: it reads `LARAVEL_STORAGE_PATH` from `$_ENV`, which `php -S` fills only with `variables_order=EGPCS`.
-2. **CORS.** `FRONTEND_URL=http://127.0.0.1:5100` must match the page origin, or every API call from the browser fails as a network error ("Sem conexão…").
-3. **Semantics placeholder.** `enableSemantics` waits up to 60 s for `flt-semantics-placeholder`, then clicks it through `evaluate` because it is hidden. If the tree never appears, run `npm run test:headed` and inspect the page.
-4. **Input order and names.** Check that `getByRole('textbox')` returns Email first and the code second on `/login`, and Nome first on the profile form. If Flutter names inputs after their hint text (for example "Insira seu código temporário"), switch to names; they are steadier than positions.
-5. **OTP log format.** Checked against a mail rendered with the real log mailer: the code is inside `<strong …>` in the HTML part. If `readOtp` times out, read the log and adjust `CODE` in `support/mail.ts`.
-6. **Button names.** The avatar button's name is its tooltip "Perfil", plus perhaps the initials. "Enviar Código" changes to "Reenviar em Ns" after a send.
-7. **Throttles.** `CACHE_STORE=array` lives for one request, so the OTP limits (3/min per email) never trigger. If you see 429s, the env is not reaching the server (see 1).
-8. **Not settled without a run.** Fix these only if they fail:
-   - `fillField`: `fill` right after `click` may run before the engine attaches its input listeners. If typed text is lost, wait a frame after the click.
-   - Clicking the date field to open the picker (`goals.spec.ts`, `transactions.spec.ts`), and clicking a button inside a text field.
-   - The swipe in `notifications.spec.ts` ("swiping a card left…").
-   - "Sair da conta" calls `FirebaseMessaging.getToken()` on web.
-9. **Month end.** On the last day of a month the backend probably skips the category 80% warning (UTC `now()` against dates stored as `Y-m-d 00:00:00`). The `notifications.spec.ts` tests that seed that warning then fail. This is app behaviour; the tests leave it alone.
+- Env passthrough, CORS, OTP log parsing, the swipe in `notifications.spec.ts` and the date picker all work as written.
+- Run one test at a time with `npx playwright test specs/<spec>.spec.ts -g "<title>" --workers=1`. `recordings/` is wiped on each run, so copy a video you want to keep, for example to `videos/` (git-ignored).
+- The six `test.fixme` tests were each run once without `fixme` and fail as their comments describe, except "switching to Resgate…", which the UI can't reach.
+- `CACHE_STORE=array` lives for one request, so the OTP limits (3/min per email) never trigger. If you see 429s, the env is not reaching the server.
+- Month end: on the last day of a month the backend probably skips the category 80% warning (UTC `now()` against dates stored as `Y-m-d 00:00:00`). The `notifications.spec.ts` tests that seed that warning then fail. This is app behaviour; the tests leave it alone.
