@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { artisan } from '../support/env';
-import { fillField, signInThroughUi, tap } from '../support/ui';
+import { fillField, shown, signInThroughUi, tap } from '../support/ui';
 
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -64,7 +64,7 @@ test('a recurring income repeated 3 times shows "1 de 3 vezes" and the next date
 
   await tap(page.getByRole('button', { name: 'Entrada', exact: true }));
   // Inputs on the form, in order: amount, Descrição, Data (read-only).
-  await fillField(page.getByRole('textbox').nth(0), '150000');
+  await fillField(page.getByRole('textbox').nth(0), '150000', '1.500,00');
   await fillField(page.getByRole('textbox').nth(1), 'Salario mensal');
   await tap(recurrenceSwitch(page, /Repetir mais vezes/));
 
@@ -136,7 +136,7 @@ test('ending a recurrence from a generated transaction shows "Encerrada"', async
 
   await expect(page.getByText('Cancelar transação recorrente?')).toBeVisible();
   await tap(page.getByRole('button', { name: 'Cancelar recorrência', exact: true }));
-  await expect(page.getByText('Recorrência cancelada.')).toBeVisible();
+  await expect(shown(page, 'Recorrência cancelada.')).toBeVisible();
   await expect(page).toHaveURL(/#\/transactions$/);
 
   await tap(page.getByRole('button', { name: /Mesada/ }));
@@ -148,8 +148,8 @@ test('ending a recurrence from a generated transaction shows "Encerrada"', async
   expect(data).toMatchObject({ next_occurrence_on: null, end_date: today });
 });
 
-test('ledger:generate-recurring never creates a duplicate occurrence', async () => {
-  const { token } = await api.signUp({ firstName: 'Uba' });
+test('ledger:generate-recurring never creates a duplicate occurrence', async ({ page }) => {
+  const { email, token } = await api.signUp({ firstName: 'Uba' });
   const start = addMonths(todayIso(), -1);
   const recurring = await seedRecurring(token, { description: 'Rendimento', amount: '50.00', start_date: start });
   expect(await transactionsOf(token, recurring.id)).toHaveLength(2);
@@ -167,4 +167,9 @@ test('ledger:generate-recurring never creates a duplicate occurrence', async () 
     const { data } = await api.get(token, `/recurring-transactions/${recurring.id}`);
     expect(data).toMatchObject({ generated_count: 2, next_occurrence_on: addMonths(start, 2) });
   }
+
+  await signInThroughUi(page, { email, firstName: 'Uba' });
+  await openTransactions(page);
+  await tap(page.getByRole('checkbox', { name: 'Este Mês' }));
+  await expect(page.getByRole('button', { name: /Rendimento/ })).toHaveCount(2);
 });
