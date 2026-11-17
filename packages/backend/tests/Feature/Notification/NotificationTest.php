@@ -19,7 +19,6 @@ use Tests\TestCase;
  * Testa os alertas de limites de gastos, lembretes de parcelas e metas,
  * prevenção de notificações duplicadas e acesso às notificações dos usuários.
  */
-
 class NotificationTest extends TestCase
 {
     // Reinicia o banco de dados antes da execução de cada teste.

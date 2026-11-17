@@ -20,7 +20,6 @@ use Tests\TestCase;
  *
  * O QUE COBRE: o "básico" de acesso — ver o próprio perfil, ser barrado sem login
  * e encerrar a sessão (logout). É um teste de fumaça (smoke test) da autenticação.
- *
  */
 class AuthTest extends TestCase
 {

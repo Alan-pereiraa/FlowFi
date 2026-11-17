@@ -24,7 +24,6 @@ use Tests\TestCase;
  * Avalia a criação de notificações, o envio de push para dispositivos
  * registrados, a prevenção de duplicidades e a remoção de tokens inválidos.
  */
-
 class NotificationServiceTest extends TestCase
 {
     // Reinicia o banco de dados antes de cada teste.

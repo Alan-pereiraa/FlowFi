@@ -20,7 +20,6 @@ use Tests\TestCase;
  *
  * O QUE COBRE: o conteúdo do e-mail do código de acesso — assunto, código, prazo de
  * expiração, nome do app e renderização do template sem erro.
- *
  */
 class OtpCodeMailTest extends TestCase
 {
