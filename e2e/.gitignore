@@ -1,0 +1,6 @@
+node_modules/
+.tmp/
+recordings/
+playwright-report/
+videos/
+test-results/

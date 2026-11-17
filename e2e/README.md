@@ -1,0 +1,103 @@
+# FlowFi end-to-end tests
+
+Playwright drives the Flutter web build against a throwaway Laravel API. Each test is recorded on video. Nothing here changes the app: the run uses its own SQLite file, its own storage folder and its own ports.
+
+| Piece | Where |
+|---|---|
+| API | `php -d variables_order=EGPCS -S 127.0.0.1:8100` with Laravel's router script, env from `support/env.ts` |
+| Web app | `python3 -m http.server 5100` serving `.tmp/web` |
+| Database | `.tmp/db.sqlite`, recreated and migrated before every run |
+| Laravel storage (log, compiled views) | `.tmp/storage` (via `LARAVEL_STORAGE_PATH`); package and service caches in `.tmp` |
+| OTP mails | `.tmp/storage/logs/laravel.log` (mailer `log`), or Mailpit with `E2E_MAIL=mailpit` |
+
+## Prerequisites
+
+- PHP 8.3 and `composer install` in `packages/backend`. No `.env` is needed; if one exists, the variables in `support/env.ts` take precedence.
+- Flutter, for the web build.
+- Node 22, then in this folder: `npm install` and `npx playwright install chromium`.
+- Python 3, to serve the web build.
+- Network access at run time: the web build loads Firebase JS and CanvasKit from gstatic.
+
+## Run
+
+```sh
+cd e2e
+npm run build:web     # once, and again after every frontend change (slow: minutes)
+npm test              # all specs, headless, one worker
+npm run test:auth     # one spec group
+npm run test:headed   # watch the browser
+npx playwright test specs/auth.spec.ts -g "wrong code"   # one test
+npm run report        # open the HTML report
+```
+
+- Videos: `recordings/<test>/video.webm`, one for every test, whether it passed or failed. Failed tests also keep a screenshot and a trace.
+- HTML report: `playwright-report/`, with the videos embedded.
+- Both folders are wiped at the start of each run.
+- One worker is the supported default. `E2E_WORKERS=2` may hit "database is locked" in SQLite.
+- If something already listens on 8100 or 5100, the run fails. `E2E_REUSE_SERVERS=1` reuses it, with whatever env it started with.
+- `ledger:send-reminders` and `ledger:generate-recurring` do not run on a schedule here. Call `artisan('ledger:send-reminders')` from a spec.
+
+### Mailpit instead of the log
+
+```sh
+E2E_MAIL=mailpit npm test    # Mailpit on 127.0.0.1:1025 (SMTP) and :8025 (API); override with E2E_MAILPIT_URL
+```
+
+## Helpers (`support/`)
+
+```ts
+// ui.ts
+openApp(page, path = '/'): Promise<void>          // goto /#<path>, then enableSemantics
+enableSemantics(page): Promise<void>              // call again after page.reload()
+tap(locator): Promise<void>                       // wait until it stops moving, then click through the shell overlay
+fillField(locator, value, shownAs = value): Promise<void>  // tap, fill, retry until the field shows shownAs
+shown(page, text, exact = false): Locator        // DOM text or aria-label in the semantics tree (skips aria-live copies)
+signInThroughUi(page, { firstName?, email? }): Promise<{ email }>
+
+// api.ts
+uniqueEmail(tag): string                          // e2e+<tag>-<ms>-<rand>@flowfi.test
+api.signUp({ firstName, email? }): Promise<{ email, token, userId }>
+api.get(token, path) / api.post(token | null, path, body?) / api.patch(token, path, body?) / api.delete(token, path)
+
+// mail.ts
+mailCursor(): number                              // take it before the request that sends the code
+readOtp(email, since, timeoutMs = 15000): Promise<string>
+
+// env.ts
+artisan(command): string                          // php artisan <command> with the e2e env, returns stdout
+```
+
+- `signInThroughUi` opens `/login`, sends the code, reads it and clicks "Entrar".
+  - New user and `firstName` given: completes the profile and returns to the dashboard.
+  - User already signed up with `api.signUp`: the profile is complete, so it goes straight to the dashboard.
+  - With `firstName`, it ends by asserting "Olá, {firstName}". Without it, it returns as soon as the URL is `/complete-profile` or `/dashboard`.
+- API paths are relative to `/api/v1`, for example `api.post(token, '/categories', {...})`.
+- Seed through `api`, then sign in through the UI with the same email.
+
+## Locator conventions
+
+Verified on the first full run (Flutter 3.47.1 web, release build).
+
+- Use the exact strings from the Dart source. Copy them; don't retype accents.
+- Prefer `page.getByRole('button', { name })`, then `getByLabel`, then `getByText`. Add `exact: true` when a name is a prefix of another, as with "Entrar".
+- Don't use CSS on Flutter internals. The exceptions are `flt-semantics-placeholder` (in `enableSemantics`) and `flt-semantics-host` (in `shown`).
+- Click with `tap(locator)`, not `locator.click()`. A route pushed inside the app shell leaves an empty full-screen semantics node on top, so Playwright's hit-target check never passes. `tap` waits until the target stops moving, then clicks through; Flutter still routes the pointer by position.
+- Type with `fillField`. A `fill` sent right after focus is dropped, so it retries until the value sticks. Money fields reformat what you type: pass the shown text, `fillField(amount, '35000', '350,00')`.
+- Text fields: the `AppTextField` label is not the input's name. An input is named after a wrapping `Semantics(label)` or its hint, and the hint name goes away once the field holds text. Pick inputs by position, `page.getByRole('textbox').nth(i)`.
+- aria-live copies: SnackBar texts, form validation errors and new route titles are also written to `flt-announcement-*`, so `page.getByText` finds them twice (strict mode error). Assert messages with `shown()`, titles with `getByRole('heading', { name })`.
+- Money: `Money.format` puts a no-break space after `R$`. String matching normalizes it; in a regex write `R\$\s100,00`.
+- Card rule: text inside a `Card` merges into the card's node.
+  - Card with no button or field inside: one DOM text with all its texts. `getByText('x')` works; `exact: true` never matches.
+  - Card with a button or field inside: `role=group` named by `aria-label`. `getByText` finds nothing; use `shown()` or `getByRole('group', { name })`.
+- An input's DOM `value` is written only while it has focus. `tap` the field before `toHaveValue`.
+- Routes are hash URLs: `/#/dashboard`. Assert with `expect(page).toHaveURL(/#\/dashboard/)`. Don't use `waitForURL`: it waits for a load event that hash routes never fire.
+- Use a fresh user per test (`uniqueEmail`, `api.signUp`). Never rely on another test's data.
+- Playwright records video only for tests that use `page`. An API-only test should end with a UI check.
+
+## Notes from the first run
+
+- Env passthrough, CORS, OTP log parsing, the swipe in `notifications.spec.ts` and the date picker all work as written.
+- Run one test at a time with `npx playwright test specs/<spec>.spec.ts -g "<title>" --workers=1`. `recordings/` is wiped on each run, so copy a video you want to keep, for example to `videos/` (git-ignored).
+- The six `test.fixme` tests were each run once without `fixme` and fail as their comments describe, except "switching to Resgate…", which the UI can't reach.
+- `CACHE_STORE=array` lives for one request, so the OTP limits (3/min per email) never trigger. If you see 429s, the env is not reaching the server.
+- Month end: on the last day of a month the backend probably skips the category 80% warning (UTC `now()` against dates stored as `Y-m-d 00:00:00`). The `notifications.spec.ts` tests that seed that warning then fail. This is app behaviour; the tests leave it alone.
