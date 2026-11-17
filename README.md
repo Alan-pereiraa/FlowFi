@@ -35,3 +35,15 @@ tipo de arquivo.
 ```sh
 docker compose up --build
 ```
+
+## CI
+
+[![CI](https://github.com/Alan-pereiraa/FlowFi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Alan-pereiraa/FlowFi/actions/workflows/ci.yml)
+
+O GitHub Actions (`.github/workflows/ci.yml`) roda em todo pull request e em todo push, em qualquer branch:
+
+- **backend**: Pint (`--test`) e `php artisan test`.
+- **frontend**: `dart format`, `flutter analyze` e `flutter test`.
+- **e2e**: build web do Flutter e a suíte Playwright de `e2e/` (veja `e2e/README.md`).
+
+Os vídeos de cada teste e2e ficam nos artifacts `e2e-videos` e `playwright-report` da execução (página do run, seção "Artifacts"), por 14 dias.
