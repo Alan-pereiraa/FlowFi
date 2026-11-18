@@ -3,6 +3,7 @@
 namespace App\Domains\Ledger\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Ledger\Models\Category;
 use App\Domains\Ledger\Models\Transaction;
 use App\Domains\Shared\Casts\Money;
 use App\Domains\Shared\Services\GeminiClient;
@@ -37,7 +38,7 @@ class TransactionDraftService
         - total_amount: the amount as a decimal string with a dot and two decimal places, e.g. "1250.90". For a split purchase it is the total, not the value of each installment ("12x de 100" is "1200.00"). For kind "recurring" it is the value of one occurrence, never multiplied ("100 por mês durante 6 meses" is "100.00").
         - date: YYYY-MM-DD. Resolve relative dates ("hoje", "ontem", "sexta passada") against the given today date; use today when no date is mentioned. For kind "recurring" it is the first occurrence: the next matching date for "todo dia 5" (today counts), the named past date for "desde janeiro".
         - description: a short label for what was bought, paid or received, in Portuguese (e.g. "Celular", "Uber", "Salário"). Null only when the note names nothing.
-        - category_id: the id of the best-matching category from the given list. Null for a transfer.
+        - category_id: the id of the best-matching category from the given list whose type equals the transaction type ("income" or "expense"). Null for a transfer or when no category of that type fits.
         - goal_id: the id of a goal from the given list. Required for a transfer; for an expense only when the money is taken out of that goal; null for income.
         - installments_count: the number of installments, only for an expense of kind "transaction" whose amount is split ("em 12x", "parcelado em 3 vezes", "3 parcelas a cada 15 dias"). Otherwise null. Always null for income, transfer and kind "recurring".
         - period_unit, period_interval: for a split, the time between installments; for kind "recurring", the time between occurrences. Otherwise null. period_unit is day, week, month or year, "month" unless the note says otherwise. period_interval is how many period_units, 1 unless the note says otherwise.
@@ -87,7 +88,7 @@ class TransactionDraftService
             'system_instruction' => self::INSTRUCTIONS,
             'input' => implode("\n\n", [
                 "Today: {$today}",
-                'Categories: '.$this->idNameList($categories),
+                'Categories: '.$this->categoryList($categories),
                 'Goals: '.$this->idNameList($goals),
                 "Note:\n{$rawContext}",
             ]),
@@ -104,23 +105,23 @@ class TransactionDraftService
             throw new HttpException(502, 'O provedor de IA retornou um rascunho inválido. Tente novamente ou preencha a transação manualmente.');
         }
 
-        $categoryIds = $categories->modelKeys();
+        $categoryTypes = $categories->pluck('type', 'id')->all();
         $goalIds = $goals->modelKeys();
 
         if (($draft['kind'] ?? null) === self::KIND_RECURRING) {
             return [
                 'kind' => self::KIND_RECURRING,
-                'draft' => $this->normalizeRecurring($draft, $categoryIds, $goalIds, $today),
+                'draft' => $this->normalizeRecurring($draft, $categoryTypes, $goalIds, $today),
             ];
         }
 
         return [
             'kind' => self::KIND_TRANSACTION,
-            'draft' => $this->normalizeTransaction($draft, $categoryIds, $goalIds, $today),
+            'draft' => $this->normalizeTransaction($draft, $categoryTypes, $goalIds, $today),
         ];
     }
 
-    private function normalizeTransaction(array $draft, array $categoryIds, array $goalIds, string $today): array
+    private function normalizeTransaction(array $draft, array $categoryTypes, array $goalIds, string $today): array
     {
         $type = $this->type($draft);
         $isSplit = $type === Transaction::TYPE_EXPENSE && (int) ($draft['installments_count'] ?? 1) > 1;
@@ -130,7 +131,7 @@ class TransactionDraftService
             'total_amount' => $this->amount($draft),
             'date' => $this->date($draft['date'] ?? null) ?? $today,
             'description' => $this->description($draft),
-            'category_id' => $this->categoryId($draft, $type, $categoryIds),
+            'category_id' => $this->categoryId($draft, $type, $categoryTypes),
             'goal_id' => $this->goalId($draft, $type, $goalIds),
             'installments_count' => $isSplit ? min((int) $draft['installments_count'], 120) : null,
             'period_unit' => $isSplit ? $this->periodUnit($draft) : null,
@@ -138,7 +139,7 @@ class TransactionDraftService
         ];
     }
 
-    private function normalizeRecurring(array $draft, array $categoryIds, array $goalIds, string $today): array
+    private function normalizeRecurring(array $draft, array $categoryTypes, array $goalIds, string $today): array
     {
         $type = $this->type($draft);
         $startDate = $this->startDate($draft, $today);
@@ -146,7 +147,7 @@ class TransactionDraftService
 
         return [
             'type' => $type,
-            'category_id' => $this->categoryId($draft, $type, $categoryIds),
+            'category_id' => $this->categoryId($draft, $type, $categoryTypes),
             'goal_id' => $this->goalId($draft, $type, $goalIds),
             'description' => $this->description($draft),
             'amount' => $this->amount($draft),
@@ -210,11 +211,11 @@ class TransactionDraftService
         return $description === '' ? null : $description;
     }
 
-    private function categoryId(array $draft, string $type, array $categoryIds): ?int
+    private function categoryId(array $draft, string $type, array $categoryTypes): ?int
     {
-        return $type !== Transaction::TYPE_TRANSFER && in_array($draft['category_id'] ?? null, $categoryIds, true)
-            ? $draft['category_id']
-            : null;
+        $id = $draft['category_id'] ?? null;
+
+        return is_int($id) && ($categoryTypes[$id] ?? null) === $type ? $id : null;
     }
 
     private function goalId(array $draft, string $type, array $goalIds): ?int
@@ -234,6 +235,18 @@ class TransactionDraftService
         $interval = (int) ($draft['period_interval'] ?? 0);
 
         return $interval >= 1 && $interval <= 365 ? $interval : null;
+    }
+
+    private function categoryList(Collection $categories): string
+    {
+        return json_encode(
+            $categories->map(fn (Category $category): array => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'type' => $category->type,
+            ])->values(),
+            JSON_UNESCAPED_UNICODE,
+        );
     }
 
     private function idNameList(Collection $models): string

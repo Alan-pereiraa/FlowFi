@@ -10,6 +10,7 @@ class TransactionUpdate {
     this.goalId,
     this.description,
     this.schedule,
+    this.confirmOverLimit = false,
   });
 
   final int? categoryId;
@@ -19,4 +20,6 @@ class TransactionUpdate {
   final String? description;
 
   final TransactionSchedule? schedule;
+
+  final bool confirmOverLimit;
 }

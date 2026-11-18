@@ -12,6 +12,10 @@ class NotificationCard extends StatelessWidget {
 
   static const _subjectIcons = {
     'category_limit_warning': Icons.data_usage,
+    'category_limit_near': Icons.data_usage,
+    'category_limit_reached': Icons.data_usage,
+    'category_limit_exceeded': Icons.error_outline,
+    'category_goal_reached': Icons.emoji_events_outlined,
     'installment_due_soon': Icons.payments_outlined,
     'installment_overdue': Icons.event_busy,
     'goal_deadline': Icons.savings,

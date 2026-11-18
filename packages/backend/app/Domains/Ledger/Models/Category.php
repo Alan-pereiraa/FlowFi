@@ -14,11 +14,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['user_id', 'name', 'icon', 'color', 'limit_amount'])]
+#[Fillable(['user_id', 'name', 'type', 'icon', 'color', 'limit_amount'])]
 #[UseFactory(CategoryFactory::class)]
 class Category extends Model implements HasAppearance
 {
     use HasFactory, SoftDeletes;
+
+    public const string TYPE_INCOME = 'income';
+
+    public const string TYPE_EXPENSE = 'expense';
+
+    public const array TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE];
+
+    public function isIncome(): bool
+    {
+        return $this->type === self::TYPE_INCOME;
+    }
 
     protected function casts(): array
     {

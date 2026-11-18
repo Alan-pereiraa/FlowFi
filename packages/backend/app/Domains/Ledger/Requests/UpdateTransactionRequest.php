@@ -36,6 +36,7 @@ class UpdateTransactionRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
+                    ->where('type', $type)
                     ->whereNull('deleted_at'),
             ],
             'goal_id' => [
@@ -64,6 +65,8 @@ class UpdateTransactionRequest extends FormRequest
             'installments.*.amount' => ['required_with:installments', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required_with:installments', 'date_format:Y-m-d'],
 
+            'confirm_over_limit' => ['sometimes', 'boolean'],
+
             'installments_count' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120'],
             'period_unit' => ['sometimes', Rule::prohibitedIf(! $isExpense), 'nullable', 'string', Rule::in(Transaction::PERIOD_UNITS)],
             'period_interval' => ['sometimes', Rule::prohibitedIf(! $isExpense), 'nullable', 'integer', 'min:1', 'max:365'],
@@ -76,6 +79,7 @@ class UpdateTransactionRequest extends FormRequest
 
         return [
             'installments.prohibited' => $onlyExpenses,
+            'category_id.exists' => 'Escolha uma categoria do mesmo tipo da transação: entrada ou saída.',
             'period_unit.prohibited' => $onlyExpenses,
             'period_interval.prohibited' => $onlyExpenses,
             'category_id.prohibited' => 'Transferências e resgates não usam categoria.',

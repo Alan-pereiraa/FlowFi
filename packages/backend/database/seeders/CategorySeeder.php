@@ -19,7 +19,7 @@ class CategorySeeder extends Seeder
         ['name' => 'Tecnologia', 'icon' => 'laptop', 'color' => '#26C6DA'],
         ['name' => 'Família', 'icon' => 'family_restroom', 'color' => '#66BB6A'],
         ['name' => 'Viagem', 'icon' => 'flight', 'color' => '#5C6BC0'],
-        ['name' => 'Salário', 'icon' => 'attach_money', 'color' => '#2E7D32'],
+        ['name' => 'Salário', 'icon' => 'attach_money', 'color' => '#2E7D32', 'type' => Category::TYPE_INCOME],
         ['name' => 'Investimentos', 'icon' => 'trending_up', 'color' => '#00897B'],
     ];
 
@@ -29,7 +29,11 @@ class CategorySeeder extends Seeder
             foreach (self::DEFAULTS as $category) {
                 Category::firstOrCreate(
                     ['user_id' => $user->id, 'name' => $category['name']],
-                    ['icon' => $category['icon'], 'color' => $category['color']],
+                    [
+                        'icon' => $category['icon'],
+                        'color' => $category['color'],
+                        'type' => $category['type'] ?? Category::TYPE_EXPENSE,
+                    ],
                 );
             }
         });

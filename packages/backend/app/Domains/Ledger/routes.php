@@ -11,6 +11,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['goals' => 'id'])
         ->where(['id' => '[0-9]+']);
 
+    Route::get('categories/usage', [CategoryController::class, 'usage']);
+
     Route::apiResource('categories', CategoryController::class)
         ->parameters(['categories' => 'id'])
         ->where(['id' => '[0-9]+']);

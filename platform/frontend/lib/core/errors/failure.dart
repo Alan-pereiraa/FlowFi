@@ -9,7 +9,12 @@ sealed class Failure implements Exception {
     null => const NetworkFailure(),
     401 => const UnauthorizedFailure(),
     404 => const NotFoundFailure(),
-    422 => ValidationFailure(message: e.message, fieldErrors: e.fieldErrors),
+    422 => ValidationFailure(
+      message: e.message,
+      fieldErrors: e.fieldErrors,
+      code: e.code,
+      details: e.details,
+    ),
     429 => RateLimitedFailure(retryAfter: e.retryAfter),
     502 || 503 => UnexpectedFailure(message: e.message),
     _ => const UnexpectedFailure(),
@@ -25,10 +30,21 @@ final class NotFoundFailure extends Failure {
 }
 
 final class ValidationFailure extends Failure {
-  const ValidationFailure({this.message, this.fieldErrors = const {}});
+  const ValidationFailure({
+    this.message,
+    this.fieldErrors = const {},
+    this.code,
+    this.details = const {},
+  });
+
+  static const categoryLimitExceeded = 'category_limit_exceeded';
 
   final String? message;
   final Map<String, List<String>> fieldErrors;
+  final String? code;
+  final Map<String, dynamic> details;
+
+  bool get isCategoryLimitExceeded => code == categoryLimitExceeded;
 
   String? firstErrorFor(String field) => fieldErrors[field]?.firstOrNull;
 }

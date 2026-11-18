@@ -33,7 +33,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
     final key =
         '${month.year.toString().padLeft(4, '0')}-'
         '${month.month.toString().padLeft(2, '0')}';
-    final totals = await guardApi(() => _api.spendingByCategory(key));
+    final totals = await guardApi(() => _api.usage(key));
     return {
       for (final entry in totals.entries)
         entry.key: cents.Money.parseApi(entry.value) ?? 0,
@@ -49,7 +49,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Category> create(CategoryDraft data) async {
     final dto = await guardApi(
-      () => _api.createCategory(CategoryDraftDto(data)),
+      () => _api.createCategory(CategoryDraftDto(data, includeType: true)),
     );
     return dto.toEntity();
   }

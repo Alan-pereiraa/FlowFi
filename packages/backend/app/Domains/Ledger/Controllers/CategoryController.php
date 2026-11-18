@@ -2,9 +2,11 @@
 
 namespace App\Domains\Ledger\Controllers;
 
+use App\Domains\Ledger\Requests\CategoryUsageRequest;
 use App\Domains\Ledger\Requests\StoreCategoryRequest;
 use App\Domains\Ledger\Requests\UpdateCategoryRequest;
 use App\Domains\Ledger\Resources\CategoryResource;
+use App\Domains\Ledger\Resources\CategoryUsageResource;
 use App\Domains\Ledger\Services\CategoryService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +39,31 @@ class CategoryController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         return CategoryResource::collection($this->categories->list($request->user()));
+    }
+
+    #[OA\Get(
+        path: '/categories/usage',
+        operationId: 'categoryUsage',
+        tags: ['Categorias'],
+        summary: 'Uso das categorias no mês',
+        description: 'Quanto cada categoria do usuário já usou no mês. Categorias de saída somam as parcelas com vencimento no mês; categorias de entrada somam as entradas pela data. Para saídas o limite é um teto; para entradas é uma meta e `used_percent` pode passar de 100.',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/CategoryUsageMonth'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Uso de cada categoria no mês',
+                content: new OA\JsonContent(ref: '#/components/schemas/CategoryUsageResponse'),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+        ],
+    )]
+    public function usage(CategoryUsageRequest $request): CategoryUsageResource
+    {
+        return new CategoryUsageResource($this->categories->usageInMonth($request->user(), $request->validated('month')));
     }
 
     #[OA\Post(

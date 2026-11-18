@@ -27,13 +27,13 @@ class CategoryCard extends StatelessWidget {
     final color = AppPalette.parse(category.color);
 
     final spent = spentCents;
-    final nearLimit = spent != null && category.isNearLimit(spent);
     final overLimit = spent != null && category.isOverLimit(spent);
     final accent = color;
     final usageColor = overLimit ? scheme.error : accent;
     final limitText = category.limitCents == null
-        ? 'Sem limite'
+        ? (category.isIncome ? 'Sem meta' : 'Sem limite')
         : Money.format(category.limitCents!);
+    final status = spent == null ? null : _status(spent, scheme, accent);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -79,9 +79,12 @@ class CategoryCard extends StatelessWidget {
               const SizedBox(height: 12),
               if (spent == null)
                 Text(
-                  category.limitCents == null
-                      ? 'Sem limite mensal'
-                      : 'Limite mensal $limitText',
+                  switch ((category.isIncome, category.limitCents == null)) {
+                    (true, true) => 'Sem meta mensal',
+                    (true, false) => 'Meta mensal $limitText',
+                    (false, true) => 'Sem limite mensal',
+                    (false, false) => 'Limite mensal $limitText',
+                  },
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -129,20 +132,18 @@ class CategoryCard extends StatelessWidget {
                   value: (category.usedPercent(spent) ?? 0) / 100,
                   color: usageColor,
                 ),
-                if (nearLimit) ...[
+                if (status != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        size: 16,
-                        color: scheme.error,
-                      ),
+                      Icon(status.icon, size: 16, color: status.color),
                       const SizedBox(width: 4),
-                      Text(
-                        overLimit ? 'Limite ultrapassado' : 'Próximo do limite',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.error,
+                      Expanded(
+                        child: Text(
+                          status.label,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: status.color,
+                          ),
                         ),
                       ),
                     ],
@@ -155,4 +156,39 @@ class CategoryCard extends StatelessWidget {
       ),
     );
   }
+
+  _CardStatus? _status(int spent, ColorScheme scheme, Color accent) {
+    if (category.reachedGoal(spent)) {
+      return (
+        icon: Icons.check_circle_rounded,
+        color: accent,
+        label: 'Meta atingida',
+      );
+    }
+    if (category.isOverLimit(spent)) {
+      return (
+        icon: Icons.error_rounded,
+        color: scheme.error,
+        label:
+            'Limite estourado em ${Money.format(spent - category.limitCents!)}',
+      );
+    }
+    if (category.isAtLimit(spent)) {
+      return (
+        icon: Icons.warning_amber_rounded,
+        color: scheme.error,
+        label: 'Limite atingido',
+      );
+    }
+    if (category.isNearLimit(spent)) {
+      return (
+        icon: Icons.warning_amber_rounded,
+        color: scheme.error,
+        label: 'Próximo do limite',
+      );
+    }
+    return null;
+  }
 }
+
+typedef _CardStatus = ({IconData icon, Color color, String label});

@@ -21,6 +21,7 @@ class StoreTransactionRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
+                    ->where('type', (string) $this->input('type'))
                     ->whereNull('deleted_at'),
             ],
             'goal_id' => [
@@ -48,6 +49,8 @@ class StoreTransactionRequest extends FormRequest
             'installments.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
             'installments.*.date' => ['required', 'date_format:Y-m-d'],
 
+            'confirm_over_limit' => ['sometimes', 'boolean'],
+
             'installments_count' => ['nullable', 'integer', 'min:1', 'max:120'],
             'period_unit' => [
                 'nullable',
@@ -70,6 +73,7 @@ class StoreTransactionRequest extends FormRequest
 
         return [
             'installments.prohibited_if' => $onlyExpenses,
+            'category_id.exists' => 'Escolha uma categoria do mesmo tipo da transação: entrada ou saída.',
             'period_unit.prohibited_if' => $onlyExpenses,
             'period_interval.prohibited_if' => $onlyExpenses,
             'category_id.prohibited_if' => 'Transferências e resgates não usam categoria.',

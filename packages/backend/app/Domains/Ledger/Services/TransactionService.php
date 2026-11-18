@@ -61,7 +61,12 @@ class TransactionService
             $plan = $this->planner->planFromInput($data);
 
             if ($data['type'] === Transaction::TYPE_EXPENSE) {
-                $this->categories->ensureInMonthLimit($data['category_id'] ?? null, $plan['rows'], null);
+                $this->categories->ensureInMonthLimit(
+                    $data['category_id'] ?? null,
+                    $plan['rows'],
+                    null,
+                    (bool) ($data['confirm_over_limit'] ?? false),
+                );
             }
 
             if ($data['type'] === Transaction::TYPE_TRANSFER) {
@@ -84,7 +89,10 @@ class TransactionService
 
             if ($transaction->type === Transaction::TYPE_EXPENSE) {
                 $this->settleInstallments($this->transactions->replaceInstallments($transaction, $plan['rows']));
-                $this->categories->warnIfNearLimit($user, $transaction->category_id);
+            }
+
+            if ($this->countsTowardCategory($transaction)) {
+                $this->categories->notifyLimitStatus($user, $transaction->category_id);
             }
 
             $effect = $this->goalEffect($transaction);
@@ -129,15 +137,24 @@ class TransactionService
                 $this->moveGoalEffect($oldGoalId, $oldEffect, $transaction);
             }
 
-            if ($transaction->type === Transaction::TYPE_EXPENSE && ($replan || array_key_exists('category_id', $data))) {
+            $categoryChanged = array_key_exists('category_id', $data) || array_key_exists('date', $data);
+
+            if ($transaction->type === Transaction::TYPE_EXPENSE && ($replan || $categoryChanged)) {
                 $rows = $transaction->installments->map(fn (Installment $installment) => [
                     'date' => CarbonImmutable::parse($installment->date),
                     'amount' => Money::toCents($installment->amount),
                 ])->all();
 
-                $this->categories->ensureInMonthLimit($transaction->category_id, $rows, $transaction->id);
+                $this->categories->ensureInMonthLimit(
+                    $transaction->category_id,
+                    $rows,
+                    $transaction->id,
+                    (bool) ($data['confirm_over_limit'] ?? false),
+                );
+            }
 
-                $this->categories->warnIfNearLimit($transaction->user, $transaction->category_id);
+            if ($this->countsTowardCategory($transaction) && ($replan || $categoryChanged)) {
+                $this->categories->notifyLimitStatus($transaction->user, $transaction->category_id);
             }
 
             return $transaction->load('installments');
@@ -299,6 +316,11 @@ class TransactionService
             'period_unit' => array_key_exists('period_unit', $data) ? $data['period_unit'] : $transaction->period_unit,
             'period_interval' => array_key_exists('period_interval', $data) ? $data['period_interval'] : $transaction->period_interval,
         ];
+    }
+
+    private function countsTowardCategory(Transaction $transaction): bool
+    {
+        return in_array($transaction->type, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME], true);
     }
 
     private function goalEffect(Transaction $transaction): int

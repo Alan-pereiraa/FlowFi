@@ -17,6 +17,7 @@ class StoreRecurringTransactionRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
+                    ->where('type', (string) $this->input('type'))
                     ->whereNull('deleted_at'),
             ],
             'goal_id' => [
@@ -44,6 +45,7 @@ class StoreRecurringTransactionRequest extends FormRequest
     {
         return [
             'type.in' => 'Escolha entrada, saída ou transferência. Resgates não podem ser recorrentes.',
+            'category_id.exists' => 'Escolha uma categoria do mesmo tipo da transação: entrada ou saída.',
         ];
     }
 }

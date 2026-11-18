@@ -16,7 +16,7 @@ final categoryFormControllerProvider =
     );
 
 class CategoryFormController extends Notifier<CategoryFormState> {
-  static const _fields = ['name', 'icon', 'color', 'limit_amount'];
+  static const _fields = ['name', 'type', 'icon', 'color', 'limit_amount'];
 
   @override
   CategoryFormState build() => const CategoryFormState();

@@ -2,15 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { enableSemantics, fillField, shown, signInThroughUi, tap } from '../support/ui';
 
-// Category form inputs, in widget order: the limit field (LimitStepper), then the name (CategoryNameField).
 const limitField = (page: Page) => page.getByRole('textbox').nth(0);
 const nameField = (page: Page) => page.getByRole('textbox').nth(1);
 
-// CategoryCard holds the "Editar" button, so its texts merge into the card's aria-label (role=group).
-// With the newlines collapsed: "<name> <spent> / <limit> <percent>[ <warning>]".
 const categoryCard = (page: Page, label: string) => page.getByRole('group', { name: label, exact: true });
 
-// The device month and the backend month agree because the config pins the browser to America/Sao_Paulo.
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 
 async function openCategories(page: Page) {
@@ -25,7 +21,7 @@ async function seedUser(firstName: string) {
 }
 
 async function seedCategory(token: string, body: { name: string; limit_amount?: number | null }) {
-  const { data } = await api.post(token, '/categories', { icon: 'local_offer', color: '#00530C', ...body });
+  const { data } = await api.post(token, '/categories', { icon: 'local_offer', color: '#00530C', type: 'expense', ...body });
   return data as { id: number };
 }
 
@@ -50,7 +46,6 @@ test('creates a category with an icon, a colour and a limit set with the stepper
 
   await tap(page.getByRole('button', { name: 'Aumentar limite' }));
   await tap(page.getByRole('button', { name: 'Aumentar limite' }));
-  // The engine writes the DOM value only while the field has focus.
   await tap(limitField(page));
   await expect(limitField(page)).toHaveValue('100,00');
 
@@ -63,7 +58,6 @@ test('creates a category with an icon, a colour and a limit set with the stepper
 
   await tap(page.getByRole('button', { name: 'Escolher cor' }));
   await expect(page.getByText('Escolha uma cor')).toBeVisible();
-  // Swatches are all named "Cor", in AppPalette.hexes order: index 5 is #42A5F5.
   await tap(page.getByRole('button', { name: 'Cor', exact: true }).nth(5));
   await expect(page.getByText('Escolha uma cor')).toBeHidden();
 
@@ -73,7 +67,6 @@ test('creates a category with an icon, a colour and a limit set with the stepper
   await expect(page).toHaveURL(/#\/categories$/);
   await expect(categoryCard(page, 'Mercado R$ 0,00 / R$ 100,00 0%')).toBeVisible();
 
-  // The icon and colour have no text on the card, so check what the sheets saved.
   const { data } = await api.get(token, '/categories');
   expect(data).toEqual([
     expect.objectContaining({ name: 'Mercado', icon: 'shopping_cart', color: '#42A5F5' }),
@@ -100,7 +93,6 @@ test('a duplicate name shows the backend error', async ({ page }) => {
   await openCategories(page);
 
   await tap(page.getByRole('button', { name: 'Nova Categoria' }));
-  // The uniqueness check ignores case (UniqueIgnoringCase).
   await fillField(nameField(page), 'mercado');
   await tap(page.getByRole('button', { name: 'Salvar' }));
 
@@ -124,7 +116,6 @@ test('editing the name and limit updates the card', async ({ page }) => {
   await expect(limitField(page)).toHaveValue('200,00');
 
   await fillField(nameField(page), 'Streaming');
-  // Typed digits are cents: 35000 → 350,00.
   await fillField(limitField(page), '35000', '350,00');
   await tap(page.getByRole('button', { name: 'Salvar' }));
 
@@ -144,7 +135,6 @@ test('removing a category after the confirm dialog removes its card', async ({ p
   await tap(page.getByRole('button', { name: 'Remover', exact: true }));
   await expect(page.getByText('Remover categoria?')).toBeVisible();
   await expect(page.getByText(/as transações dela ficam sem categoria/)).toBeVisible();
-  // The dialog's "Remover" comes after the page's in the tree (if the page's is exposed at all).
   await tap(page.getByRole('button', { name: 'Remover', exact: true }).last());
 
   await expect(shown(page, 'Categoria removida.')).toBeVisible();
@@ -156,7 +146,6 @@ test('removing a category after the confirm dialog removes its card', async ({ p
 test("a card shows this month's spend, the percent and the limit warnings", async ({ page }) => {
   const { email, token, firstName } = await seedUser('Kika');
   const near = await seedCategory(token, { name: 'Restaurantes', limit_amount: 1000 });
-  // An expense over the limit is rejected (422), but lowering the limit afterwards is not checked.
   const over = await seedCategory(token, { name: 'Viagens', limit_amount: 1000 });
   for (const [category, amount] of [[near, 850], [over, 150]] as const) {
     await api.post(token, '/transactions', {
@@ -172,7 +161,7 @@ test("a card shows this month's spend, the percent and the limit warnings", asyn
   await openCategories(page);
 
   await expect(categoryCard(page, 'Restaurantes R$ 850,00 / R$ 1.000,00 85% Próximo do limite')).toBeVisible();
-  await expect(categoryCard(page, 'Viagens R$ 150,00 / R$ 100,00 150% Limite ultrapassado')).toBeVisible();
+  await expect(categoryCard(page, 'Viagens R$ 150,00 / R$ 100,00 150% Limite estourado em R$ 50,00')).toBeVisible();
 });
 
 test('reloading the edit page loads the category by id', async ({ page }) => {
@@ -183,7 +172,6 @@ test('reloading the edit page loads the category by id', async ({ page }) => {
   await tap(page.getByRole('button', { name: 'Editar', exact: true }));
   await expect(page).toHaveURL(new RegExp(`#/categories/${id}/edit`));
 
-  // The reload drops the Category passed as `extra`, so the page fetches GET /categories/{id}.
   await page.reload();
   await enableSemantics(page);
 
@@ -196,7 +184,6 @@ test('reloading the edit page loads the category by id', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Remover', exact: true })).toBeVisible();
 });
 
-// category_form_page.dart:55-63 fills the form from the `extra` the list passed and never re-fetches.
 test.fixme('the edit form shows the saved category, not the copy from the list', async ({ page }) => {
   const { email, token, firstName } = await seedUser('Malu');
   const { id } = await seedCategory(token, { name: 'Padaria' });

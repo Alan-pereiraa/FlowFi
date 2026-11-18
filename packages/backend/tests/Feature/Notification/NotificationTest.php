@@ -49,7 +49,7 @@ class NotificationTest extends TestCase
         $this->expense($token, $category, '0.01');
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
-            'subject' => 'category_limit_warning',
+            'subject' => 'category_limit_near',
             'subject_id' => $category->id,
         ]);
 
@@ -80,7 +80,7 @@ class NotificationTest extends TestCase
         $this->expense($token, $category, '10.00', '2026-09-16');
         $this->expense($token, $category, '20.00', '2026-09-10');
         $this->expense($token, $category, '30.00', '2026-09-30');
-        $this->expense($token, $category, '40.00', '2026-09-10', 'income');
+        $this->expense($token, Category::factory()->income()->for($user)->create(['limit_amount' => null]), '40.00', '2026-09-10', 'income');
         $this->travelTo('2026-09-15 12:00:00');
 
         $reminders = app(ReminderService::class);

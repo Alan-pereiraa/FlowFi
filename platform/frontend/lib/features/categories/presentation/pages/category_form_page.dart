@@ -14,24 +14,29 @@ import '../../../../shared/widgets/appearance_picker.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/category_draft.dart';
+import '../../domain/entities/category_type.dart';
 import '../category_routes.dart';
 import '../controllers/category_form_state.dart';
 import '../widgets/category_name_field.dart';
+import '../widgets/category_type_selector.dart';
 import '../widgets/limit_stepper.dart';
 
 class CategoryFormPage extends ConsumerStatefulWidget {
-  const CategoryFormPage.create({super.key})
-    : categoryId = null,
-      initial = null;
+  const CategoryFormPage.create({
+    super.key,
+    this.initialType = CategoryType.expense,
+  }) : categoryId = null,
+       initial = null;
 
   const CategoryFormPage.edit({
     super.key,
     required int this.categoryId,
     this.initial,
-  });
+  }) : initialType = CategoryType.expense;
 
   final int? categoryId;
   final Category? initial;
+  final CategoryType initialType;
 
   bool get isEdit => categoryId != null;
 
@@ -44,6 +49,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
   final _name = TextEditingController();
 
   int _limitCents = 0;
+  late CategoryType _type = widget.initialType;
   String? _icon;
   String? _color;
   bool _filled = false;
@@ -73,6 +79,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     _filled = true;
     _name.text = category.name;
     _limitCents = category.limitCents ?? 0;
+    _type = category.type;
     _icon = category.icon;
     _color = category.color;
   }
@@ -95,6 +102,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     name: _name.text.trim(),
     icon: _icon ?? AppIcons.defaultCategory,
     color: _color ?? AppPalette.defaultHex,
+    type: _type,
     limitCents: _limitCents > 0 ? _limitCents : null,
   );
 
@@ -230,11 +238,38 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 24),
+                    CategoryTypeSelector(
+                      value: _type,
+                      onChanged: widget.isEdit || state.busy
+                          ? null
+                          : (type) => setState(() => _type = type),
+                      helperText: widget.isEdit
+                          ? 'O tipo não pode ser alterado.'
+                          : _type == CategoryType.income
+                          ? 'O valor definido é uma meta: entradas acima dela são aceitas.'
+                          : 'O valor definido é um teto: o app pede confirmação para passar dele.',
+                    ),
+                    if (state.fieldErrors['type'] case final message?) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        message,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
                     LimitStepper(
                       cents: _limitCents,
-                      caption: widget.isEdit
-                          ? 'Editar Limite'
-                          : 'Adicionar Limite',
+                      amountColor: _type == CategoryType.expense
+                          ? theme.colorScheme.error
+                          : null,
+                      caption: switch ((widget.isEdit, _type)) {
+                        (true, CategoryType.income) => 'Editar Meta',
+                        (false, CategoryType.income) => 'Adicionar Meta',
+                        (true, CategoryType.expense) => 'Editar Limite',
+                        (false, CategoryType.expense) => 'Adicionar Limite',
+                      },
                       errorText: state.fieldErrors['limit_amount'],
                       enabled: !state.busy,
                       onChanged: (cents) => setState(() => _limitCents = cents),

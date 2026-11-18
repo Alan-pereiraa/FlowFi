@@ -13,6 +13,7 @@ class LimitStepper extends StatefulWidget {
     this.errorText,
     this.step = 5000,
     this.enabled = true,
+    this.amountColor,
   });
 
   final int cents;
@@ -24,6 +25,7 @@ class LimitStepper extends StatefulWidget {
 
   final int step;
   final bool enabled;
+  final Color? amountColor;
 
   @override
   State<LimitStepper> createState() => _LimitStepperState();
@@ -83,6 +85,7 @@ class _LimitStepperState extends State<LimitStepper> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final valueColor = widget.amountColor ?? scheme.primary;
 
     final caption = Text(
       widget.caption,
@@ -90,7 +93,7 @@ class _LimitStepperState extends State<LimitStepper> {
       style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
     );
     final amountStyle = theme.textTheme.displaySmall?.copyWith(
-      color: scheme.primary,
+      color: valueColor,
     );
 
     return Column(
@@ -103,7 +106,7 @@ class _LimitStepperState extends State<LimitStepper> {
             Text(
               'R\$',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: scheme.primary,
+                color: valueColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -126,7 +129,7 @@ class _LimitStepperState extends State<LimitStepper> {
                   inputFormatters: const [CurrencyInputFormatter()],
                   onChanged: (text) =>
                       widget.onChanged(CurrencyInputFormatter.centsOf(text)),
-                  cursorColor: scheme.primary,
+                  cursorColor: valueColor,
                   style: amountStyle,
                   decoration: InputDecoration(
                     filled: false,

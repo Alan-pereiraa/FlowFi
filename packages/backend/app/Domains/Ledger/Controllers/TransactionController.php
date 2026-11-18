@@ -98,7 +98,7 @@ class TransactionController extends Controller
         operationId: 'createTransaction',
         tags: ['Transações'],
         summary: 'Criar transação',
-        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma despesa ultrapassaria o limite mensal da categoria, quando a meta não tem saldo suficiente para a transação, quando uma transferência ultrapassa o saldo disponível (entradas realizadas menos saídas pagas e transferências, mais resgates), ou quando um resgate é maior que o valor guardado na meta.',
+        description: 'Só saídas geram parcelas: as com data até hoje (America/Sao_Paulo) nascem pagas e as futuras nascem pendentes. Entradas e transferências não geram parcelas. Também retorna 422 quando uma saída ultrapassaria o limite mensal da categoria (com `code: category_limit_exceeded`; reenvie com `confirm_over_limit: true` para salvar mesmo assim), quando a categoria não é do mesmo tipo da transação, quando a meta não tem saldo suficiente para a transação, quando uma transferência ultrapassa o saldo disponível (entradas realizadas menos saídas pagas e transferências, mais resgates), ou quando um resgate é maior que o valor guardado na meta.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -111,7 +111,7 @@ class TransactionController extends Controller
                 content: new OA\JsonContent(ref: '#/components/schemas/TransactionResponse'),
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/CategoryLimitExceededResponse'),
         ],
     )]
     public function store(StoreTransactionRequest $request): JsonResponse
@@ -167,7 +167,7 @@ class TransactionController extends Controller
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/CategoryLimitExceededResponse'),
         ],
     )]
     #[OA\Patch(
@@ -192,7 +192,7 @@ class TransactionController extends Controller
             ),
             new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedResponse'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFoundResponse'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationErrorResponse'),
+            new OA\Response(response: 422, ref: '#/components/responses/CategoryLimitExceededResponse'),
         ],
     )]
     public function update(UpdateTransactionRequest $request, int $id): TransactionResource
