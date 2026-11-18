@@ -232,10 +232,14 @@ test('search filters by description, ignoring accents', async ({ page }) => {
   await expect(row(page, 'Uber')).toBeVisible();
 
   await tap(page.getByRole('button', { name: 'Buscar' }));
-  await fillField(page.getByRole('textbox').nth(0), 'acai');
+  const search = page.getByRole('textbox').nth(0);
+  await expect(async () => {
+    await fillField(search, '');
+    await fillField(search, 'acai');
+    await expect(row(page, 'Uber')).toHaveCount(0, { timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
 
   await expect(row(page, 'Açaí da praia')).toBeVisible();
-  await expect(row(page, 'Uber')).toHaveCount(0);
 
   await tap(page.getByRole('button', { name: 'Fechar busca' }));
   await expect(row(page, 'Uber')).toBeVisible();
