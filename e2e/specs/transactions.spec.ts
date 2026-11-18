@@ -2,8 +2,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { api } from '../support/api';
 import { fillField, shown, signInThroughUi, tap } from '../support/ui';
 
-// Form inputs, in widget order (transaction_form_page.dart): MoneyAmountField, then Descrição, then Data.
-// VoiceFillCard, shown above them on create, has no text field.
 const AMOUNT = 0;
 const DESCRIPTION = 1;
 const DATE = 2;
@@ -14,24 +12,19 @@ const MONTHS = [
   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
 ];
 
-// "YYYY-MM-DD" in São Paulo, shifted by whole days. The browser and the backend both use this zone.
 function sp(offsetDays = 0): string {
   const [y, m, d] = new Date().toLocaleDateString('en-CA', { timeZone: TZ }).split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d + offsetDays)).toISOString().slice(0, 10);
 }
 const parts = (ymd: string) => ymd.split('-').map(Number);
-// TransactionsPage day header for today: "Hoje, 15 de Novembro" (Dates.dayHeader + _capitalizeMonth).
 const todayHeader = () => {
   const [, m, d] = parts(sp());
   const month = MONTHS[m - 1];
   return `Hoje, ${d} de ${month[0].toUpperCase()}${month.slice(1)}`;
 };
 
-// Spaces become \s: Money.format puts a no-break space after R$.
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s');
 
-// A TransactionTile is a Card, so its texts merge into one node. With a "Pagar" button inside it
-// becomes role=group named by aria-label; without one it is a plain button. Match either by its texts.
 function row(page: Page, ...texts: string[]): Locator {
   const name = new RegExp(texts.map(escape).join('.*'));
   return page.getByRole('button', { name }).or(page.getByRole('group', { name }));
@@ -64,8 +57,13 @@ async function seedUser(page: Page, firstName: string) {
   return { ...user, firstName, signIn: () => signInThroughUi(page, { email: user.email, firstName }) };
 }
 
-async function seedCategory(token: string, name: string, limit_amount: number | null = null) {
-  const { data } = await api.post(token, '/categories', { name, icon: 'local_offer', color: '#00530C', limit_amount });
+async function seedCategory(
+  token: string,
+  name: string,
+  limit_amount: number | null = null,
+  type: 'income' | 'expense' = 'expense',
+) {
+  const { data } = await api.post(token, '/categories', { name, type, icon: 'local_offer', color: '#00530C', limit_amount });
   return data.id as number;
 }
 
@@ -93,7 +91,7 @@ const seedSplit = (token: string, description: string, total_amount: number) =>
 
 test('creates an income and an expense with a category; both show under today', async ({ page }) => {
   const user = await seedUser(page, 'Lia');
-  await seedCategory(user.token, 'Salário');
+  await seedCategory(user.token, 'Salário', null, 'income');
   await seedCategory(user.token, 'Mercado');
   await user.signIn();
   await openTransactions(page);
@@ -143,7 +141,6 @@ test('a 3x split expense lists 1/3 paid today and the next two pending', async (
 
   await expect(page.getByText(todayHeader())).toBeVisible();
   await expect(row(page, 'Geladeira', '1/3 • Paga', '- R$ 30,00')).toBeVisible();
-  // "Este Mês" hides the installments due in later months.
   await expect(row(page, 'Geladeira', '2/3')).toHaveCount(0);
 
   await turnOffThisMonth(page);
@@ -207,7 +204,6 @@ test('the category menu shows only that category', async ({ page }) => {
 
 test('"Vencidas" shows only past-due pending installments', async ({ page }) => {
   const user = await seedUser(page, 'Iris');
-  // A past-dated expense is born paid; unpaying it leaves a pending installment before today.
   const late = await seedTransaction(user.token, {
     type: 'expense',
     description: 'Conta de luz',
@@ -224,7 +220,6 @@ test('"Vencidas" shows only past-due pending installments', async ({ page }) => 
 
   await expect(row(page, 'Conta de luz', 'Vencida', '- R$ 120,00')).toBeVisible();
   await expect(row(page, 'Café')).toHaveCount(0);
-  // Turning "Vencidas" on also turns "Este Mês" off (TransactionListController.toggleOverdueOnly).
   await expect(page.getByRole('checkbox', { name: 'Este Mês' })).not.toBeChecked();
 });
 
@@ -237,7 +232,6 @@ test('search filters by description, ignoring accents', async ({ page }) => {
   await expect(row(page, 'Uber')).toBeVisible();
 
   await tap(page.getByRole('button', { name: 'Buscar' }));
-  // The search field is the only text field on the list page.
   await fillField(page.getByRole('textbox').nth(0), 'acai');
 
   await expect(row(page, 'Açaí da praia')).toBeVisible();
@@ -257,7 +251,6 @@ test('edits a description from the row, then deletes the transaction after confi
   await expect(page).toHaveURL(/#\/transactions\/\d+\/edit/);
   await expect(page.getByText('Editar Transação')).toBeVisible();
   const description = page.getByRole('textbox').nth(DESCRIPTION);
-  // The engine writes the DOM value only while the field has focus.
   await tap(description);
   await expect(description).toHaveValue('Freela');
   await fillField(description, 'Freela do site');
@@ -277,7 +270,7 @@ test('edits a description from the row, then deletes the transaction after confi
   await expect(page.getByText('Nenhuma transação', { exact: true })).toBeVisible();
 });
 
-test('an expense above the category limit is blocked under the amount', async ({ page }) => {
+test('an expense above the category limit asks for confirmation before saving', async ({ page }) => {
   const user = await seedUser(page, 'Teo');
   await seedCategory(user.token, 'Lazer', 100);
   await user.signIn();
@@ -290,7 +283,9 @@ test('an expense above the category limit is blocked under the amount', async ({
 
   const [y, m] = parts(sp());
   const month = `${String(m).padStart(2, '0')}/${y}`;
-  await expect(shown(page, `Esta transação ultrapassa o limite da categoria em ${month}.`)).toBeVisible();
+  const dialog = page.getByRole('alertdialog');
+  await expect(dialog).toContainText(`Esta transação ultrapassa o limite da categoria "Lazer" em R$ 50,00 em ${month}.`);
+  await tap(dialog.getByRole('button', { name: 'Cancelar' }));
   await expect(page).toHaveURL(/#\/transactions\/new/);
 });
 
@@ -303,7 +298,6 @@ test('a transfer to a goal with no income shows the insufficient-balance error',
 
   await tap(page.getByRole('button', { name: 'Transferência', exact: true }));
   await expect(page.getByText('Meta de destino', { exact: false }).first()).toBeVisible();
-  // _GoalOption merges its texts: "Reserva 0% R$ 0,00 de R$ 1.000,00".
   await tap(page.getByRole('button', { name: /^Reserva/ }));
   await typeAmount(page, '5000', '50,00');
   await save(page);
@@ -312,12 +306,7 @@ test('a transfer to a goal with no income shows the insufficient-balance error',
   await expect(page).toHaveURL(/#\/transactions\/new/);
 });
 
-// The transaction form has no "Resgate" segment to pick (TransactionTypeToggle only renders it when the
-// type is already withdrawal), so the withdrawal goes through the goal page. Its client check compares
-// against the balance it loaded; spending the goal down through the API afterwards lets the request
-// reach the backend, which answers with its own message.
 test.describe('withdrawal', () => {
-  // Below 860 px GoalDetailPage stacks its cards, so the inputs read deposit, withdraw, then the edit form.
   test.use({ viewport: { width: 800, height: 1000 } });
   const WITHDRAW = 1;
 
@@ -329,7 +318,6 @@ test.describe('withdrawal', () => {
     await user.signIn();
 
     await tap(page.getByRole('tab', { name: 'Metas' }));
-    // GoalCard's name is "<name>. <saved> de <target>. …".
     await tap(page.getByRole('button', { name: /^Viagem\./ }));
     await expect(page.getByText('O valor volta para o seu saldo. Disponível na meta: R$ 100,00.')).toBeVisible();
 
@@ -357,7 +345,6 @@ test.fixme(
     await expect(page.getByText('Editar Transação')).toBeVisible();
     await expect(page.getByText(/• Paga$/)).toHaveCount(2);
 
-    // Move the date one day within the same month. Material day buttons are named "<day>, <full date>".
     const [, , d] = parts(sp());
     const newDay = d > 1 ? d - 1 : d + 1;
     await tap(page.getByRole('textbox').nth(DATE));
@@ -367,7 +354,6 @@ test.fixme(
     await expect(page).toHaveURL(/#\/transactions$/);
 
     await turnOffThisMonth(page);
-    // Expected: the installment paid early stays paid. Today it comes back as "Pendente".
     await expect(row(page, 'Notebook', '3/3 • Paga')).toBeVisible();
   },
 );
@@ -375,9 +361,6 @@ test.fixme(
 test.fixme(
   'switching to Resgate after turning recurrence on still submits a recurrence and shows a general error (transaction_form_page.dart:114 keeps _recurring)',
   async ({ page }) => {
-    // Not reachable through the UI today: the "Resgate" segment only renders when the type is already
-    // withdrawal (transaction_type_toggle.dart:67), and voice drafts never return a withdrawal.
-    // If a "Resgate" entry point is added, this is the path that breaks.
     const user = await seedUser(page, 'Bia');
     await seedGoal(user.token, 'Reserva');
     await seedTransaction(user.token, { type: 'income', total_amount: 500 });
@@ -392,8 +375,6 @@ test.fixme(
     await typeAmount(page, '1000', '10,00');
     await save(page);
 
-    // Expected: a plain withdrawal is saved. Today POST /recurring-transactions answers 422 type.in, and
-    // "type" is not a mapped field, so the form shows it as a general error.
     await expect(
       shown(page, 'Escolha entrada, saída ou transferência. Resgates não podem ser recorrentes.'),
     ).toHaveCount(0);

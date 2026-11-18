@@ -3,12 +3,9 @@ import { api } from '../support/api';
 import { artisan } from '../support/env';
 import { shown, signInThroughUi, tap } from '../support/ui';
 
-// No device tokens in e2e, so NotificationService::notify stores the row and queues no push job.
-
 const CATEGORY_WARNING = 'Limite da categoria quase atingido';
-const categoryWarning = (name: string) => `Você já gastou mais de 80% do limite da categoria "${name}".`;
+const categoryWarning = (name: string) => `Você já usou 85% do limite da categoria "${name}". Restam R$ 15,00.`;
 
-// The ledger works in São Paulo dates; ReminderService uses UTC, but its windows still cover these offsets.
 function spDate(offsetDays = 0): string {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   const [y, m, d] = today.split('-').map(Number);
@@ -16,24 +13,21 @@ function spDate(offsetDays = 0): string {
 }
 const br = (isoDate: string) => isoDate.split('-').reverse().join('/');
 
-// The bell's tooltip is its accessible name: "Notificações" or "Notificações, N não lidas" (app_shell.dart:49).
 const bell = (page: Page) => page.getByRole('button', { name: /^Notificações/ });
 const badge = (page: Page, count: number) => page.getByRole('button', { name: `Notificações, ${count} não lidas` });
 const noBadge = (page: Page) => page.getByRole('button', { name: /não lidas/ });
 
-// NotificationCard merges into one node labelled "[Não lida. ]title. message" (notification_card.dart:44-51).
-// Unread cards are buttons; read cards are plain labelled nodes.
 const unreadCard = (page: Page, title: string, message: string) =>
   page.getByRole('button', { name: `Não lida. ${title}. ${message}`, exact: true });
 const readCard = (page: Page, title: string, message: string) => shown(page, `${title}. ${message}`, true);
 
-// FilterChip may be exposed as a button or as a checkbox, depending on the Flutter version.
 const chip = (page: Page, label: 'Todas' | 'Não lidas' | 'Lidas') =>
   page.getByRole('button', { name: label, exact: true }).or(page.getByRole('checkbox', { name: label, exact: true }));
 
 async function seedCategoryWarning(token: string, name: string) {
   const { data: category } = await api.post(token, '/categories', {
     name,
+    type: 'expense',
     icon: 'home',
     color: '#4CAF50',
     limit_amount: '100.00',
@@ -108,7 +102,6 @@ test('a pending expense due tomorrow gets one "due soon" reminder, even when the
 test('an unpaid past installment gets one "overdue" reminder', async ({ page }) => {
   const { email, token } = await api.signUp({ firstName: 'Rui' });
   const due = spDate(-3);
-  // Past installments are settled on create, so unpay it to make it overdue.
   const { data: transaction } = await api.post(token, '/transactions', {
     type: 'expense',
     description: 'Aluguel',
@@ -198,7 +191,6 @@ test('filters, tapping a card to mark it read, and "Marcar todas como lidas"', a
 test('swiping a card left and confirming deletes it', async ({ page }) => {
   const { email, token } = await api.signUp({ firstName: 'Uma' });
   await seedCategoryWarning(token, 'Mercado');
-  // Swipe a read card: an unread one is a semantics button, whose click debouncer could turn the drag into a tap.
   await api.patch(token, '/notifications/read');
 
   await signInThroughUi(page, { email, firstName: 'Uma' });
@@ -239,8 +231,6 @@ test('a notification deleted through the API is gone from the list', async ({ pa
 test.fixme('the badge does not refresh when a notification is created while the user stays on the dashboard', async ({
   page,
 }) => {
-  // UnreadCountController refreshes only on sign-in and on return from /notifications (app_shell.dart:52-55),
-  // so saving an expense that crosses 80% of its category limit leaves the bell at 0.
   const { email, token } = await api.signUp({ firstName: 'Wil' });
   await signInThroughUi(page, { email, firstName: 'Wil' });
   await expect(noBadge(page)).toHaveCount(0);
@@ -251,7 +241,6 @@ test.fixme('the badge does not refresh when a notification is created while the 
 });
 
 test.fixme('tapping a card does not open its subject', async ({ page }) => {
-  // NotificationsPage only marks the card read (notifications_page.dart:158); nothing routes by subject/subject_id.
   const { email, token } = await api.signUp({ firstName: 'Xavi' });
   await seedCategoryWarning(token, 'Mercado');
 
