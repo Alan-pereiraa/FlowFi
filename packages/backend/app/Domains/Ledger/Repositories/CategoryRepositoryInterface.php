@@ -21,6 +21,8 @@ interface CategoryRepositoryInterface
 
     public function findForLimitCheck(int $categoryId): Category;
 
+    public function recordLimitAlert(Category $category, ?int $level, string $month): void;
+
     public function detachFromTransactions(Category $category): void;
 
     public function usedInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int;

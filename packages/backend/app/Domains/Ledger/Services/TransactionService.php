@@ -109,6 +109,7 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $data): Transaction {
             $oldGoalId = $transaction->goal_id;
+            $oldCategoryId = $transaction->category_id;
             $oldEffect = $this->goalEffect($transaction);
             $replan = $this->needsReplan($transaction, $data);
 
@@ -155,6 +156,10 @@ class TransactionService
 
             if ($this->countsTowardCategory($transaction) && ($replan || $categoryChanged)) {
                 $this->categories->notifyLimitStatus($transaction->user, $transaction->category_id);
+
+                if ($oldCategoryId !== $transaction->category_id) {
+                    $this->categories->notifyLimitStatus($transaction->user, $oldCategoryId);
+                }
             }
 
             return $transaction->load('installments');
@@ -170,6 +175,10 @@ class TransactionService
 
             $transaction->installments()->delete();
             $this->transactions->delete($transaction);
+
+            if ($this->countsTowardCategory($transaction)) {
+                $this->categories->notifyLimitStatus($transaction->user, $transaction->category_id);
+            }
 
             $effect = $this->goalEffect($transaction);
 
