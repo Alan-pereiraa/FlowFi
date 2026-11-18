@@ -12,6 +12,7 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/money_amount_field.dart';
 import '../../../categories/domain/entities/category.dart';
+import '../../../categories/presentation/category_routes.dart';
 import '../../domain/entities/installment.dart';
 import '../../domain/entities/recurring_input.dart';
 import '../../domain/entities/transaction.dart';
@@ -25,6 +26,7 @@ import '../controllers/transaction_form_state.dart';
 import '../controllers/voice_draft_controller.dart';
 import '../transaction_type_style.dart';
 import '../widgets/category_chips.dart';
+import '../widgets/category_usage_hint.dart';
 import '../widgets/choice_row.dart';
 import '../widgets/first_installment_notice.dart';
 import '../widgets/goal_picker.dart';
@@ -75,6 +77,13 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
       ? 'Escolha a meta de origem.'
       : 'Escolha a meta de destino.';
   bool get _canSplit => _type == TransactionType.expense;
+  bool get _usesCategory =>
+      _type == TransactionType.expense || _type == TransactionType.income;
+
+  List<Category> _categoriesFor(List<Category> categories) => [
+    for (final category in categories)
+      if (category.type.apiValue == _type.apiValue) category,
+  ];
   bool get _isSplit => _canSplit && _installments > 1;
 
   TransactionFormController get _controller => ref.read(
@@ -112,9 +121,17 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   }
 
   void _setType(TransactionType type) {
+    final categories = ref
+        .read(transactionFormControllerProvider(widget.transactionId))
+        .categories;
     setState(() {
       _type = type;
       if (type != TransactionType.expense) _installments = 1;
+      final selected = categories.where((c) => c.id == _categoryId);
+      if (selected.isNotEmpty &&
+          selected.first.type.apiValue != type.apiValue) {
+        _categoryId = null;
+      }
     });
     if (type.movesGoal &&
         ref
@@ -156,7 +173,9 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
   }
 
   Future<void> _createCategory() async {
-    final created = await context.push<Category>(Routes.newCategory);
+    final created = await context.push<Category>(
+      '${Routes.newCategory}?type=${_type.apiValue}',
+    );
     if (created == null || !mounted) return;
     _controller.categoryCreated(created);
     setState(() => _categoryId = created.id);
@@ -369,9 +388,59 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     if (confirmed) await _controller.endRecurrence();
   }
 
+  Future<void> _showLimitNotice(CategoryLimitNotice notice) async {
+    final choice = await showDialog<_LimitChoice>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded),
+        title: const Text('Limite da categoria'),
+        content: Text(
+          '${notice.message}\n\nDeseja lançar mesmo assim ou ajustar o limite?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_LimitChoice.cancel),
+            child: const Text('Cancelar'),
+          ),
+          if (notice.categoryId != null)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(_LimitChoice.adjust),
+              child: const Text('Ajustar limite'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(_LimitChoice.confirm),
+            child: const Text('Lançar mesmo assim'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case _LimitChoice.confirm:
+        await _controller.confirmOverLimit();
+      case _LimitChoice.adjust:
+        _controller.dismissLimitNotice();
+        final category = ref
+            .read(transactionFormControllerProvider(widget.transactionId))
+            .categories
+            .where((c) => c.id == notice.categoryId)
+            .firstOrNull;
+        await context.push<Object?>(
+          CategoryRoutes.edit(notice.categoryId!),
+          extra: category,
+        );
+        if (mounted) await _controller.refreshCategories();
+      case _LimitChoice.cancel || null:
+        _controller.dismissLimitNotice();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = transactionFormControllerProvider(widget.transactionId);
+    ref.listen(provider.select((s) => s.limitNotice), (_, notice) {
+      if (notice != null) _showLimitNotice(notice);
+    });
     ref.listen(provider.select((s) => s.original), (previous, original) {
       if (previous == null && original != null) _fillFrom(original);
     });
@@ -415,6 +484,25 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
     );
   }
 
+  (Category, int)? _selectedUsage(TransactionFormState state) {
+    final id = _categoryId;
+    if (id == null) return null;
+    final category = state.categories.where((c) => c.id == id).firstOrNull;
+    final used = state.usedOf(id);
+    if (category == null || used == null) return null;
+    if (category.type.apiValue != _type.apiValue) return null;
+    return (category, used);
+  }
+
+  void _syncUsage(TransactionFormState state) {
+    if (_isEdit) return;
+    final month = DateTime(_date.year, _date.month);
+    if (state.usageMonth == month) return;
+    Future.microtask(() {
+      if (mounted) _controller.loadUsage(_date);
+    });
+  }
+
   Widget _body(BuildContext context, TransactionFormState state) {
     final voice = ref.watch(voiceDraftControllerProvider);
     if (state.loading) {
@@ -436,6 +524,8 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
         ],
       );
     }
+
+    _syncUsage(state);
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -592,13 +682,21 @@ class _TransactionFormPageState extends ConsumerState<TransactionFormPage> {
                 ),
                 const SizedBox(height: 8),
                 CategoryChips(
-                  categories: state.categories,
+                  categories: _categoriesFor(state.categories),
                   selectedId: _categoryId,
                   onCreate: _createCategory,
                   onSelected: (id) => setState(
                     () => _categoryId = id == _categoryId ? null : id,
                   ),
                 ),
+                if (!_isEdit && _usesCategory)
+                  if (_selectedUsage(state) case (final category, final used))
+                    CategoryUsageHint(
+                      category: category,
+                      usedCents: used,
+                      amountCents: _amount.cents,
+                      month: _date,
+                    ),
                 if (state.fieldErrors['category_id'] case final message?)
                   error(message),
               ],
@@ -755,3 +853,5 @@ class _CountMenu extends StatelessWidget {
     );
   }
 }
+
+enum _LimitChoice { cancel, adjust, confirm }

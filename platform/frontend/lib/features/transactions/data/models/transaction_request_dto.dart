@@ -21,6 +21,7 @@ abstract final class TransactionRequestDto {
         'total_amount': input.schedule.totalAmount.toDecimal()
       else
         ..._schedule(input.schedule),
+      if (input.confirmOverLimit) 'confirm_over_limit': true,
     };
   }
 
@@ -32,6 +33,7 @@ abstract final class TransactionRequestDto {
     'description': update.description,
     'date': Dates.toApi(update.date),
     if (update.schedule != null) ..._schedule(update.schedule!),
+    if (update.confirmOverLimit) 'confirm_over_limit': true,
   };
 
   static Map<String, dynamic> recurring(RecurringInput input) => {

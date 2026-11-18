@@ -70,6 +70,34 @@ use OpenApi\Attributes as OA;
     ),
 )]
 #[OA\Response(
+    response: 'CategoryLimitExceededResponse',
+    description: 'Erro de validação. Quando `code` é `category_limit_exceeded`, a saída ultrapassa o limite da categoria e pode ser reenviada com `confirm_over_limit: true` depois que o usuário confirmar',
+    content: new OA\JsonContent(
+        properties: [
+            new OA\Property(property: 'message', type: 'string', example: 'Esta transação ultrapassa o limite da categoria "Alimentação" em R$ 50,00 em 11/2026.'),
+            new OA\Property(property: 'code', type: 'string', nullable: true, example: 'category_limit_exceeded'),
+            new OA\Property(
+                property: 'errors',
+                type: 'object',
+                additionalProperties: new OA\AdditionalProperties(type: 'array', items: new OA\Items(type: 'string')),
+            ),
+            new OA\Property(
+                property: 'limit',
+                type: 'object',
+                nullable: true,
+                properties: [
+                    new OA\Property(property: 'category_id', type: 'integer', example: 3),
+                    new OA\Property(property: 'month', type: 'string', example: '2026-11'),
+                    new OA\Property(property: 'limit_amount', type: 'string', format: 'decimal', example: '1000.00'),
+                    new OA\Property(property: 'used_amount', type: 'string', format: 'decimal', example: '1000.00'),
+                    new OA\Property(property: 'remaining_amount', type: 'string', format: 'decimal', example: '0.00'),
+                    new OA\Property(property: 'exceeded_by', type: 'string', format: 'decimal', example: '50.00'),
+                ],
+            ),
+        ],
+    ),
+)]
+#[OA\Response(
     response: 'TooManyRequestsResponse',
     description: 'Limite de requisições excedido',
     content: new OA\JsonContent(
@@ -156,6 +184,13 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'name', type: 'string', example: 'Mercado'),
         new OA\Property(
+            property: 'type',
+            type: 'string',
+            enum: ['income', 'expense'],
+            description: 'income agrupa entradas; expense agrupa saídas',
+            example: 'expense',
+        ),
+        new OA\Property(
             property: 'icon',
             type: 'string',
             description: 'Nome vindo de GET /icons',
@@ -167,7 +202,7 @@ use OpenApi\Attributes as OA;
             type: 'string',
             format: 'decimal',
             nullable: true,
-            description: 'Limite mensal de gastos',
+            description: 'Limite mensal. Em expense é um teto de gastos; em income é uma meta de recebimento e nunca bloqueia',
             example: '1500.00',
         ),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
@@ -177,7 +212,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'StoreCategoryRequest',
     type: 'object',
-    required: ['name', 'icon', 'color'],
+    required: ['name', 'type', 'icon', 'color'],
     properties: [
         new OA\Property(
             property: 'name',
@@ -185,6 +220,13 @@ use OpenApi\Attributes as OA;
             maxLength: 255,
             description: 'Único entre as categorias do usuário',
             example: 'Mercado',
+        ),
+        new OA\Property(
+            property: 'type',
+            type: 'string',
+            enum: ['income', 'expense'],
+            description: 'Não pode ser alterado depois. Só transações do mesmo tipo usam a categoria',
+            example: 'expense',
         ),
         new OA\Property(
             property: 'icon',
@@ -212,7 +254,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(
     schema: 'UpdateCategoryRequest',
     type: 'object',
-    description: 'Todos os campos são opcionais. `name`, `icon` e `color` não podem ser null.',
+    description: 'Todos os campos são opcionais. `name`, `icon` e `color` não podem ser null. `type` não pode ser alterado (enviá-lo retorna 422).',
     properties: [
         new OA\Property(property: 'name', type: 'string', maxLength: 255),
         new OA\Property(property: 'icon', type: 'string'),
@@ -377,7 +419,7 @@ use OpenApi\Attributes as OA;
             property: 'category_id',
             type: 'integer',
             nullable: true,
-            description: 'Opcional; proibido quando type=transfer ou withdrawal',
+            description: 'Opcional; proibido quando type=transfer ou withdrawal. A categoria deve ser do mesmo tipo da transação (income ou expense)',
             example: 5,
         ),
         new OA\Property(
@@ -455,6 +497,12 @@ use OpenApi\Attributes as OA;
             description: 'Unidades de período entre as parcelas (padrão 1). Proibido em income e transfer.',
             example: 1,
         ),
+        new OA\Property(
+            property: 'confirm_over_limit',
+            type: 'boolean',
+            description: 'Envie true para salvar mesmo ultrapassando o limite da categoria, depois que o usuário confirmar',
+            example: false,
+        ),
     ],
 )]
 #[OA\Schema(
@@ -462,7 +510,13 @@ use OpenApi\Attributes as OA;
     type: 'object',
     description: 'Todos os campos são opcionais. `type` não pode ser alterado (enviá-lo retorna 422). `category_id` é proibido em transferências e `goal_id` é proibido em receitas (obrigatório em transferências). Em receitas e transferências, `installments`, `period_unit` e `period_interval` são proibidos e `installments_count` deve ser 1. Em saídas, enviar qualquer campo do cronograma (total_amount, installments, installments_count, period_unit, period_interval) ou mudar `date` gera o cronograma inteiro de novo e reaplica a regra de status pela data. Cronogramas personalizados não são recriados quando só `date` muda.',
     properties: [
-        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria', example: 5),
+        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria. Deve ser do mesmo tipo da transação', example: 5),
+        new OA\Property(
+            property: 'confirm_over_limit',
+            type: 'boolean',
+            description: 'Envie true para salvar mesmo ultrapassando o limite da categoria, depois que o usuário confirmar',
+            example: false,
+        ),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
         new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000),
         new OA\Property(property: 'date', type: 'string', format: 'date'),
@@ -621,7 +675,7 @@ use OpenApi\Attributes as OA;
     type: 'object',
     description: 'Todos os campos são opcionais; só as próximas ocorrências recebem a alteração. `type`, `period_unit`, `period_interval`, `start_date`, `end_date` e `occurrences` não podem ser alterados (422): encerre esta e crie outra.',
     properties: [
-        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria', example: 5),
+        new OA\Property(property: 'category_id', type: 'integer', nullable: true, description: 'Envie null para remover a categoria. Deve ser do mesmo tipo da transação', example: 5),
         new OA\Property(property: 'goal_id', type: 'integer', nullable: true),
         new OA\Property(property: 'description', type: 'string', nullable: true, maxLength: 1000),
         new OA\Property(property: 'amount', type: 'string', format: 'decimal', example: '5500.00'),
@@ -718,6 +772,47 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'data', ref: '#/components/schemas/User'),
+    ],
+)]
+#[OA\Schema(
+    schema: 'CategoryUsageResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(
+            property: 'data',
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'month', type: 'string', example: '2026-11'),
+                new OA\Property(
+                    property: 'categories',
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'category_id', type: 'integer', example: 3),
+                            new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
+                            new OA\Property(property: 'limit_amount', type: 'string', format: 'decimal', nullable: true, example: '1000.00'),
+                            new OA\Property(property: 'used_amount', type: 'string', format: 'decimal', example: '850.00'),
+                            new OA\Property(
+                                property: 'remaining_amount',
+                                type: 'string',
+                                format: 'decimal',
+                                nullable: true,
+                                description: 'Nunca negativo; null quando a categoria não tem limite',
+                                example: '150.00',
+                            ),
+                            new OA\Property(
+                                property: 'used_percent',
+                                type: 'integer',
+                                nullable: true,
+                                description: 'Arredondado para baixo; pode passar de 100',
+                                example: 85,
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+        ),
     ],
 )]
 #[OA\Schema(

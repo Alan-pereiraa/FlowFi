@@ -6,6 +6,14 @@ import '../../domain/entities/transaction.dart';
 import '../../domain/entities/recurrence.dart';
 
 @immutable
+class CategoryLimitNotice {
+  const CategoryLimitNotice({required this.message, this.categoryId});
+
+  final String message;
+  final int? categoryId;
+}
+
+@immutable
 class TransactionFormState {
   const TransactionFormState({
     this.loading = false,
@@ -26,6 +34,9 @@ class TransactionFormState {
     this.recurrenceEnded = false,
     this.fieldErrors = const {},
     this.formError,
+    this.usedCents,
+    this.usageMonth,
+    this.limitNotice,
   });
 
   final bool loading;
@@ -51,6 +62,14 @@ class TransactionFormState {
 
   final Map<String, String> fieldErrors;
   final String? formError;
+
+  final Map<int, int>? usedCents;
+  final DateTime? usageMonth;
+
+  final CategoryLimitNotice? limitNotice;
+
+  int? usedOf(int categoryId) =>
+      usedCents == null ? null : (usedCents![categoryId] ?? 0);
 
   bool get busy =>
       loading ||
@@ -78,6 +97,9 @@ class TransactionFormState {
     bool? recurrenceEnded,
     Map<String, String>? fieldErrors,
     String? Function()? formError,
+    Map<int, int>? Function()? usedCents,
+    DateTime? Function()? usageMonth,
+    CategoryLimitNotice? Function()? limitNotice,
   }) {
     return TransactionFormState(
       loading: loading ?? this.loading,
@@ -100,6 +122,9 @@ class TransactionFormState {
       recurrenceEnded: recurrenceEnded ?? this.recurrenceEnded,
       fieldErrors: fieldErrors ?? this.fieldErrors,
       formError: formError == null ? this.formError : formError(),
+      usedCents: usedCents == null ? this.usedCents : usedCents(),
+      usageMonth: usageMonth == null ? this.usageMonth : usageMonth(),
+      limitNotice: limitNotice == null ? this.limitNotice : limitNotice(),
     );
   }
 }

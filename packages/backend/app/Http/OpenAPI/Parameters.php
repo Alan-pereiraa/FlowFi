@@ -13,6 +13,17 @@ use OpenApi\Attributes as OA;
     schema: new OA\Schema(type: 'integer', minimum: 1),
 )]
 #[OA\Parameter(
+    parameter: 'CategoryUsageMonth',
+    name: 'month',
+    in: 'query',
+    description: 'Mês de referência (AAAA-MM). Por padrão, considera o mês atual em America/Sao_Paulo.',
+    schema: new OA\Schema(
+        type: 'string',
+        pattern: '^\d{4}-(0[1-9]|1[0-2])$',
+        example: '2026-11',
+    ),
+)]
+#[OA\Parameter(
     parameter: 'DashboardMonth',
     name: 'month',
     in: 'query',

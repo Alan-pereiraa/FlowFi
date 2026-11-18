@@ -42,6 +42,8 @@ class TransactionFormController extends Notifier<TransactionFormState> {
 
   bool get isEdit => transactionId != null;
 
+  TransactionInput? _lastDraft;
+
   @override
   TransactionFormState build() {
     Future.microtask(load);
@@ -110,7 +112,46 @@ class TransactionFormController extends Notifier<TransactionFormState> {
     state = state.copyWith(categories: [...state.categories, category]);
   }
 
+  Future<void> loadUsage(DateTime date) async {
+    final month = DateTime(date.year, date.month);
+    if (state.usageMonth == month && state.usedCents != null) return;
+    state = state.copyWith(usageMonth: () => month);
+    try {
+      final used = await ref
+          .read(categoryRepositoryProvider)
+          .spentInMonth(month);
+      if (!ref.mounted || state.usageMonth != month) return;
+      state = state.copyWith(usedCents: () => used);
+    } on Failure {
+      if (!ref.mounted || state.usageMonth != month) return;
+      state = state.copyWith(usedCents: () => null);
+    }
+  }
+
+  Future<void> refreshCategories() async {
+    try {
+      final categories = await ref.read(categoryRepositoryProvider).list();
+      if (!ref.mounted) return;
+      state = state.copyWith(categories: categories, usedCents: () => null);
+      final month = state.usageMonth;
+      if (month != null) await loadUsage(month);
+    } on Failure {
+      return;
+    }
+  }
+
+  void dismissLimitNotice() {
+    state = state.copyWith(limitNotice: () => null);
+  }
+
+  Future<void> confirmOverLimit() async {
+    final draft = _lastDraft;
+    state = state.copyWith(limitNotice: () => null);
+    if (draft != null) await save(draft.confirmingOverLimit());
+  }
+
   Future<void> save(TransactionInput draft) => _run(() async {
+    _lastDraft = draft;
     final repository = ref.read(transactionRepositoryProvider);
     final original = state.original;
     if (original == null) {
@@ -129,13 +170,15 @@ class TransactionFormController extends Notifier<TransactionFormState> {
         description: draft.description,
         date: draft.date,
         schedule: scheduleChanged ? draft.schedule : null,
+        confirmOverLimit: draft.confirmOverLimit,
       ),
     );
   });
 
-  Future<void> saveRecurring(RecurringInput draft) => _run(
-    () => ref.read(transactionRepositoryProvider).createRecurring(draft),
-  );
+  Future<void> saveRecurring(RecurringInput draft) => _run(() {
+    _lastDraft = null;
+    return ref.read(transactionRepositoryProvider).createRecurring(draft);
+  });
 
   Future<void> endRecurrence() async {
     final recurringId = state.original?.recurringTransactionId;
@@ -213,6 +256,16 @@ class TransactionFormController extends Notifier<TransactionFormState> {
       _refreshTotals();
     } on ValidationFailure catch (failure) {
       if (!ref.mounted) return;
+      if (failure.isCategoryLimitExceeded && _lastDraft != null) {
+        state = state.copyWith(
+          saving: false,
+          limitNotice: () => CategoryLimitNotice(
+            message: failure.message ?? ErrorMessages.general(failure),
+            categoryId: failure.details['category_id'] as int?,
+          ),
+        );
+        return;
+      }
       final fieldErrors = {
         for (final field in _fields)
           field: ?ErrorMessages.forField(failure, field),

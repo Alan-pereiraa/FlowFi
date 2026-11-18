@@ -32,9 +32,17 @@ class UpdateCategoryRequest extends FormRequest
                     (int) $this->route('id'),
                 ),
             ],
+            'type' => ['prohibited'],
             'icon' => ['sometimes', 'required', 'string', Rule::in(IconCatalog::names())],
             'color' => ['sometimes', 'required', 'string', 'hex_color', 'size:7'],
             'limit_amount' => ['sometimes', 'nullable', 'numeric', 'decimal:0,2', 'min:0.01', 'max:99999999.99'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'type.prohibited' => 'O tipo da categoria não pode ser alterado.',
         ];
     }
 }

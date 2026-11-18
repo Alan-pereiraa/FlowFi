@@ -71,6 +71,11 @@ class NotificationService
         return $this->notify($user, $title, $message, $type, $subject, $subjectId);
     }
 
+    public function wasNotified(User $user, string $subject, ?int $subjectId = null, ?CarbonInterface $since = null): bool
+    {
+        return $this->notifications->exists($user, $subject, $subjectId, $since);
+    }
+
     public function markAsRead(Notification $notification): Notification
     {
         return $this->notifications->markAsRead($notification);

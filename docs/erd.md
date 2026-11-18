@@ -27,7 +27,7 @@ Status: `CATEGORY` foi concretizada como `categories`
 `users.id`, indexada), `color` → string `#RRGGBB` (não `INT`), `deleteAt` →
 `deleted_at`, mais uma coluna que não estava no desenho original,
 `limitAmount` → centavos inteiros anuláveis em `limit_amount` via cast `Money`
-(o máximo que o usuário quer destinar à categoria; null = sem limite). `name`
+(null = sem limite) e `type` (`income` ou `expense`, imutável): em saídas o limite é um teto de gastos e em entradas é uma meta de recebimento. `name`
 segue a mesma regra de unicidade por usuário de `GOAL`.
 
 Status: `TRANSACTION` e `INSTALLMENT` foram concretizadas como `transactions`

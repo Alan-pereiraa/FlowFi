@@ -6,6 +6,8 @@ class ApiException implements Exception {
     this.message,
     this.fieldErrors = const {},
     this.retryAfter,
+    this.code,
+    this.details = const {},
   });
 
   factory ApiException.fromDio(DioException error) {
@@ -14,10 +16,15 @@ class ApiException implements Exception {
 
     final data = response.data;
     String? message;
+    String? code;
+    var details = const <String, dynamic>{};
     var fieldErrors = const <String, List<String>>{};
 
     if (data is Map<String, dynamic>) {
       message = data['message'] as String?;
+      code = data['code'] as String?;
+      final limit = data['limit'];
+      if (limit is Map<String, dynamic>) details = limit;
       final errors = data['errors'];
       if (errors is Map<String, dynamic>) {
         fieldErrors = errors.map(
@@ -39,6 +46,8 @@ class ApiException implements Exception {
       message: message,
       fieldErrors: fieldErrors,
       retryAfter: retrySeconds == null ? null : Duration(seconds: retrySeconds),
+      code: code,
+      details: details,
     );
   }
 
@@ -46,6 +55,8 @@ class ApiException implements Exception {
   final String? message;
   final Map<String, List<String>> fieldErrors;
   final Duration? retryAfter;
+  final String? code;
+  final Map<String, dynamic> details;
 
   @override
   String toString() => 'ApiException($statusCode, $message)';

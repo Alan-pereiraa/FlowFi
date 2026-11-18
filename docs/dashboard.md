@@ -71,7 +71,8 @@ Anything else returns `422` with the usual `errors` object. The overview always 
 
 ### Category limits
 
-`limit_amount` is a monthly cap, as Ledger already enforces it (`CategoryService::ensureInMonthLimit()`).
+`limit_amount` is a monthly cap, as Ledger already enforces it (`CategoryService::ensureInMonthLimit()`, a soft lock the client can confirm past).
+This endpoint only covers expense categories; the per-category usage including income categories, whose `limit_amount` is a target, is `GET /categories/usage` in Ledger.
 `limit_used_percent` uses the same sum: expense installments of the category due in the month, paid or not
 (by due date, not by payment date, because the limit is a budget for what falls in the month),
 over `limit_amount`. It can go past 100.

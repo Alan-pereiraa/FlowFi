@@ -207,7 +207,7 @@ class TransactionTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
         $goal = Goal::factory()->for($user)->create();
-        $category = Category::factory()->for($user)->create();
+        $category = Category::factory()->income()->for($user)->create();
 
         $incomeId = $this->withToken($token)->postJson('/api/v1/transactions', [
             'category_id' => $category->id,
@@ -252,9 +252,10 @@ class TransactionTest extends TestCase
     {
         [$user, $token] = $this->authenticated();
         $category = Category::factory()->for($user)->create();
+        $incomeCategory = Category::factory()->income()->for($user)->create();
 
         $income = fn (string $date) => $this->withToken($token)->postJson('/api/v1/transactions', [
-            'category_id' => $category->id,
+            'category_id' => $incomeCategory->id,
             'type' => 'income',
             'date' => $date,
             'total_amount' => '10.00',

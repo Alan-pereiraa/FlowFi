@@ -12,6 +12,7 @@ class TransactionInput {
     this.categoryId,
     this.goalId,
     this.description,
+    this.confirmOverLimit = false,
   });
 
   final TransactionType type;
@@ -20,4 +21,16 @@ class TransactionInput {
   final DateTime date;
   final TransactionSchedule schedule;
   final String? description;
+
+  final bool confirmOverLimit;
+
+  TransactionInput confirmingOverLimit() => TransactionInput(
+    type: type,
+    categoryId: categoryId,
+    goalId: goalId,
+    date: date,
+    schedule: schedule,
+    description: description,
+    confirmOverLimit: true,
+  );
 }

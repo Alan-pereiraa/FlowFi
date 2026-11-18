@@ -23,5 +23,7 @@ interface CategoryRepositoryInterface
 
     public function detachFromTransactions(Category $category): void;
 
-    public function spentInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int;
+    public function usedInMonthCents(Category $category, CarbonImmutable $month, ?int $ignoreTransactionId = null): int;
+
+    public function usageInMonthCents(User $user, CarbonImmutable $month): array;
 }

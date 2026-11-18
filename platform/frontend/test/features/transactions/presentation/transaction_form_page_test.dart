@@ -36,6 +36,7 @@ void main() {
     transactions = _MockTransactions();
     goals = _MockGoals();
     when(() => categories.list()).thenAnswer((_) async => []);
+    when(() => categories.spentInMonth(any())).thenAnswer((_) async => {});
   });
 
   Future<void> pumpForm(WidgetTester tester) async {

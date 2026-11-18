@@ -31,6 +31,7 @@ class UpdateRecurringTransactionRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
+                    ->where('type', $type)
                     ->whereNull('deleted_at'),
             ],
             'goal_id' => [
@@ -52,6 +53,13 @@ class UpdateRecurringTransactionRequest extends FormRequest
             'start_date' => ['prohibited'],
             'end_date' => ['prohibited'],
             'occurrences' => ['prohibited'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'category_id.exists' => 'Escolha uma categoria do mesmo tipo da transação: entrada ou saída.',
         ];
     }
 }

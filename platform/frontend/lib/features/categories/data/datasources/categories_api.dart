@@ -62,23 +62,20 @@ class CategoriesApi {
   Future<void> deleteCategory(int id) =>
       _send(() => _dio.delete<void>('/categories/$id'));
 
-  Future<Map<int, String>> spendingByCategory(String month) async {
+  Future<Map<int, String>> usage(String month) async {
     final response = await _send(
       () => _dio.get<Map<String, dynamic>>(
-        '/dashboard/spending-by-category',
+        '/categories/usage',
         queryParameters: {'month': month},
       ),
     );
     final data = response.data!['data'] as Map<String, dynamic>;
     final rows = (data['categories'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    final totals = <int, String>{};
-    for (final row in rows) {
-      final category = row['category'] as Map<String, dynamic>?;
-      if (category == null) continue;
-      totals[category['id'] as int] = row['total'].toString();
-    }
-    return totals;
+    return {
+      for (final row in rows)
+        row['category_id'] as int: row['used_amount'].toString(),
+    };
   }
 
   CategoryDto _unwrap(Map<String, dynamic> body) =>

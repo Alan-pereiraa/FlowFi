@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../domain/entities/category.dart';
+import '../domain/entities/category_type.dart';
 import 'category_routes.dart';
 import 'pages/categories_page.dart';
 import 'pages/category_form_page.dart';
@@ -13,7 +14,9 @@ GoRoute categoriesRoute() => GoRoute(
 List<GoRoute> categoryFormRoutes() => [
   GoRoute(
     path: CategoryRoutes.create,
-    builder: (_, _) => const CategoryFormPage.create(),
+    builder: (_, state) => CategoryFormPage.create(
+      initialType: CategoryType.fromApi(state.uri.queryParameters['type']),
+    ),
   ),
   GoRoute(
     path: '/categories/:id/edit',
