@@ -136,59 +136,36 @@ class CategoryService
         }
 
         $category = $this->categories->findForLimitCheck($categoryId);
+        $now = CarbonImmutable::now();
+        $month = $now->format('Y-m');
 
-        if ($category->limit_amount === null) {
+        $limit = $category->limit_amount === null ? null : Money::toCents($category->limit_amount);
+        $used = $limit === null ? 0 : $this->categories->usedInMonthCents($category, $now);
+        $level = $limit === null ? null : $this->alertLevel($category, $limit, $used);
+
+        $previous = $category->limit_alert_month === $month ? $category->limit_alert_level : null;
+
+        if ($level === $previous) {
             return;
         }
 
-        $limit = Money::toCents($category->limit_amount);
-        $used = $this->categories->usedInMonthCents($category, CarbonImmutable::now());
+        $this->categories->recordLimitAlert($category, $level, $month);
+
+        if ($level === null || ($previous !== null && $level < $previous)) {
+            return;
+        }
 
         if ($category->isIncome()) {
-            $this->notifyGoalReached($user, $category, $limit, $used);
+            $this->notifications->notify(
+                $user,
+                'Meta da categoria atingida',
+                sprintf('Você atingiu a meta de %s da categoria "%s" este mês.', Money::toBrl($limit), $category->name),
+                NotificationType::Success,
+                'category_goal_reached',
+                $category->id,
+            );
 
             return;
-        }
-
-        $this->notifyExpenseLevel($user, $category, $limit, $used);
-    }
-
-    private function notifyGoalReached(User $user, Category $category, int $limit, int $used): void
-    {
-        if ($used < $limit) {
-            return;
-        }
-
-        $this->notifications->notifyOnce(
-            $user,
-            'Meta da categoria atingida',
-            sprintf('Você atingiu a meta de %s da categoria "%s" este mês.', Money::toBrl($limit), $category->name),
-            NotificationType::Success,
-            'category_goal_reached',
-            $category->id,
-            CarbonImmutable::now()->startOfMonth()
-        );
-    }
-
-    private function notifyExpenseLevel(User $user, Category $category, int $limit, int $used): void
-    {
-        $level = match (true) {
-            $used > $limit => 2,
-            $used === $limit => 1,
-            $used * 100 >= $limit * 80 => 0,
-            default => null,
-        };
-
-        if ($level === null) {
-            return;
-        }
-
-        $since = CarbonImmutable::now()->startOfMonth();
-
-        foreach (array_slice(self::LIMIT_SUBJECTS, $level + 1) as $higher) {
-            if ($this->notifications->wasNotified($user, $higher, $category->id, $since)) {
-                return;
-            }
         }
 
         [$title, $message] = match ($level) {
@@ -211,14 +188,27 @@ class CategoryService
             ],
         };
 
-        $this->notifications->notifyOnce(
+        $this->notifications->notify(
             $user,
             $title,
             $message,
             NotificationType::Warning,
             self::LIMIT_SUBJECTS[$level],
             $category->id,
-            $since
         );
+    }
+
+    private function alertLevel(Category $category, int $limit, int $used): ?int
+    {
+        if ($category->isIncome()) {
+            return $used >= $limit ? 1 : null;
+        }
+
+        return match (true) {
+            $used > $limit => 2,
+            $used === $limit => 1,
+            $used * 100 >= $limit * 80 => 0,
+            default => null,
+        };
     }
 }

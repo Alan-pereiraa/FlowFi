@@ -35,6 +35,7 @@ class Category extends Model implements HasAppearance
     {
         return [
             'limit_amount' => Money::class,
+            'limit_alert_level' => 'integer',
         ];
     }
 

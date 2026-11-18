@@ -45,6 +45,11 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             ->firstOrfail();
     }
 
+    public function recordLimitAlert(Category $category, ?int $level, string $month): void
+    {
+        $category->forceFill(['limit_alert_level' => $level, 'limit_alert_month' => $month])->save();
+    }
+
     public function detachFromTransactions(Category $category): void
     {
         $category->transactions()->withTrashed()->update(['category_id' => null]);
